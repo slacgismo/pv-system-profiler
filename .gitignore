@@ -17,6 +17,8 @@
 *.xml
 *.png
 
+data/
+
 ### Database ###
 *.accdb
 *.db
