@@ -16,6 +16,7 @@
 *.vcf
 *.xml
 *.png
+*.jpg
 
 data/
 
@@ -30,6 +31,7 @@ data/
 ### JupyterNotebook ###
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+*.ipynb
 
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
