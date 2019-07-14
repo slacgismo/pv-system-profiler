@@ -17,8 +17,8 @@
 *.xml
 *.png
 *.jpg
-
-data/
+*/result_analysis.py
+/data/*
 
 ### Database ###
 *.accdb
