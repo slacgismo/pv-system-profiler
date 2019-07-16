@@ -12,6 +12,9 @@ import pandas as pd
 import numpy as np
 import s3fs
 
+from os.path import expanduser
+home = expanduser('~')
+
 TZ_LOOKUP = {
     'America/Anchorage': 9,
     'America/Chicago': 6,
@@ -115,7 +118,7 @@ def nrel_meta_data(n):
     return(tz, real_longitude)
 
 def sunpower_meta_data(site_id):
-    meta = pd.read_csv('../data/SunPower/deviceMetaData_20171108_LatLon.csv')
+    meta = pd.read_csv(home + '/Documents/github/pv-system-profiler/data/SunPower/deviceMetaData_20171108_LatLon.csv')
     tz = 'America/Los_Angeles'
     meta_site = meta.loc[meta["serialNumber"]== site_id]
     real_longitude = meta_site['lon'].values[0]
