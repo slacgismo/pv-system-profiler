@@ -43,8 +43,6 @@ class Parameters:
             solarnoon = avg_sunrise_sunset(run_scsf(self.power_signals))
         if self.solarnoon_approach == 'energy com':
             solarnoon = energy_com(run_scsf(self.power_signals))
-    else:
-        print("worng parameters are given")
     return(solarnoon)
 
   def define_days(self):

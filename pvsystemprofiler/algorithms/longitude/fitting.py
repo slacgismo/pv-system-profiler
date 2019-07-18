@@ -64,7 +64,7 @@ class FitEstimator(Parameters):
     lon = cvx.Variable()
     sn_m = 4*(15*self.GMT_offset - lon)-self.EOT+720
     sn_h = sn_m / 60
-    cost = cvx.sum(cvx.huber(sn_h - solarnoon))
+    cost = cvx.sum(cvx.huber(sn_h[days] - solarnoon[days]))
     objective = cvx.Minimize(cost)
     problem = cvx.Problem(objective)
     problem.solve()
