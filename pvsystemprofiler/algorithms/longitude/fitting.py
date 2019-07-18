@@ -24,12 +24,11 @@ import cvxpy as cvx
 from sys import path
 path.append('..')
 from pvsystemprofiler.utilities.tools import *
-#from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from pvsystemprofiler.algorithms.longitude.parameters import Parameters
 
 class FitEstimator(Parameters):
-  def __init__(self, power_signals, solarnoon_approach, days_approach, scsf_flag, GMT_offset, EOT):
-    Parameters.__init__(self, power_signals, solarnoon_approach, days_approach, scsf_flag)
+  def __init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag, GMT_offset, EOT):
+    Parameters.__init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag)
     self.GMT_offset = GMT_offset
     self.EOT = EOT
 

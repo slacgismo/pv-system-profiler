@@ -25,8 +25,9 @@ def run_scsf(power_signals):
     return(scsf.clear_sky_signals())
 
 class Parameters:
-  def __init__(self, power_signals, solarnoon_approach, days_approach, scsf_flag):
+  def __init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag):
     self.power_signals = power_signals
+    self.index = index
     self.solarnoon_approach = solarnoon_approach
     self.days_approach = days_approach
     self.scsf_flag = scsf_flag
@@ -42,6 +43,8 @@ class Parameters:
             solarnoon = avg_sunrise_sunset(run_scsf(self.power_signals))
         if self.solarnoon_approach == 'energy com':
             solarnoon = energy_com(run_scsf(self.power_signals))
+    else:
+        print("worng parameters are given")
     return(solarnoon)
 
   def define_days(self):
