@@ -24,17 +24,23 @@ import cvxpy as cvx
 from sys import path
 path.append('..')
 from pvsystemprofiler.utilities.tools import *
-from pvsystemprofiler.algorithms.longitude.parameters import Parameters
+from pvsystemprofiler.algorithms.longitude.config import Config
 
-class FitEstimator(Parameters):
-  def __init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag, GMT_offset, EOT):
-    Parameters.__init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag)
+class FitEstimator():
+  def __init__(self, power_signals, index, days_approach, solarnoon_approach, scsf_flag, GMT_offset, EOT):
+    self.power_signals = power_signals
+    self.index = index
+    self.solarnoon_approach = solarnoon_approach
+    self.days_approach = days_approach
+    self.scsf_flag = scsf_flag
     self.GMT_offset = GMT_offset
     self.EOT = EOT
+    self.config = Config(power_signals, index, days_approach, solarnoon_approach, scsf_flag, GMT_offset)
 
   def fit_norm1(self):
-    solarnoon = Parameters.extract_solarnoon(self)
-    days = Parameters.define_days(self)
+    solarnoon = Config.config_solarnoon(self)
+    temp = np.isnan(solarnoon)
+    days = Config.config_days(self)
     lon = cvx.Variable()
     sn_m = 4*(15*self.GMT_offset - lon)-self.EOT+720
     sn_h = sn_m / 60
@@ -46,8 +52,8 @@ class FitEstimator(Parameters):
     return lon_value
 
   def fit_norm(self):
-    solarnoon = Parameters.extract_solarnoon(self)
-    days = Parameters.define_days(self)
+    solarnoon = Config.config_solarnoon(self)
+    days = Config.config_days(self)
     lon = cvx.Variable()
     sn_m = 4*(15*self.GMT_offset - lon)-self.EOT+720
     sn_h = sn_m / 60
@@ -59,8 +65,8 @@ class FitEstimator(Parameters):
     return lon_value
 
   def fit_huber(self):
-    solarnoon = Parameters.extract_solarnoon(self)
-    days = Parameters.define_days(self)
+    solarnoon = Config.config_solarnoon(self)
+    days = Config.config_days(self)
     lon = cvx.Variable()
     sn_m = 4*(15*self.GMT_offset - lon)-self.EOT+720
     sn_h = sn_m / 60

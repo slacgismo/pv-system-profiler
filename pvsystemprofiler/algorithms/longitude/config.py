@@ -24,28 +24,23 @@ def run_scsf(power_signals):
     scsf.execute(mu_l=5e2, mu_r=1e3, tau=0.85, max_iteration=10)
     return(scsf.clear_sky_signals())
 
-class Parameters:
-  def __init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag):
+class Config():
+  def __init__(self, power_signals, index, days_approach, solarnoon_approach, scsf_flag, GMT_offset):
     self.power_signals = power_signals
     self.index = index
     self.solarnoon_approach = solarnoon_approach
     self.days_approach = days_approach
     self.scsf_flag = scsf_flag
+    self.GMT_offset = GMT_offset
 
-  def extract_solarnoon(self):
+  def config_solarnoon(self):
     if self.scsf_flag == "False":
-        if self.solarnoon_approach == 'avg_sunrise_sunset':
-            solarnoon = avg_sunrise_sunset(self.power_signals)
-        if self.solarnoon_approach == 'energy com':
-            solarnoon = energy_com(self.power_signals)
+        solarnoon = self.solarnoon_approach(self.power_signals)
     if self.scsf_flag == "True":
-        if self.solarnoon_approach == 'avg_sunrise_sunset':
-            solarnoon = avg_sunrise_sunset(run_scsf(self.power_signals))
-        if self.solarnoon_approach == 'energy com':
-            solarnoon = energy_com(run_scsf(self.power_signals))
+        solarnoon = self.solarnoon_approach(run_scsf(self.power_signals))
     return(solarnoon)
 
-  def define_days(self):
+  def config_days(self):
     if self.days_approach == 'all':
         days = np.array([True] * len(self.power_signals[0]))
     if self.days_approach == 'clear days':

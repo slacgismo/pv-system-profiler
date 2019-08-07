@@ -25,8 +25,8 @@ def equation_of_time_Haghdadi(beta):
     distributed photovoltaic systems from their generation output data." Renewable Energy 108 (2017): 390-400.
     """
 
-    eot = (9.87 * np.sin(2.0 * beta)) - (7.53 * np.cos(beta)) - (1.5* np.sin(beta))
-    #eot = (9.87 * np.sin(2.0 * beta * np.pi / 180)) - (7.53 * np.cos(beta * np.pi / 180)) - (1.5 * np.sin(beta * np.pi / 180))
+    #eot = (9.87 * np.sin(2.0 * beta)) - (7.53 * np.cos(beta)) - (1.5* np.sin(beta))
+    eot = (9.87 * np.sin(2.0 * beta * np.pi / 180)) - (7.53 * np.cos(beta * np.pi / 180)) - (1.5 * np.sin(beta * np.pi / 180))
     return eot
 
 def calculate_simple_day_angle_Haghdadi(dayofyear, offset=81):

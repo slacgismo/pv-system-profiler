@@ -11,9 +11,11 @@ from cassandra.cluster import Cluster
 import pandas as pd
 import numpy as np
 import s3fs
-
 from os.path import expanduser
+
 home = expanduser('~')
+path.append(home + '/Documents/github/pv-system-profiler')
+
 
 TZ_LOOKUP = {
     'America/Anchorage': 9,
@@ -24,6 +26,17 @@ TZ_LOOKUP = {
     'America/Phoenix': 7,
     'Pacific/Honolulu': 10
 }
+
+def get_credentials():
+    """
+    This function gets credentials for service client connection with AWS.
+    param: not applicable
+    return: access key and secret access key
+    """
+    with open(home + '/.aws/credentials') as f:
+        lns = f.readlines()
+    my_dict = {l.split(' = ')[0]: l.split(' = ')[1][:-1] for l in lns if len(l.split(' = ')) == 2 }
+    return my_dict['aws_access_key_id'], my_dict['aws_secret_access_key']
 
 #initial site TAEAC1031314 with shading
 def sunpower_index_load(site_id):
@@ -84,7 +97,7 @@ def nrel_data_load(n, local=True):
     if not local:
         base = 's3://pvinsight.nrel/PVO/'
     #meta = pd.read_csv('/Users/elpiniki/Documents/github/pv-system-profiler/data/PVO/sys_meta.csv')
-    meta = pd.read_csv('../data/PVO/sys_meta.csv')
+    meta = pd.read_csv('/Documents/github/pv-system-profiler/data/PVO/sys_meta.csv')
     id = meta['ID'][n]
     df = pd.read_csv(base+'PVOutput/{}.csv'.format(id), index_col=0,
                       parse_dates=[0], usecols=[1, 3])
@@ -111,7 +124,7 @@ def data_preprocess(data):
     #return()
 
 def nrel_meta_data(n):
-    meta = pd.read_csv('../data/PVO/sys_meta.csv')
+    meta = pd.read_csv('/Documents/github/pv-system-profiler/data/PVO/sys_meta.csv')
     id = meta['ID'][n]
     tz = meta['TimeZone'][n]
     real_longitude = meta['Longitude'][n]

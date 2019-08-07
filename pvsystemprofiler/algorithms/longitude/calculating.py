@@ -24,10 +24,10 @@ import cvxpy as cvx
 from sys import path
 path.append('..')
 from pvsystemprofiler.utilities.tools import *
-from pvsystemprofiler.algorithms.longitude.parameters import Parameters
+from pvsystemprofiler.algorithms.longitude.config import Config
 
 
-class CalEstimator(Parameters):
+class CalEstimator():
     """ The fitting approach applied here for longitude estimation uses methods from
     Haghdadi et al. and Duffie & Beckman. The longitude is estimated by a series of equations.
 
@@ -53,24 +53,28 @@ class CalEstimator(Parameters):
     distributed photovoltaic systems from their generation output data." Renewable Energy 108 (2017): 390-400.
     [2] Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. John Wiley & Sons, 2013.
     """
-    def __init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag, GMT_offset, EOT):
-        Parameters.__init__(self, power_signals, index, solarnoon_approach, days_approach, scsf_flag)
+    def __init__(self, power_signals, index, days_approach, solarnoon_approach, scsf_flag, GMT_offset):
+        self.power_signals = power_signals
+        self.index = index
+        self.solarnoon_approach = solarnoon_approach
+        self.days_approach = days_approach
+        self.scsf_flag = scsf_flag
         self.GMT_offset = GMT_offset
-        self.EOT = EOT
+        self.config = Config(power_signals, index, days_approach, solarnoon_approach, scsf_flag, GMT_offset)
 
     def cal_haghdadi(self):
-        solarnoon = Parameters.extract_solarnoon(self)
-        day_of_year = day_of_year_finder(self.index)[1:-2]
-        days = Parameters.define_days(self)
+        solarnoon = Config.config_solarnoon(self)
+        day_of_year = day_of_year_finder(self.index)[1:-1]
+        days = Config.config_days(self)
         B_h = calculate_simple_day_angle_Haghdadi(day_of_year[days], offset=81)
         E_h = equation_of_time_Haghdadi(B_h)
-        lon_value = np.median((720-solarnoon[days]*60)/4-(E_h/4)) - 15*self.GMT_offset
+        lon_value = np.nanmedian((720-solarnoon[days]*60)/4-(E_h/4)) - 15*self.GMT_offset
         return lon_value
 
     def cal_duffie(self):
-        solarnoon = Parameters.extract_solarnoon(self)
-        day_of_year = day_of_year_finder(self.index)[1:-2]
-        days = Parameters.define_days(self)
+        solarnoon = Config.config_solarnoon(self)
+        day_of_year = day_of_year_finder(self.index)[1:-1]
+        days = Config.config_days(self)
         B_d = calculate_simple_day_angle_Duffie(day_of_year[days], offset=81)
         E_d = equation_of_time_Duffie(B_d)
         lon_value_signal = (solarnoon[days]*60 + E_d -720 - 4*15*self.GMT_offset)/4
