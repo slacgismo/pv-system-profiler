@@ -57,7 +57,7 @@ class GeoEstimator():
 
     def calculate_latitude(self):
         self.hours_daylight = (np.sum(self.boolean_daylight, axis=0))*self.data_sampling/60
-        latitude_calculate_1 = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight)) / np.tan((self.delta[0]))))
+        latitude_calculate_1 = np.degrees(np.arctan2(- np.cos(np.radians(15/2*self.hours_daylight)), np.tan((self.delta[0]))))
         self.latitude_calculate = np.tile(latitude_calculate_1, (self.data_matrix.shape[0], 1))
         return
 
