@@ -14,13 +14,14 @@ from scipy.optimize import curve_fit
 from statistical_clear_sky.algorithm.iterative_fitting import IterativeFitting
 
 class GeoEstimator():
-    def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None):
+    def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None):
         self.data_matrix = data_matrix
         self.start_date = start_date
         self.end_date = end_date
         self.phi_real = phi_real
         self.ground_beta = ground_beta
         self.ground_gamma = ground_gamma
+        self.SCSF_flag = SCSF_flag
         if self.data_matrix is not None:
             self.num_days = self.data_matrix.shape[1]
             self.data_sampling_daily = self.data_matrix.shape[0]
@@ -68,9 +69,12 @@ class GeoEstimator():
         return
 
     def flag_clear_days(self):
-        dh = DataHandler(raw_data_matrix=self.data_matrix)
-        dh.run_pipeline(verbose=False)
-        self.clear_index_set = dh.daily_flags.clear
+        if self.SCSF_flag is not None:
+            self.clear_index_set = np.s_[:]
+        else:
+            dh = DataHandler(raw_data_matrix=self.data_matrix)
+            dh.run_pipeline(verbose=False)
+            self.clear_index_set = dh.daily_flags.clear
         return
 
     def estimate_costheta(self):
@@ -133,7 +137,10 @@ class GeoEstimator():
         return np.array([self.jacphi(X, phi, beta, gamma), self.jacbeta(X, phi, beta, gamma), self.jacgamma(X, phi, beta, gamma)]).T
 
     def run_curve_fit_1(self, bootstrap_iterations=None):
-        slct_curve_fit = self.boolean_daylight * self.clear_index_set
+        if self.SCSF_flag is not None:
+            slct_curve_fit = self.boolean_daylight
+        else:
+            slct_curve_fit = self.boolean_daylight * self.clear_index_set
         delta_f = self.delta[slct_curve_fit]
         omega_f = self.omega[slct_curve_fit]
         costheta_estimated_f = self.costheta_estimate[slct_curve_fit]
