@@ -27,7 +27,7 @@ class GeoEstimator():
             self.data_sampling_daily = self.data_matrix.shape[0]
             self.doy_list = pd.date_range(self.start_date, self.end_date).dayofyear.values[1:-2]
             self.data_sampling = 24 * 60 / self.data_matrix.shape[0]
-            self.boolean_daylight = self.data_matrix > 0.0001 * np.percentile(self.data_matrix, 95)
+            self.boolean_daylight = self.data_matrix > 0.001 * np.percentile(self.data_matrix, 95)
         else:
             self.num_days = None
             self.data_sampling = None
@@ -41,6 +41,7 @@ class GeoEstimator():
         self.azimuth_estimate = None
         self.costheta_ground_truth_calculate = None
         self.scale_factor_costheta = None
+        self.hours_daylight = None
 
     def run_preprocessing(self):
         self.make_delta()
@@ -64,8 +65,8 @@ class GeoEstimator():
 
     def calculate_latitude(self):
         self.hours_daylight = (np.sum(self.boolean_daylight, axis=0))*self.data_sampling/60
-        latitude_calculate_1 = np.degrees(np.arctan2(- np.cos(np.tan(self.delta[0])), (np.radians(15/2*self.hours_daylight))))
-        self.latitude_calculate = np.tile(latitude_calculate_1, (self.data_matrix.shape[0], 1))
+        self.latitude_calculate = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/(np.tan(self.delta[0]))))
+        #self.latitude_calculate = np.tile(latitude_calculate_1, (self.data_matrix.shape[0], 1))
         return
 
     def flag_clear_days(self):
@@ -151,7 +152,8 @@ class GeoEstimator():
 
     def run_curve_fit_2(self):
         print("Tilt and azimuth not ready yet")
-        self.latitude_estimate = np.median(self.latitude_calculate[0][[self.clear_index_set]])
+        #self.latitude_estimate = np.median(self.latitude_calculate[0][[self.clear_index_set]])
+        self.latitude_estimate = np.median(self.latitude_calculate)
         return
 
     def ground_truth_costheta(self):
