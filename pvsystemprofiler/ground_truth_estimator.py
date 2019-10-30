@@ -126,6 +126,6 @@ def ground_truth_finder(subdir):
         med_azimuth = np.median(azimuth)
         return ave_tilt, med_tilt, ave_azimuth, med_azimuth
 
-subdir = '/Users/elpiniki/Documents/SLAC/PVInsight/notebooks/tiltazimuth/roofs/TAEAC1006600'
-a,b,c,d = ground_truth_finder(subdir)
-print (a,b,c,d)
+# subdir = '/Users/elpiniki/Documents/SLAC/PVInsight/notebooks/tiltazimuth/roofs/TAEAC1006600'
+# a,b,c,d = ground_truth_finder(subdir)
+# print (a,b,c,d)
