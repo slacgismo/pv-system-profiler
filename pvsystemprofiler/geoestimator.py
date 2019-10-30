@@ -12,6 +12,8 @@ from os.path import expanduser
 home = expanduser('~')
 from scipy.optimize import curve_fit
 from statistical_clear_sky.algorithm.iterative_fitting import IterativeFitting
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 
 class GeoEstimator():
     def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None):
@@ -42,6 +44,8 @@ class GeoEstimator():
         self.costheta_ground_truth_calculate = None
         self.scale_factor_costheta = None
         self.hours_daylight = None
+        self.costheta_predicted = None
+        self.mean_absolute_error = None
 
     def run_preprocessing(self):
         self.make_delta()
@@ -146,7 +150,7 @@ class GeoEstimator():
         omega_f = self.omega[slct_curve_fit]
         costheta_estimated_f = self.costheta_estimate[slct_curve_fit]
         X = np.array([omega_f, delta_f])
-        popt, pcov = curve_fit(self.func, X, costheta_estimated_f, p0=np.deg2rad([30,10,0]), jac=self.jac_matrix, bounds=([-1.57,0,-3.14],[1.57,1.57,3.14]))
+        popt, pcov = curve_fit(self.func, X, costheta_estimated_f, p0=np.deg2rad([50,10,0]), jac=self.jac_matrix, bounds=([-1.57,0,-3.14],[1.57,1.57,3.14]))
         self.latitude_estimate, self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
 
@@ -162,4 +166,17 @@ class GeoEstimator():
         ground_beta_2d = np.tile(self.ground_beta,(self.data_sampling_daily,self.num_days))
         ground_gamma_2d = np.tile(self.ground_gamma,(self.data_sampling_daily,self.num_days))
         self.costheta_ground_truth_calculate = self.func(X,phi_real_2d,ground_beta_2d, ground_gamma_2d)
+        return
+
+    def calculate_errors(self):
+        X = np.array([self.omega, self.delta])
+        phi_predicted_2d = np.tile(np.deg2rad(self.latitude_estimate),(self.data_sampling_daily,self.num_days))
+        beta_predicted_2d = np.tile(np.deg2rad(self.tilt_estimate),(self.data_sampling_daily,self.num_days))
+        gamma_predicted_2d = np.tile(np.deg2rad(self.azimuth_estimate),(self.data_sampling_daily,self.num_days))
+        self.costheta_predicted = self.func(X,phi_predicted_2d,beta_predicted_2d, gamma_predicted_2d)
+        self.costheta_mean_absolute_error = mean_absolute_error(self.costheta_ground_truth_calculate, self.costheta_predicted)
+        self.costheta_mean_squared_error = mean_squared_error(self.costheta_ground_truth_calculate, self.costheta_predicted)
+        self.latitude_error = np.rad2deg(self.phi_real - np.deg2rad(self.latitude_estimate))
+        self.tilt_error = np.rad2deg(self.ground_beta - np.deg2rad(self.tilt_estimate))
+        self.azimuth_error = np.rad2deg(self.ground_gamma - np.deg2rad(self.azimuth_estimate))
         return
