@@ -15,8 +15,8 @@ from statistical_clear_sky.algorithm.iterative_fitting import IterativeFitting
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 
-class GeoEstimator():
-    def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None):
+class ProfileEstimator():
+    def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None, init_values = None):
         self.data_matrix = data_matrix
         self.start_date = start_date
         self.end_date = end_date
@@ -24,6 +24,7 @@ class GeoEstimator():
         self.ground_beta = ground_beta
         self.ground_gamma = ground_gamma
         self.SCSF_flag = SCSF_flag
+        self.init_values = init_values
         if self.data_matrix is not None:
             self.num_days = self.data_matrix.shape[1]
             self.data_sampling_daily = self.data_matrix.shape[0]
@@ -33,10 +34,11 @@ class GeoEstimator():
         else:
             self.num_days = None
             self.data_sampling = None
+
         self.clear_index_set = None
         self.delta = None
         self.omega = None
-        self.costheta_estimate = None
+        self.costheta_fit = None
         self.latitude_estimate = None
         self.latitude_calculate = None
         self.tilt_estimate = None
@@ -44,16 +46,23 @@ class GeoEstimator():
         self.costheta_ground_truth_calculate = None
         self.scale_factor_costheta = None
         self.hours_daylight = None
-        self.costheta_predicted = None
-        self.mean_absolute_error = None
+        self.costheta_ = None
+        self.costheta_mean_absolute_error = None
+        self.costheta_mean_squared_error = None
+        self.latitude_error = None
+        self.tilt_error = None
+        self.azimuth_error = None
+        self.cost = None
+        self.costheta_fit_f = None
 
     def run_preprocessing(self):
         self.make_delta()
         self.make_omega()
         self.calculate_latitude()
         self.flag_clear_days()
-        self.estimate_costheta()
+        self.find_fit_costheta()
         self.ground_truth_costheta()
+        self.select_days()
         return
 
     def make_delta(self):
@@ -62,7 +71,7 @@ class GeoEstimator():
         return
 
     def make_omega(self):
-        hour = np.arange(0, 24, 1 / (60/self.data_sampling)) # don't hardcode 1/12!!
+        hour = np.arange(0, 24, self.data_sampling / 60)
         omega_1 = np.deg2rad(15 * (hour - 12))
         self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.data_matrix.shape[1]))
         return
@@ -70,7 +79,7 @@ class GeoEstimator():
     def calculate_latitude(self):
         self.hours_daylight = (np.sum(self.boolean_daylight, axis=0))*self.data_sampling/60
         self.latitude_calculate = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/(np.tan(self.delta[0]))))
-        #self.latitude_calculate = np.tile(latitude_calculate_1, (self.data_matrix.shape[0], 1))
+        self.latitude_estimate = np.median(self.latitude_calculate)
         return
 
     def flag_clear_days(self):
@@ -82,7 +91,13 @@ class GeoEstimator():
             self.clear_index_set = dh.daily_flags.clear
         return
 
-    def estimate_costheta(self):
+    def select_days(self):
+        if self.SCSF_flag is not None:
+            self.slct_curve_fit = self.boolean_daylight
+        else:
+            self.slct_curve_fit = self.boolean_daylight * self.clear_index_set
+
+    def find_fit_costheta(self):
         data = np.max(self.data_matrix, axis=0)
         s1 = cvx.Variable(len(data))
         s2 = cvx.Variable(len(data))
@@ -95,10 +110,21 @@ class GeoEstimator():
         problem = cvx.Problem(objective, constraints)
         problem.solve(solver='MOSEK');
         self.scale_factor_costheta = s1.value
-        self.costheta_estimate = self.data_matrix / np.max(s1.value)
+        self.costheta_fit = self.data_matrix / np.max(s1.value)
         return
 
-    def func(self, X, phi, beta, gamma):
+    def func(self, X, beta, gamma):
+        w = X[0]
+        d = X[1]
+        phi = np.deg2rad(self.latitude_estimate)
+        A = np.sin(d) * np.sin(phi) * np.cos(beta)
+        B = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
+        C = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
+        D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
+        E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
+        return A - B + C + D + E
+
+    def func2(self, X, phi, beta, gamma):
         w = X[0]
         d = X[1]
         A = np.sin(d) * np.sin(phi) * np.cos(beta)
@@ -108,19 +134,10 @@ class GeoEstimator():
         E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
         return A - B + C + D + E
 
-    def jacphi(self, X, phi, beta, gamma):
+    def jacbeta(self, X, beta, gamma):
         w = X[0]
         d = X[1]
-        A = np.sin(d) * np.cos(phi) * np.cos(beta)
-        B = -np.sin(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma)
-        C = -np.cos(d) * np.sin(phi) * np.cos(beta) * np.cos(w)
-        D = np.cos(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
-        E = 0
-        return A - B + C + D + E
-
-    def jacbeta(self, X, phi, beta, gamma):
-        w = X[0]
-        d = X[1]
+        phi = np.deg2rad(np.median(self.latitude_calculate))
         A = -np.sin(d) * np.sin(phi) * np.sin(beta)
         B = np.sin(d) * np.cos(phi) * np.cos(beta) * np.cos(gamma)
         C = -np.cos(d) * np.cos(phi) * np.sin(beta) * np.cos(w)
@@ -128,9 +145,10 @@ class GeoEstimator():
         E = np.cos(d) * np.cos(beta) * np.sin(gamma) * np.sin(w)
         return A - B + C + D + E
 
-    def jacgamma(self, X, phi, beta, gamma):
+    def jacgamma(self, X, beta, gamma):
         w = X[0]
         d = X[1]
+        phi = np.deg2rad(np.median(self.latitude_calculate))
         A = 0
         B = -np.sin(d) * np.cos(phi) * np.sin(beta) * np.sin(gamma)
         C = 0
@@ -138,26 +156,17 @@ class GeoEstimator():
         E = np.cos(d) * np.sin(beta) * np.cos(gamma) * np.sin(w)
         return A - B + C + D + E
 
-    def jac_matrix(self, X, phi, beta, gamma):
-        return np.array([self.jacphi(X, phi, beta, gamma), self.jacbeta(X, phi, beta, gamma), self.jacgamma(X, phi, beta, gamma)]).T
+    def jac_matrix(self, X, beta, gamma):
+        return np.array([self.jacbeta(X, beta, gamma), self.jacgamma(X, beta, gamma)]).T
 
     def run_curve_fit_1(self, bootstrap_iterations=None):
-        if self.SCSF_flag is not None:
-            slct_curve_fit = self.boolean_daylight
-        else:
-            slct_curve_fit = self.boolean_daylight * self.clear_index_set
-        delta_f = self.delta[slct_curve_fit]
-        omega_f = self.omega[slct_curve_fit]
-        costheta_estimated_f = self.costheta_estimate[slct_curve_fit]
+        delta_f = self.delta[self.slct_curve_fit]
+        omega_f = self.omega[self.slct_curve_fit]
+        self.costheta_fit_f = self.costheta_fit[self.slct_curve_fit]
         X = np.array([omega_f, delta_f])
-        popt, pcov = curve_fit(self.func, X, costheta_estimated_f, p0=np.deg2rad([50,10,0]), jac=self.jac_matrix, bounds=([-1.57,0,-3.14],[1.57,1.57,3.14]))
-        self.latitude_estimate, self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
-        return
-
-    def run_curve_fit_2(self):
-        print("Tilt and azimuth not ready yet")
-        #self.latitude_estimate = np.median(self.latitude_calculate[0][[self.clear_index_set]])
-        self.latitude_estimate = np.median(self.latitude_calculate)
+        popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.init_values), bounds=([0,-3.14],[1.57,3.14]))
+        #jac=self.jac_matrix,
+        self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
 
     def ground_truth_costheta(self):
@@ -165,18 +174,28 @@ class GeoEstimator():
         phi_real_2d = np.tile(self.phi_real,(self.data_sampling_daily,self.num_days))
         ground_beta_2d = np.tile(self.ground_beta,(self.data_sampling_daily,self.num_days))
         ground_gamma_2d = np.tile(self.ground_gamma,(self.data_sampling_daily,self.num_days))
-        self.costheta_ground_truth_calculate = self.func(X,phi_real_2d,ground_beta_2d, ground_gamma_2d)
+        self.costheta_ground_truth_calculate = self.func2(X,phi_real_2d, ground_beta_2d, ground_gamma_2d)
         return
 
-    def calculate_errors(self):
+    def estimate_costheta(self):
         X = np.array([self.omega, self.delta])
-        phi_predicted_2d = np.tile(np.deg2rad(self.latitude_estimate),(self.data_sampling_daily,self.num_days))
-        beta_predicted_2d = np.tile(np.deg2rad(self.tilt_estimate),(self.data_sampling_daily,self.num_days))
-        gamma_predicted_2d = np.tile(np.deg2rad(self.azimuth_estimate),(self.data_sampling_daily,self.num_days))
-        self.costheta_predicted = self.func(X,phi_predicted_2d,beta_predicted_2d, gamma_predicted_2d)
-        self.costheta_mean_absolute_error = mean_absolute_error(self.costheta_ground_truth_calculate, self.costheta_predicted)
-        self.costheta_mean_squared_error = mean_squared_error(self.costheta_ground_truth_calculate, self.costheta_predicted)
-        self.latitude_error = np.rad2deg(self.phi_real - np.deg2rad(self.latitude_estimate))
-        self.tilt_error = np.rad2deg(self.ground_beta - np.deg2rad(self.tilt_estimate))
-        self.azimuth_error = np.rad2deg(self.ground_gamma - np.deg2rad(self.azimuth_estimate))
+        phi_estimate_2d = np.tile(np.deg2rad(self.latitude_estimate),(self.data_sampling_daily,self.num_days))
+        beta_estimate_2d = np.tile(np.deg2rad(self.tilt_estimate),(self.data_sampling_daily,self.num_days))
+        gamma_estimate_2d = np.tile(np.deg2rad(self.azimuth_estimate),(self.data_sampling_daily,self.num_days))
+        self.costheta_estimated = self.func2(X,phi_estimate_2d, beta_estimate_2d, gamma_estimate_2d)
         return
+
+    # def calculate_cost(self):
+    #     delta_f = self.delta
+    #     omega_f = self.omega
+    #     costheta_estimated_f = self.costheta_fit
+    #     X = np.array([omega_f, delta_f])
+    #     phi_predicted_2d = np.tile(np.deg2rad(self.latitude_estimate),(self.data_sampling_daily,self.num_days))
+    #     beta_predicted_2d = np.tile(np.deg2rad(self.tilt_estimate),(self.data_sampling_daily,self.num_days))
+    #     gamma_predicted_2d = np.tile(np.deg2rad(self.azimuth_estimate),(self.data_sampling_daily,self.num_days))
+    #     costheta_predicted_f = self.func(X,phi_predicted_2d,beta_predicted_2d, gamma_predicted_2d)
+    #     self.cost = np.sum(np.power((costheta_estimated_f - costheta_predicted_f),2))
+    #     self.latitude_error = np.rad2deg(self.phi_real - np.deg2rad(self.latitude_estimate))
+    #     self.tilt_error = np.rad2deg(self.ground_beta - np.deg2rad(self.tilt_estimate))
+    #     self.azimuth_error = np.rad2deg(self.ground_gamma - np.deg2rad(self.azimuth_estimate))
+    #     return
