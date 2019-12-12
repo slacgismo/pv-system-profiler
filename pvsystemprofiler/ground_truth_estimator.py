@@ -65,11 +65,14 @@ def ground_truth_estimate(filename):
         # Calculate tilt and azimuth
         #tilt = (np.arctan(np.sqrt((x*x)+(y*y))/z))*(180/np.pi)
         tilt = math.degrees(np.arctan2(np.sqrt((x*x)+(y*y))*(180/np.pi), z*(180/np.pi)))
-        #azimuth = 180-math.degrees(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
-        azimuth = -90-math.degrees(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
         #azimuth = 90-math.degrees(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
-        if azimuth < -180:
-            azimuth = 360 + azimuth
+        #azimuth = 90-(np.arctan((y/x))*(180/np.pi))
+        #azimuth = 90-math.degrees(np.arctan((y/x)))
+        azimuth = 90-math.degrees(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
+        if azimuth < -90:
+            azimuth = +180 + azimuth
+        elif azimuth > 90:
+            azimuth = +180 - azimuth
         return tilt,azimuth
     file = filename
     tilt = []
