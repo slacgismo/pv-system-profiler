@@ -5,23 +5,13 @@ from haversine import haversine
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
+import math
 
-def ground_truth_finder(subdir):
-    def readCoordinates(filename):
-
-        file = filename
-
-        #root = parser.fromstring(open(file,'r').read())
-
-        with open(file, 'rb') as f:
-            root = parser.fromstring(f.read())
-            #root_read = f.read()
-
-        # Read coordinates from KML file
-        coordinates = root.Document.Placemark.Polygon.outerBoundaryIs.LinearRing.coordinates
+def ground_truth_estimate(filename):
+    def readCoordinates_onepolygon(child):
+        coordinates = child.Polygon.outerBoundaryIs.LinearRing.coordinates
         s = coordinates.__str__()
         s = s.split()
-
         # Extract coordinates
         j = 0
         for i in s:
@@ -32,7 +22,6 @@ def ground_truth_finder(subdir):
             elif j==3:
                 c3 = np.fromstring(i,dtype=np.float,sep=',')
             j = j+1
-
         return c1,c2,c3
 
     def coordinatesToCartesian(c1,c2,c3):
@@ -73,59 +62,44 @@ def ground_truth_finder(subdir):
         return x,y,z
 
     def tiltAz(x,y,z):
-        # Estimate tilt and azimuth
-        tilt = np.rad2deg(np.arctan2(np.sqrt((x*x)+(y*y))*(180/np.pi), z*(180/np.pi)))
-        azimuth = -90-np.rad2deg(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
+        # Calculate tilt and azimuth
+        #tilt = (np.arctan(np.sqrt((x*x)+(y*y))/z))*(180/np.pi)
+        tilt = math.degrees(np.arctan2(np.sqrt((x*x)+(y*y))*(180/np.pi), z*(180/np.pi)))
+        #azimuth = 180-math.degrees(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
+        azimuth = -90-math.degrees(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
+        #azimuth = 90-math.degrees(np.arctan2(y*(180/np.pi), x*(180/np.pi)))
         if azimuth < -180:
             azimuth = 360 + azimuth
-
         return tilt,azimuth
+    file = filename
+    tilt = []
+    azimuth = []
+    with open(file, 'rb') as f:
+        root = parser.fromstring(f.read())
+    ch = root.Document.Folder.getchildren()
+    for child in ch:
+        try:
+            c1,c2,c3 = readCoordinates_onepolygon(child)
+            #convert coordinates to cartesian
+            p1,p2,p3 = coordinatesToCartesian(c1,c2,c3)
+            #get the normal vector to the plane
+            x,y,z = normalVec(p1,p2,p3)
+            #aa.append(x)
+            #bb.append(y)
+            #cc.append(z)
+            #calculate tilt and azimuth
+            t,a = tiltAz(x,y,z)
+            #gather all tilts and azimuths of same home
+            tilt.append(t)
+            azimuth.append(a)
+        except:
+            pass
+    #calculate mean and standard deviation tilt and azimuth per home
+    ave_tilt = np.mean(tilt)
+    med_tilt = np.median(tilt)
+    std_tilt = np.std(tilt)
+    ave_azimuth = np.mean(azimuth)
+    med_azimuth = np.median(azimuth)
+    std_azimuth = np.std(azimuth)
 
-    dire = os.path.join(os.getcwd(), 'roofs')
-    subdirs = [x[0] for x in os.walk(dire)]
-    subdirs.sort()
-
-    aa = []
-    bb = []
-    cc = []
-    files = os.walk(subdir).__next__()[2]
-    length = len(files)
-    if length>0:
-        files.sort()
-        tilt = np.zeros(length)
-        azimuth = np.zeros(length)
-        i = 0
-        for filen in files: #for each .kml of the same roof
-            if not filen.startswith('.'):
-                os.chdir(subdir)
-
-                #read coordinates
-                c1,c2,c3 = readCoordinates(filen)
-
-                #convert coordinates to cartesian
-                p1,p2,p3 = coordinatesToCartesian(c1,c2,c3)
-
-                #get the normal vector to the plane
-                x,y,z = normalVec(p1,p2,p3)
-                aa.append(x)
-                bb.append(y)
-                cc.append(z)
-                t,a = tiltAz(x,y,z)
-
-                #gather all tilts and azimuths of same home
-                tilt[i] = t
-                azimuth[i] = a
-                i = i + 1
-
-        #calculate mean and standard deviation tilt and azimuth per home
-        ave_tilt = np.mean(tilt)
-        std_tilt = np.std(tilt)
-        med_tilt = np.median(tilt)
-        ave_azimuth = np.mean(azimuth)
-        std_azimuth = np.std(azimuth)
-        med_azimuth = np.median(azimuth)
-        return ave_tilt, med_tilt, ave_azimuth, med_azimuth
-
-# subdir = '/Users/elpiniki/Documents/SLAC/PVInsight/notebooks/tiltazimuth/roofs/TAEAC1006600'
-# a,b,c,d = ground_truth_finder(subdir)
-# print (a,b,c,d)
+    return (ave_tilt, med_tilt, std_tilt, ave_azimuth, med_azimuth, std_azimuth)
