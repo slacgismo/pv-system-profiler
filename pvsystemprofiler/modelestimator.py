@@ -26,6 +26,8 @@ class ModelEstimator():
         self.SCSF_flag = SCSF_flag
         self.summer_flag = summer_flag
         self.init_values = init_values
+        self.fixed_power_thr = fixed_power_thr
+        self.fix_param = fix_param
         self.power_threshold_fit = None
         if self.data_matrix is not None:
             self.num_days = self.data_matrix.shape[1]
@@ -33,7 +35,7 @@ class ModelEstimator():
             self.doy_list = pd.date_range(self.start_date, self.end_date).dayofyear.values[1:-2]
             self.data_sampling = 24 * 60 / self.data_matrix.shape[0]
             self.boolean_daylight_lat = self.data_matrix > 0.001 * np.percentile(self.data_matrix, 95)
-            if self.fixed_power_thr = None:
+            if self.fixed_power_thr == None:
                 self.boolean_daylight = np.empty([self.data_sampling_daily, self.num_days], dtype=bool)
             else:
                 self.boolean_daylight = self.data_matrix > self.fix_param * np.percentile(self.data_matrix, 95)
@@ -68,17 +70,18 @@ class ModelEstimator():
         self.costheta_fit_f = None
 
     def run_preprocessing(self):
+        print("before assignment at run preprocessing", sum(self.boolean_daylight))
         self.make_delta()
         self.make_omega()
         self.calculate_latitude()
         self.flag_clear_days()
         self.find_fit_costheta()
         self.ground_truth_costheta()
-        self.select_days()
-        if self.fixed_power_thr = None:
+        if self.fixed_power_thr == None:
             self.power_threshold_fit = self.find_power_threshold_quantile_seasonality()
             for d in range(0,self.num_days-1):
-                self.boolean_daylight[:,d] = self.data_matrix[:,d] > self.power_threshold_fit[d]
+                self.boolean_daylight[:,d] = self.data_matrix[:,d] > 1 * self.power_threshold_fit[d]
+        self.select_days()
         return
 
     def make_delta(self):
@@ -110,7 +113,6 @@ class ModelEstimator():
     def select_days(self):
         if self.SCSF_flag is not None:
             self.slct_curve_fit = self.boolean_daylight * self.slct_summer
-
         else:
             self.slct_curve_fit = self.boolean_daylight * self.clear_index_set * self.slct_summer
             self.delta_f = self.delta[self.slct_curve_fit]
