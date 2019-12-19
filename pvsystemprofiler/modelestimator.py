@@ -16,7 +16,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 
 class ModelEstimator():
-    def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None, summer_flag=None, init_values = None):
+    def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None, summer_flag=None, init_values = None, fixed_power_thr = None, fix_param = 0.8):
         self.data_matrix = data_matrix
         self.start_date = start_date
         self.end_date = end_date
@@ -26,13 +26,17 @@ class ModelEstimator():
         self.SCSF_flag = SCSF_flag
         self.summer_flag = summer_flag
         self.init_values = init_values
+        self.power_threshold_fit = None
         if self.data_matrix is not None:
             self.num_days = self.data_matrix.shape[1]
             self.data_sampling_daily = self.data_matrix.shape[0]
             self.doy_list = pd.date_range(self.start_date, self.end_date).dayofyear.values[1:-2]
             self.data_sampling = 24 * 60 / self.data_matrix.shape[0]
             self.boolean_daylight_lat = self.data_matrix > 0.001 * np.percentile(self.data_matrix, 95)
-            self.boolean_daylight = self.data_matrix > 0.1 * np.percentile(self.data_matrix, 95)
+            if self.fixed_power_thr = None:
+                self.boolean_daylight = np.empty([self.data_sampling_daily, self.num_days], dtype=bool)
+            else:
+                self.boolean_daylight = self.data_matrix > self.fix_param * np.percentile(self.data_matrix, 95)
         else:
             self.num_days = None
             self.data_sampling = None
@@ -71,6 +75,10 @@ class ModelEstimator():
         self.find_fit_costheta()
         self.ground_truth_costheta()
         self.select_days()
+        if self.fixed_power_thr = None:
+            self.power_threshold_fit = self.find_power_threshold_quantile_seasonality()
+            for d in range(0,self.num_days-1):
+                self.boolean_daylight[:,d] = self.data_matrix[:,d] > self.power_threshold_fit[d]
         return
 
     def make_delta(self):
@@ -102,8 +110,12 @@ class ModelEstimator():
     def select_days(self):
         if self.SCSF_flag is not None:
             self.slct_curve_fit = self.boolean_daylight * self.slct_summer
+
         else:
             self.slct_curve_fit = self.boolean_daylight * self.clear_index_set * self.slct_summer
+            self.delta_f = self.delta[self.slct_curve_fit]
+            self.omega_f = self.omega[self.slct_curve_fit]
+
 
     def find_fit_costheta(self):
         data = np.max(self.data_matrix, axis=0)
@@ -168,10 +180,10 @@ class ModelEstimator():
         return np.array([self.jacbeta(X, beta, gamma), self.jacgamma(X, beta, gamma)]).T
 
     def run_curve_fit_1(self, bootstrap_iterations=None):
-        delta_f = self.delta[self.slct_curve_fit]
-        omega_f = self.omega[self.slct_curve_fit]
+        #delta_f = self.delta[self.slct_curve_fit]
+        #omega_f = self.omega[self.slct_curve_fit]
         self.costheta_fit_f = self.costheta_fit[self.slct_curve_fit]
-        X = np.array([omega_f, delta_f])
+        X = np.array([self.omega_f, self.delta_f])
         popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.init_values), bounds=([0,-3.14],[1.57,3.14]))
         #jac=self.jac_matrix,
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
@@ -192,6 +204,26 @@ class ModelEstimator():
         gamma_estimate_2d = np.tile(np.deg2rad(self.azimuth_estimate),(self.data_sampling_daily,self.num_days))
         self.costheta_estimated = self.func2(X,phi_estimate_2d, beta_estimate_2d, gamma_estimate_2d)
         return
+
+    def find_power_threshold_quantile_seasonality(self):
+        m = cvx.Parameter(nonneg=True, value=10 ** 6)
+        t = cvx.Parameter(nonneg=True, value=0.9)
+        y = np.quantile(self.data_matrix, .9, axis=0)
+        x1 = cvx.Variable(len(y))
+        x2 = cvx.Variable(len(y))
+        if self.data_matrix.shape[1] > 365:
+            constraints = [
+                x2[365:] == x2[:-365], x1 + x2 == y
+            ]
+        else:
+            constraints = []
+        c1 = cvx.sum(1/2 * cvx.abs(x1) + (t - 1/2) * x1)
+        c2 = cvx.sum_squares(cvx.diff(x2,2))
+        objective = cvx.Minimize(c1 + m * c2)
+        prob = cvx.Problem(objective, constraints=constraints)
+        prob.solve(solver='MOSEK')
+        print("run")
+        return x2.value
 
     # def calculate_cost(self):
     #     delta_f = self.delta
