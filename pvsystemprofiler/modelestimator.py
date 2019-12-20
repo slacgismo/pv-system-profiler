@@ -70,7 +70,6 @@ class ModelEstimator():
         self.costheta_fit_f = None
 
     def run_preprocessing(self):
-        print("before assignment at run preprocessing", sum(self.boolean_daylight))
         self.make_delta()
         self.make_omega()
         self.calculate_latitude()
@@ -224,7 +223,6 @@ class ModelEstimator():
         objective = cvx.Minimize(c1 + m * c2)
         prob = cvx.Problem(objective, constraints=constraints)
         prob.solve(solver='MOSEK')
-        print("run")
         return x2.value
 
     # def calculate_cost(self):
