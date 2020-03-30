@@ -1,5 +1,5 @@
-''' System Parameter (Lat, tilt and azimuth) Estimation Module
-This module contains a class for estimating latitude, tilt and azimuth from power signal outputs
+''' System Parameter Estimation Module
+This module contains a class for estimating longitude from power signal outputs
 '''
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -49,6 +49,7 @@ class ModelEstimator():
     def config_solarnoon(self):
         #if self.scsf_flag == "False":
         self.solarnoon = self.solarnoon_approach(self.data_matrix)
+        print(len(self.solarnoon))
         #if self.scsf_flag == "True":
         #    self.solarnoon = self.solarnoon_approach(run_scsf(self.data_matrix))
         return
@@ -184,6 +185,8 @@ class ModelEstimator():
         self.equation_of_time_Haghdadi()
         self.calculate_simple_day_angle_Duffie()
         self.equation_of_time_Duffie()
+        print("at execution:")
+        print(len(self.solarnoon))
         self.lon_value_haghdadi = np.nanmedian((720-self.solarnoon[self.days]*60)/4-(self.eot_hag[self.days]/4)) - 15*self.GMT_offset
         self.lon_value_duffie = np.nanmedian(self.solarnoon[self.days]*60 + self.eot_duffie[self.days] -720 - 4*15*self.GMT_offset)/4
         self.fit_norm1()
