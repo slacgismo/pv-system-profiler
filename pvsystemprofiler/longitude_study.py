@@ -37,10 +37,14 @@ class LongitudeStudy():
         self.lon_value_fit_norm = None
         self.lon_value_fit_norm1 = None
         self.solarnoon = self.solarnoon_function(self.data_matrix)
-        self.days = None
+        if self.day_selection == 'clear days':
+            self.days = self.data_handler.daily_flags.clear
+        if self.day_selection == 'cloudy days':
+            self.days = self.data_handler.daily_flags.cloudy
+        else:
+            self.days = np.ones(self.data_matrix.shape[1], dtype=np.bool)
 
     def run(self):
-        self.config_days()
         self.calculate_simple_day_angle_Haghdadi()
         self.equation_of_time_Haghdadi()
         self.calculate_simple_day_angle_Duffie()
@@ -50,15 +54,6 @@ class LongitudeStudy():
         self.fit_norm1()
         self.fit_norm()
         self.fit_huber()
-        return
-
-    def config_days(self):
-        if self.day_selection == 'all':
-            self.days = np.array([True] * len(self.data_matrix[0]))
-        if self.day_selection == 'clear days':
-            self.days = self.data_handler.daily_flags.clear
-        if self.day_selection == 'cloudy days':
-            self.days =self.data_handler.daily_flags.cloudy
         return
 
     def equation_of_time_Haghdadi(self):
