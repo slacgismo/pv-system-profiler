@@ -17,8 +17,7 @@
 *.xml
 *.png
 *.jpg
-*/result_analysis.py
-/data/*
+*.ipynb
 
 ### Database ###
 *.accdb
@@ -27,6 +26,8 @@
 *.mdb
 *.pdb
 *.sqlite3
+**/Results
+**/notbooks
 
 ### JupyterNotebook ###
 .ipynb_checkpoints
