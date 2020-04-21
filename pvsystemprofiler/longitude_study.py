@@ -12,16 +12,22 @@ the system:
 import numpy as np
 import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
-from solardatatools.clear_day_detection import find_clear_days
 
 class LongitudeStudy():
-    def __init__(self, data_matrix=None, days_approach="cloudy days", solarnoon_approach=avg_sunrise_sunset, GMT_offset=None, day_of_year=None):
-        self.data_matrix = data_matrix
-        self.days_approach = days_approach
-        self.solarnoon_approach = solarnoon_approach
-        self.scsf_flag = None
+    def __init__(self, data_handler, day_selection="cloudy days",
+                 solarnoon_approach='sunrise_sunset_average', GMT_offset=8):
+        self.data_handler = data_handler
+        if not data_handler._ran_pipeline:
+            print('Running DataHandler preprocessing pipeline with defaults')
+            self.data_handler.run_pipeline()
+        self.data_matrix = self.data_handler.filled_data_matrix
+        self.day_selection = day_selection
+        if solarnoon_approach == 'sunrise_sunset_average':
+            self.solarnoon_function = avg_sunrise_sunset
+        elif solarnoon_approach == 'energy_center_of_mass':
+            self.solarnoon_function = energy_com
         self.GMT_offset = GMT_offset
-        self.day_of_year = day_of_year
+        self.day_of_year = self.data_handler.day_index.dayofyear
         self.lon_value_haghdadi = None
         self.lon_value_duffie = None
         self.eot_duffie = None
@@ -34,17 +40,17 @@ class LongitudeStudy():
         self.days = None
 
     def config_solarnoon(self):
-        self.solarnoon = self.solarnoon_approach(self.data_matrix)
+        self.solarnoon = self.solarnoon_function(self.data_matrix)
         # print(len(self.solarnoon))
         return
 
     def config_days(self):
-        if self.days_approach == 'all':
+        if self.day_selection == 'all':
             self.days = np.array([True] * len(self.data_matrix[0]))
-        if self.days_approach == 'clear days':
-            self.days = find_clear_days(self.data_matrix)
-        if self.days_approach == 'cloudy days':
-            self.days = ~find_clear_days(self.data_matrix)
+        if self.day_selection == 'clear days':
+            self.days = self.data_handler.daily_flags.clear
+        if self.day_selection == 'cloudy days':
+            self.days =self.data_handler.daily_flags.cloudy
         return
 
     def equation_of_time_Haghdadi(self):
