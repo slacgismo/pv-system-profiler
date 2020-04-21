@@ -12,7 +12,7 @@ the system:
 import numpy as np
 import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
-from pvsystemprofiler.equation_of_time import haghdadi, duffie
+from pvsystemprofiler.utilities.equation_of_time import haghdadi, duffie
 
 class LongitudeStudy():
     def __init__(self, data_handler, day_selection="cloudy days",
