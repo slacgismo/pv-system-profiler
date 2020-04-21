@@ -1,31 +1,11 @@
 ''' System Parameter Estimation Module
 This module contains a class for estimating longitude from power signal outputs
 '''
-import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy as cvx
 from sys import path
-path.append('..')
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from solardatatools.clear_day_detection import find_clear_days
-from solardatatools import standardize_time_axis, make_2d, plot_2d
-#, load_pvo_data
-#, DataHandlerf
-import boto3
-import sys
-from os.path import expanduser
-home = expanduser('~')
-from scipy.optimize import curve_fit
-#from statistical_clear_sky.algorithm.iterative_fitting import IterativeFitting
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import mean_squared_error
-#sys.path.append('/Users/elpiniki/Documents/github/solar-data-tools/solardatatools')
-from importlib.machinery import SourceFileLoader
-
-#I use this line only if DataHandler is not working
-#dp = SourceFileLoader("solardatatools.data_handler", "/Users/elpiniki/Documents/github/solar-data-tools/solardatatools/data_handler.py").load_module()
-#dp = DataHandler(df, convert_to_ts=True)
 
 class ModelEstimator():
     def __init__(self, data_matrix=None, days_approach="cloudy days", solarnoon_approach=avg_sunrise_sunset, scsf_flag=False, GMT_offset=None, day_of_year=None):
