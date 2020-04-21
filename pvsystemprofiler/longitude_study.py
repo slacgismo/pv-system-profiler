@@ -1,5 +1,13 @@
-''' System Parameter Estimation Module
-This module contains a class for estimating longitude from power signal outputs
+''' Longitude Study Module
+This module contains a class for running a "longitude study". The class accepts
+a time-series data set from a PV system, typically multiple years of sub-daily
+power data. It then runs all possible methods for estimating the longitude of
+the system:
+- Forward calculation, Hagdhadi
+- Forward calculation, Duffie
+- Curve fitting, L1 norm cost function
+- Curve fitting, L2 norm cost function
+- Curve fitting, Huber cost function (https://en.wikipedia.org/wiki/Huber_loss
 '''
 import numpy as np
 import cvxpy as cvx
