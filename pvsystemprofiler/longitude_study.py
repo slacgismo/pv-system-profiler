@@ -6,7 +6,7 @@ import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from solardatatools.clear_day_detection import find_clear_days
 
-class ModelEstimator():
+class LongitudeStudy():
     def __init__(self, data_matrix=None, days_approach="cloudy days", solarnoon_approach=avg_sunrise_sunset, scsf_flag=False, GMT_offset=None, day_of_year=None):
         self.data_matrix = data_matrix
         self.days_approach = days_approach
