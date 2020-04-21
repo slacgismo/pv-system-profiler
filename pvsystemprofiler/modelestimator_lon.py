@@ -27,7 +27,7 @@ class ModelEstimator():
 
     def config_solarnoon(self):
         self.solarnoon = self.solarnoon_approach(self.data_matrix)
-        print(len(self.solarnoon))
+        # print(len(self.solarnoon))
         return
 
     def config_days(self):
@@ -161,8 +161,8 @@ class ModelEstimator():
         self.equation_of_time_Haghdadi()
         self.calculate_simple_day_angle_Duffie()
         self.equation_of_time_Duffie()
-        print("at execution:")
-        print(len(self.solarnoon))
+        # print("at execution:")
+        # print(len(self.solarnoon))
         self.lon_value_haghdadi = np.nanmedian((720-self.solarnoon[self.days]*60)/4-(self.eot_hag[self.days]/4)) - 15*self.GMT_offset
         self.lon_value_duffie = np.nanmedian(self.solarnoon[self.days]*60 + self.eot_duffie[self.days] -720 - 4*15*self.GMT_offset)/4
         self.fit_norm1()
