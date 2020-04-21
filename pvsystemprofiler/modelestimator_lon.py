@@ -3,7 +3,6 @@ This module contains a class for estimating longitude from power signal outputs
 '''
 import numpy as np
 import cvxpy as cvx
-from sys import path
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from solardatatools.clear_day_detection import find_clear_days
 
@@ -27,11 +26,8 @@ class ModelEstimator():
         self.days = None
 
     def config_solarnoon(self):
-        #if self.scsf_flag == "False":
         self.solarnoon = self.solarnoon_approach(self.data_matrix)
         print(len(self.solarnoon))
-        #if self.scsf_flag == "True":
-        #    self.solarnoon = self.solarnoon_approach(run_scsf(self.data_matrix))
         return
 
     def config_days(self):
