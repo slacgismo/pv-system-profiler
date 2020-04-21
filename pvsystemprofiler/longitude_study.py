@@ -36,12 +36,20 @@ class LongitudeStudy():
         self.beta_hag = None
         self.lon_value_fit_norm = None
         self.lon_value_fit_norm1 = None
-        self.solarnoon = None
+        self.solarnoon = self.solarnoon_function(self.data_matrix)
         self.days = None
 
-    def config_solarnoon(self):
-        self.solarnoon = self.solarnoon_function(self.data_matrix)
-        # print(len(self.solarnoon))
+    def run(self):
+        self.config_days()
+        self.calculate_simple_day_angle_Haghdadi()
+        self.equation_of_time_Haghdadi()
+        self.calculate_simple_day_angle_Duffie()
+        self.equation_of_time_Duffie()
+        self.lon_value_haghdadi = np.nanmedian((720-self.solarnoon[self.days]*60)/4-(self.eot_hag[self.days]/4)) - 15*self.GMT_offset
+        self.lon_value_duffie = np.nanmedian(self.solarnoon[self.days]*60 + self.eot_duffie[self.days] -720 - 4*15*self.GMT_offset)/4
+        self.fit_norm1()
+        self.fit_norm()
+        self.fit_huber()
         return
 
     def config_days(self):
@@ -166,20 +174,4 @@ class LongitudeStudy():
         problem = cvx.Problem(objective)
         problem.solve()
         self.lon_value_fit_huber = -lon.value
-        return
-
-    def run(self):
-        self.config_solarnoon()
-        self.config_days()
-        self.calculate_simple_day_angle_Haghdadi()
-        self.equation_of_time_Haghdadi()
-        self.calculate_simple_day_angle_Duffie()
-        self.equation_of_time_Duffie()
-        # print("at execution:")
-        # print(len(self.solarnoon))
-        self.lon_value_haghdadi = np.nanmedian((720-self.solarnoon[self.days]*60)/4-(self.eot_hag[self.days]/4)) - 15*self.GMT_offset
-        self.lon_value_duffie = np.nanmedian(self.solarnoon[self.days]*60 + self.eot_duffie[self.days] -720 - 4*15*self.GMT_offset)/4
-        self.fit_norm1()
-        self.fit_norm()
-        self.fit_huber()
         return
