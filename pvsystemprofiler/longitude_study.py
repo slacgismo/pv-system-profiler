@@ -12,7 +12,7 @@ the system:
 import numpy as np
 import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
-from pvsystemprofiler.utilities.equation_of_time import haghdadi, duffie
+from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 
 class LongitudeStudy():
     def __init__(self, data_handler, day_selection="cloudy days",
@@ -31,8 +31,8 @@ class LongitudeStudy():
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.lon_value_haghdadi = None
         self.lon_value_duffie = None
-        self.eot_duffie = duffie(self.day_of_year)
-        self.eot_hag = haghdadi(self.day_of_year)
+        self.eot_duffie = eot_duffie(self.day_of_year)
+        self.eot_hag = eot_haghdadi(self.day_of_year)
         self.lon_value_fit_norm = None
         self.lon_value_fit_norm1 = None
         self.solarnoon = self.solarnoon_function(self.data_matrix)

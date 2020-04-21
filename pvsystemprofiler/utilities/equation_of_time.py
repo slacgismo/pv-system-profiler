@@ -7,7 +7,7 @@ This module contains two approaches to calculating the EoT: Haghdadi and Duffie
 import numpy as np
 
 
-def haghdadi(day_of_year):
+def eot_haghdadi(day_of_year):
     """
     The equation of time as defined in:
         Haghdadi, Navid, et al. "A method to estimate the location and
@@ -23,7 +23,7 @@ def haghdadi(day_of_year):
     eot = 9.87 * np.sin(2 * b) - 7.53 * np.cos(b) - 1.5 * np.sin(b)
     return eot
 
-def duffie(day_of_year):
+def eot_duffie(day_of_year):
     """
     The equation of time as defined in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
