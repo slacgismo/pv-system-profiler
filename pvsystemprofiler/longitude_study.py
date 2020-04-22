@@ -120,6 +120,7 @@ class LongitudeStudy():
         if self.true_value is not None:
             best_loc = results['residual'].apply(lambda x: np.abs(x)).argmin()
             self.best_result = results.loc[best_loc]
+            self.results = results.loc[np.argsort(np.abs(results['residual']).values)]
         return
 
     def estimate_longitude(self, estimator, eot_calculation):
