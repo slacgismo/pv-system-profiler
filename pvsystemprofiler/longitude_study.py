@@ -54,7 +54,8 @@ class LongitudeStudy():
     def run(self, estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
             solar_noon_method=('rise_set_average', 'energy_com'),
-            day_selection_method=('all', 'clear', 'cloudy')):
+            day_selection_method=('all', 'clear', 'cloudy'),
+            verbose=True):
         """
         Run a study with the given configuration of options. Defaults to
         running all available options. Any kwarg can be constrained by
@@ -79,6 +80,7 @@ class LongitudeStudy():
         :param eot_calculation: 'duffie', 'haghdadi'
         :param solar_noon_method: 'rise_set_average', 'energy_com'
         :param day_selection_method: 'all', 'clear', 'cloudy'
+        :param verbose: show progress bar if True
         :return: None
         """
         results = pd.DataFrame(columns=[
@@ -107,13 +109,15 @@ class LongitudeStudy():
                     self.days = self.data_handler.daily_flags.cloudy
                 for est in estimator:
                     for eot in eot_calculation:
-                        progress(counter, total)
+                        if verbose:
+                            progress(counter, total)
                         lon = self.estimate_longitude(est, eot)
                         results.loc[counter] = [
                             lon, est, eot, sn, ds
                         ]
                         counter += 1
-        progress(counter, total)
+        if verbose:
+            progress(counter, total)
         if self.true_value is not None:
             results['residual'] = self.true_value - results['longitude']
         self.results = results
