@@ -47,6 +47,9 @@ class LongitudeStudy():
         # Attributes that change depending on the configuration
         self.solarnoon = None
         self.days = None
+        # Results
+        self.results = None
+        self.best_result = None
 
     def run(self, estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
@@ -67,11 +70,16 @@ class LongitudeStudy():
             ('fit_l2',)
             'fit_l2'
 
+        This method sets the `results` attribute to be a pandas data frame
+        containing the results of the study. If a ground truth value was
+        provided to the class constructor, the best result will be assigned
+        to the `best_result` attribute.
+
         :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'
         :param eot_calculation: 'duffie', 'haghdadi'
         :param solar_noon_method: 'rise_set_average', 'energy_com'
         :param day_selection_method: 'all', 'clear', 'cloudy'
-        :return: pandas data frame containing the results of the study
+        :return: None
         """
         results = pd.DataFrame(columns=[
             'longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
@@ -108,7 +116,11 @@ class LongitudeStudy():
         progress(counter, total)
         if self.true_value is not None:
             results['residual'] = self.true_value - results['longitude']
-        return results
+        self.results = results
+        if self.true_value is not None:
+            best_loc = results['residual'].apply(lambda x: np.abs(x)).argmin()
+            self.best_result = results.loc[best_loc]
+        return
 
     def estimate_longitude(self, estimator, eot_calculation):
         if estimator == 'calculated':
