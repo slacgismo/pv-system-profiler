@@ -18,35 +18,21 @@ from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
 
 class LongitudeStudy():
-    def __init__(self, data_handler, day_selection="cloudy days",
-                 solarnoon_approach='sunrise_sunset_average', GMT_offset=8,
-                 true_value=None):
+    def __init__(self, data_handler, GMT_offset=8, true_value=None):
         self.data_handler = data_handler
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.data_matrix = self.data_handler.filled_data_matrix
-        self.day_selection = day_selection
-        if solarnoon_approach == 'sunrise_sunset_average':
-            self.solarnoon_function = avg_sunrise_sunset
-        elif solarnoon_approach == 'energy_center_of_mass':
-            self.solarnoon_function = energy_com
+        self.true_value = true_value
+        # Attributes used for all calculations
         self.gmt_offset = GMT_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
-        self.lon_value_haghdadi = None
-        self.lon_value_duffie = None
         self.eot_duffie = eot_duffie(self.day_of_year)
         self.eot_hag = eot_haghdadi(self.day_of_year)
-        self.lon_value_fit_norm = None
-        self.lon_value_fit_norm1 = None
-        self.solarnoon = self.solarnoon_function(self.data_matrix)
-        if self.day_selection == 'clear days':
-            self.days = self.data_handler.daily_flags.clear
-        if self.day_selection == 'cloudy days':
-            self.days = self.data_handler.daily_flags.cloudy
-        else:
-            self.days = np.ones(self.data_matrix.shape[1], dtype=np.bool)
-        self.true_value = true_value
+        # Attributes that change depending on the configuration
+        self.solarnoon = None
+        self.days = None
 
     def run(self, estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
