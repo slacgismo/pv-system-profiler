@@ -26,8 +26,10 @@ from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
 
 class LongitudeStudy():
-    def __init__(self, data_handler, GMT_offset=8, true_value=None):
+    def __init__(self, data_handler, gmt_offset=-8, true_value=None):
         """
+        Default value for GMT offset is -8 which corresponds to Pacific
+        Standard Time, or systems located in California.
 
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param GMT_offset: The offset in hours between the local timezone and GMT/UTC
@@ -40,7 +42,7 @@ class LongitudeStudy():
         self.data_matrix = self.data_handler.filled_data_matrix
         self.true_value = true_value
         # Attributes used for all calculations
-        self.gmt_offset = GMT_offset
+        self.gmt_offset = gmt_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.eot_duffie = eot_duffie(self.day_of_year)
         self.eot_hag = eot_haghdadi(self.day_of_year)
