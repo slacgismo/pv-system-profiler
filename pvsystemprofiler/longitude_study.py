@@ -12,6 +12,7 @@ the system:
 import numpy as np
 import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
+from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 
 class LongitudeStudy():
@@ -27,7 +28,7 @@ class LongitudeStudy():
             self.solarnoon_function = avg_sunrise_sunset
         elif solarnoon_approach == 'energy_center_of_mass':
             self.solarnoon_function = energy_com
-        self.GMT_offset = GMT_offset
+        self.gmt_offset = GMT_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.lon_value_haghdadi = None
         self.lon_value_duffie = None
@@ -44,16 +45,30 @@ class LongitudeStudy():
             self.days = np.ones(self.data_matrix.shape[1], dtype=np.bool)
 
     def run(self):
-        self.lon_value_haghdadi = np.nanmedian((720-self.solarnoon[self.days]*60)/4-(self.eot_hag[self.days]/4)) - 15*self.GMT_offset
-        self.lon_value_duffie = np.nanmedian(self.solarnoon[self.days]*60 + self.eot_duffie[self.days] -720 - 4*15*self.GMT_offset)/4
+        self.calculate_longitude_haghdadi()
+        self.calculate_longitude_duffie()
         self.fit_norm1()
         self.fit_norm()
         self.fit_huber()
         return
 
+    def calculate_longitude_haghdadi(self):
+        sn = 60 * self.solarnoon[self.days]     # convert hours to minutes
+        eot = self.eot_hag[self.days]
+        gmt = self.gmt_offset
+        estimates = calc_lon(sn, eot, gmt)
+        self.lon_value_haghdadi = np.median(estimates)
+
+    def calculate_longitude_duffie(self):
+        sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
+        eot = self.eot_duffie[self.days]
+        gmt = self.gmt_offset
+        estimates = calc_lon(sn, eot, gmt)
+        self.lon_value_duffie = np.median(estimates)
+
     def fit_norm1(self):
         lon = cvx.Variable()
-        sn_m = 4*(15*self.GMT_offset - lon)-self.eot_duffie+720
+        sn_m = 4*(15*self.gmt_offset - lon)-self.eot_duffie+720
         sn_h = sn_m / 60
         cost = cvx.norm1(sn_h[self.days] - self.solarnoon[self.days])
         objective = cvx.Minimize(cost)
@@ -64,7 +79,7 @@ class LongitudeStudy():
 
     def fit_norm(self):
         lon = cvx.Variable()
-        sn_m = 4*(15*self.GMT_offset - lon)-self.eot_duffie+720
+        sn_m = 4*(15*self.gmt_offset - lon)-self.eot_duffie+720
         sn_h = sn_m / 60
         cost = cvx.norm(sn_h[self.days] - self.solarnoon[self.days])
         objective = cvx.Minimize(cost)
@@ -75,7 +90,7 @@ class LongitudeStudy():
 
     def fit_huber(self):
         lon = cvx.Variable()
-        sn_m = 4*(15*self.GMT_offset - lon)-self.eot_duffie+720
+        sn_m = 4*(15*self.gmt_offset - lon)-self.eot_duffie+720
         sn_h = sn_m / 60
         cost = cvx.sum(cvx.huber(sn_h[self.days] - self.solarnoon[self.days]))
         objective = cvx.Minimize(cost)
