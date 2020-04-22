@@ -1,13 +1,21 @@
 ''' Longitude Study Module
-This module contains a class for running a "longitude study". The class accepts
-a time-series data set from a PV system, typically multiple years of sub-daily
-power data. It then runs all possible methods for estimating the longitude of
-the system:
-- Forward calculation, Hagdhadi
-- Forward calculation, Duffie
-- Curve fitting, L1 norm cost function
-- Curve fitting, L2 norm cost function
-- Curve fitting, Huber cost function (https://en.wikipedia.org/wiki/Huber_loss
+This module contains a class for conducting a study of different approaches
+to estimating longitude from solar power data. This code accepts solar power
+data in the form of a `solar-data-tools` `DataHandler` object, which is used
+to standardize and pre-process the data. The provided class will then estimate
+the longitude of the site that produced the data, using configurations that can
+be set in the `run` method. The basic concept is to estimate solar noon for
+each day based on the measured data, and then use the relationship between
+standard time, solar time, and the equation of time to estimate the longitude.
+The following configurations can be run:
+
+ - Equation of time (EoT) estimator: Duffie or Haghdadi
+ - Estimation algorithm: calculation from EoT definition, curve fitting with
+   L2 loss, curve fitting with L1 loss, or curve fitting with Huber loss
+ - Method for solar noon estimation: average of sunrise and sunset or the
+   energy center of mass
+ - Method for day selection: all days, sunny/clear days, cloudy days
+
 '''
 import numpy as np
 import pandas as pd
@@ -19,6 +27,12 @@ from pvsystemprofiler.utilities.progress import progress
 
 class LongitudeStudy():
     def __init__(self, data_handler, GMT_offset=8, true_value=None):
+        """
+
+        :param data_handler: `DataHandler` class instance loaded with a solar power data set
+        :param GMT_offset: The offset in hours between the local timezone and GMT/UTC
+        :param true_value: (optional) the ground truth value for the system's longitude
+        """
         self.data_handler = data_handler
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
@@ -38,6 +52,27 @@ class LongitudeStudy():
             eot_calculation=('duffie', 'haghdadi'),
             solar_noon_method=('rise_set_average', 'energy_com'),
             day_selection_method=('all', 'clear', 'cloudy')):
+        """
+        Run a study with the given configuration of options. Defaults to running
+        all available options. Any kwarg can be constrained by providing a subset
+        of acceptable keys. For example the default keys for the estimator kwarg
+        are
+
+            ('calculated', 'fit_l1', 'fit_l2', 'fit_huber')
+
+        Additionally, any of the following would be acceptable for this kwarg:
+
+            ('calculated', 'fit_l1', 'fit_l2', 'fit_huber')
+            ('fit_l2', 'fit_huber')
+            ('fit_l2',)
+            'fit_l2'
+
+        :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'
+        :param eot_calculation: 'duffie', 'haghdadi'
+        :param solar_noon_method: 'rise_set_average', 'energy_com'
+        :param day_selection_method: 'all', 'clear', 'cloudy'
+        :return: pandas data frame containing the results of the study
+        """
         results = pd.DataFrame(columns=[
             'longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
             'day_selection_method'
