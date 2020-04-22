@@ -19,7 +19,8 @@ from pvsystemprofiler.utilities.progress import progress
 
 class LongitudeStudy():
     def __init__(self, data_handler, day_selection="cloudy days",
-                 solarnoon_approach='sunrise_sunset_average', GMT_offset=8):
+                 solarnoon_approach='sunrise_sunset_average', GMT_offset=8,
+                 true_value=None):
         self.data_handler = data_handler
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
@@ -45,6 +46,7 @@ class LongitudeStudy():
             self.days = self.data_handler.daily_flags.cloudy
         else:
             self.days = np.ones(self.data_matrix.shape[1], dtype=np.bool)
+        self.true_value = true_value
 
     def run(self, estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
@@ -86,6 +88,8 @@ class LongitudeStudy():
                         ]
                         counter += 1
         progress(counter, total)
+        if self.true_value is not None:
+            results['residual'] = self.true_value - results['longitude']
         return results
 
     def estimate_longitude(self, estimator, eot_calculation):
