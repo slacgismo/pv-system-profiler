@@ -53,10 +53,10 @@ class LongitudeStudy():
             solar_noon_method=('rise_set_average', 'energy_com'),
             day_selection_method=('all', 'clear', 'cloudy')):
         """
-        Run a study with the given configuration of options. Defaults to running
-        all available options. Any kwarg can be constrained by providing a subset
-        of acceptable keys. For example the default keys for the estimator kwarg
-        are
+        Run a study with the given configuration of options. Defaults to
+        running all available options. Any kwarg can be constrained by
+        providing a subset of acceptable keys. For example the default keys
+        for the estimator kwarg are:
 
             ('calculated', 'fit_l1', 'fit_l2', 'fit_huber')
 
@@ -84,9 +84,6 @@ class LongitudeStudy():
         total = (len(estimator) * len(eot_calculation) * len(solar_noon_method)
                  * len(day_selection_method))
         counter = 0
-        for est in estimator:
-            for eot in eot_calculation:
-                pass
         for sn in solar_noon_method:
             if sn == 'rise_set_average':
                 self.solarnoon = avg_sunrise_sunset(self.data_matrix)
