@@ -10,6 +10,7 @@ the system:
 - Curve fitting, Huber cost function (https://en.wikipedia.org/wiki/Huber_loss
 '''
 import numpy as np
+import pandas as pd
 import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
@@ -45,28 +46,30 @@ class LongitudeStudy():
             self.days = np.ones(self.data_matrix.shape[1], dtype=np.bool)
 
     def run(self):
-        self.calculate_longitude_haghdadi()
-        self.calculate_longitude_duffie()
-        self.fit_norm1()
-        self.fit_norm()
-        self.fit_huber()
-        return
+        results = pd.DataFrame(columns=['calculated', 'fit_l1', 'fit_l2',
+                                        'fit_huber'])
+        keys = ['duffie', 'haghdadi']
+        for key in keys:
+            results.loc[key] = [
+                self.calculate_longitude(eot_ref=key),
+                self.fit_longitude(loss='l1', eot_ref=key),
+                self.fit_longitude(loss='l2', eot_ref=key),
+                self.fit_longitude(loss='huber', eot_ref=key),
+            ]
+        return results
 
-    def calculate_longitude_haghdadi(self):
-        sn = 60 * self.solarnoon[self.days]     # convert hours to minutes
-        eot = self.eot_hag[self.days]
-        gmt = self.gmt_offset
-        estimates = calc_lon(sn, eot, gmt)
-        self.lon_value_haghdadi = np.median(estimates)
-
-    def calculate_longitude_duffie(self):
+    def calculate_longitude(self, eot_ref='duffie'):
         sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
-        eot = self.eot_duffie[self.days]
+        if eot_ref in ('duffie', 'd', 'duf'):
+            eot = self.eot_duffie
+        elif eot_ref in ('haghdadi', 'h', 'hag'):
+            eot = self.eot_hag
         gmt = self.gmt_offset
         estimates = calc_lon(sn, eot, gmt)
-        self.lon_value_duffie = np.median(estimates)
+        return np.median(estimates)
 
-    def fit_longitude(self, loss='l2'):
+
+    def fit_longitude(self, loss='l2', eot_ref='duffie'):
         lon = cvx.Variable()
         if loss == 'l2':
             cost_func = cvx.norm
@@ -74,7 +77,11 @@ class LongitudeStudy():
             cost_func = cvx.norm1
         elif loss == 'huber':
             cost_func = lambda x: cvx.sum(cvx.huber(x))
-        sn_m = 720 - self.eot_duffie + 4 * (15 * self.gmt_offset - lon)
+        if eot_ref in ('duffie', 'd', 'duf'):
+            eot = self.eot_duffie
+        elif eot_ref in ('haghdadi', 'h', 'hag'):
+            eot = self.eot_hag
+        sn_m = 720 - eot + 4 * (15 * self.gmt_offset - lon)
         sn_h = sn_m / 60
         cost = cost_func(sn_h[self.days] - self.solarnoon[self.days])
         objective = cvx.Minimize(cost)
@@ -82,35 +89,3 @@ class LongitudeStudy():
         problem.solve()
         return lon.value.item()
 
-    def fit_norm1(self):
-        lon = cvx.Variable()
-        sn_m = 4*(15*self.gmt_offset - lon)-self.eot_duffie+720
-        sn_h = sn_m / 60
-        cost = cvx.norm1(sn_h[self.days] - self.solarnoon[self.days])
-        objective = cvx.Minimize(cost)
-        problem = cvx.Problem(objective)
-        problem.solve()
-        self.lon_value_fit_norm1 = -lon.value
-        return
-
-    def fit_norm(self):
-        lon = cvx.Variable()
-        sn_m = 4*(15*self.gmt_offset - lon)-self.eot_duffie+720
-        sn_h = sn_m / 60
-        cost = cvx.norm(sn_h[self.days] - self.solarnoon[self.days])
-        objective = cvx.Minimize(cost)
-        problem = cvx.Problem(objective)
-        problem.solve()
-        self.lon_value_fit_norm = -lon.value
-        return
-
-    def fit_huber(self):
-        lon = cvx.Variable()
-        sn_m = 4*(15*self.gmt_offset - lon)-self.eot_duffie+720
-        sn_h = sn_m / 60
-        cost = cvx.sum(cvx.huber(sn_h[self.days] - self.solarnoon[self.days]))
-        objective = cvx.Minimize(cost)
-        problem = cvx.Problem(objective)
-        problem.solve()
-        self.lon_value_fit_huber = -lon.value
-        return
