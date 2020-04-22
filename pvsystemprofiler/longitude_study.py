@@ -66,6 +66,22 @@ class LongitudeStudy():
         estimates = calc_lon(sn, eot, gmt)
         self.lon_value_duffie = np.median(estimates)
 
+    def fit_longitude(self, loss='l2'):
+        lon = cvx.Variable()
+        if loss == 'l2':
+            cost_func = cvx.norm
+        elif loss == 'l1':
+            cost_func = cvx.norm1
+        elif loss == 'huber':
+            cost_func = lambda x: cvx.sum(cvx.huber(x))
+        sn_m = 720 - self.eot_duffie + 4 * (15 * self.gmt_offset - lon)
+        sn_h = sn_m / 60
+        cost = cost_func(sn_h[self.days] - self.solarnoon[self.days])
+        objective = cvx.Minimize(cost)
+        problem = cvx.Problem(objective)
+        problem.solve()
+        return lon.value.item()
+
     def fit_norm1(self):
         lon = cvx.Variable()
         sn_m = 4*(15*self.gmt_offset - lon)-self.eot_duffie+720
