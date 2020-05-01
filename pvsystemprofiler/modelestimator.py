@@ -5,21 +5,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import cvxpy as cvx
-from solardatatools import standardize_time_axis, make_2d, plot_2d, load_pvo_data, DataHandler
+from solardatatools import standardize_time_axis, make_2d, plot_2d, load_pvo_data
+from solardatatools import DataHandler
 import boto3
 import sys
 from os.path import expanduser
 home = expanduser('~')
 from scipy.optimize import curve_fit
-from statistical_clear_sky.algorithm.iterative_fitting import IterativeFitting
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
+from importlib.machinery import SourceFileLoader
 
 class ModelEstimator():
-    def __init__(self, data_matrix=None, start_date=None, end_date=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None, summer_flag=None, init_values = None, fixed_power_thr = None, fix_param = 0.8):
+    def __init__(self, data_matrix=None, doy_list=None, phi_real=None, ground_beta=None, ground_gamma=None, SCSF_flag=None, summer_flag=None, init_values = None, fixed_power_thr = None, fix_param = 0.8):
         self.data_matrix = data_matrix
-        self.start_date = start_date
-        self.end_date = end_date
+        self.doy_list = doy_list
+        #self.end_date = end_date
         self.phi_real = phi_real
         self.ground_beta = ground_beta
         self.ground_gamma = ground_gamma
@@ -32,7 +33,7 @@ class ModelEstimator():
         if self.data_matrix is not None:
             self.num_days = self.data_matrix.shape[1]
             self.data_sampling_daily = self.data_matrix.shape[0]
-            self.doy_list = pd.date_range(self.start_date, self.end_date).dayofyear.values[1:-2]
+            #self.doy_list = pd.date_range(self.start_date, self.end_date).dayofyear.values[1:-2]
             self.data_sampling = 24 * 60 / self.data_matrix.shape[0]
             self.boolean_daylight_lat = self.data_matrix > 0.001 * np.percentile(self.data_matrix, 95)
             if self.fixed_power_thr == None:
@@ -46,7 +47,7 @@ class ModelEstimator():
             #self.slct_summer = (self.doy_list>152) & (self.doy_list<245) #summer only
             #self.slct_summer = (self.doy_list>60) & (self.doy_list<335) #no winter
             #self.slct_summer = (self.doy_list>60) & (self.doy_list<153) #spring only
-            self.slct_summer = (self.doy_list>100) & (self.doy_list<180) #manual set only
+            self.slct_summer = (self.doy_list>85) & (self.doy_list<167) #manual set only
         else:
             self.slct_summer = np.ones(self.doy_list.shape, dtype=bool)
         self.clear_index_set = None
@@ -76,6 +77,8 @@ class ModelEstimator():
         self.flag_clear_days()
         self.find_fit_costheta()
         self.ground_truth_costheta()
+        dh = DataHandler(raw_data_matrix=self.data_matrix)
+        dh.run_pipeline(verbose=False)
         if self.fixed_power_thr == None:
             self.power_threshold_fit = self.find_power_threshold_quantile_seasonality()
             for d in range(0,self.num_days-1):
@@ -181,12 +184,9 @@ class ModelEstimator():
         return np.array([self.jacbeta(X, beta, gamma), self.jacgamma(X, beta, gamma)]).T
 
     def run_curve_fit_1(self, bootstrap_iterations=None):
-        #delta_f = self.delta[self.slct_curve_fit]
-        #omega_f = self.omega[self.slct_curve_fit]
         self.costheta_fit_f = self.costheta_fit[self.slct_curve_fit]
         X = np.array([self.omega_f, self.delta_f])
         popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.init_values), bounds=([0,-3.14],[1.57,3.14]))
-        #jac=self.jac_matrix,
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
 
