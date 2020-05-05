@@ -4,45 +4,27 @@
 import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.progress import progress
+from solardatatools.daytime import find_daytime
 
 class LatitudeStudy():
-    def __init__(self, data_handler, summer_flag=None, fixed_power_thr=None,
-                 fix_param=0.8, true_value=None):
-
+    def __init__(self, data_handler, daytime_threshold=0.01, true_value=None):
         self.data_handler = data_handler
+        self.daytime_threshold = daytime_threshold
+        self.true_value = true_value
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.data_matrix = self.data_handler.filled_data_matrix
-        self.true_value = true_value
+        self.raw_data_matrix = self.data_handler.raw_data_matrix
         self.day_of_year = self.data_handler.day_index.dayofyear
-        self.summer_flag = summer_flag
-        self.fixed_power_thr = fixed_power_thr  #?
-        self.fix_param = fix_param # ?
-        #self.power_threshold_fit = None  # ?
-
         self.num_days = self.data_handler.num_days
-        self.daily_meas = self.data_handler.filled_data_matrix.shape[0] #daily measurements
+        self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
-        self.day_of_year = self.data_handler.day_index.dayofyear
-        self.boolean_daylight_lat = self.data_handler.filled_data_matrix \
-                                    > 0.001 * np.percentile(self.data_matrix, 95)
-        #self.boolean_daylight_lat = data_handler.boolean_masks.daytime
-
-        if self.fixed_power_thr == None:
-            self.boolean_daylight = np.empty([self.daily_meas, self.num_days], dtype=bool)
-        else:
-            self.boolean_daylight = self.data_matrix > self.fix_param * np.percentile(self.data_matrix, 95)
-
-        if self.summer_flag == True:
-            # self.slct_summer = (self.doy_list>152) & (self.doy_list<245) #summer only
-            # self.slct_summer = (self.doy_list>60) & (self.doy_list<335) #no winter
-            # self.slct_summer = (self.doy_list>60) & (self.doy_list<153) #spring only
-            self.slct_summer = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
-        else:
-            self.slct_summer = np.ones(self.day_of_year.shape, dtype=bool)
-
-        self.latitude_calculate = None
+        self.boolean_daytime = find_daytime(self.data_matrix,
+                                            self.daytime_threshold)
+        #self.boolean_daytime = find_daytime(self.raw_data_matrix,
+                                            # self.daytime_threshold)
+        self.discrete_latitude = None
         self.latitude_estimate = None
         self.hours_daylight = None
         self.delta = None
@@ -55,12 +37,11 @@ class LatitudeStudy():
         self.make_delta()
         self.estimate_latitude()
 
-
     def estimate_latitude(self):
-        self.hours_daylight = (np.sum(self.boolean_daylight_lat, axis=0))*self.data_sampling/60
-        self.latitude_calculate = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/
+        self.hours_daylight = (np.sum(self.boolean_daytime, axis=0))*self.data_sampling/60
+        self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/
                                                        (np.tan(self.delta[0]))))
-        self.latitude_estimate = np.median(self.latitude_calculate)
+        self.latitude_estimate = np.median(self.discrete_latitude)
         return
 
     def make_delta(self):
