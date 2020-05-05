@@ -10,7 +10,7 @@ from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, gmt_offset=-8, summer_flag=False, scsf_flag=None,
+    def __init__(self, data_handler, gmt_offset=-8, summer_flag=False,
                  init_values=None, daytime_threshold=None, tilt_true_value=None,
                  azim_true_value=None):
         self.data_handler = data_handler
@@ -24,7 +24,6 @@ class TiltAzimuthStudy():
         self.daytime_threshold = daytime_threshold
         self.ground_beta = tilt_true_value
         self.ground_gamma = azim_true_value
-        self.scsf_flag = scsf_flag
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.solarnoon = None
         self.days = None
@@ -36,7 +35,7 @@ class TiltAzimuthStudy():
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
         self.day_of_year = self.data_handler.day_index.dayofyear
-
+        self.clear_index_set = self.data_handler.daily_flags.clear
 
         if self.daytime_threshold is None:
             self.boolean_daylight = np.empty([self.daily_meas, self.num_days], dtype=bool)
@@ -56,7 +55,6 @@ class TiltAzimuthStudy():
         self.latitude_calculate = None
         self.latitude_estimate = None
         self.hours_daylight = None
-        self.clear_index_set = None
         self.delta = None
         self.omega = None
         self.costheta_fit = None
@@ -78,10 +76,8 @@ class TiltAzimuthStudy():
 
     def run(self):
         self.make_delta()
-        # self.calculate_latitude()
-        # self.make_omega()
-        # self.flag_clear_days()
-        # self.find_fit_costheta()
+        self.make_omega()
+      # self.find_fit_costheta()
         # self.ground_truth_costheta()
         # dh = DataHandler(raw_data_matrix=self.data_matrix)
         # dh.run_pipeline(verbose=False)
@@ -95,4 +91,10 @@ class TiltAzimuthStudy():
     def make_delta(self):
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
         self.delta = np.tile(delta_1, (self.data_matrix.shape[0], 1))
+        return
+
+    def make_omega(self):
+        hour = np.arange(0, 24, self.data_sampling / 60)
+        omega_1 = np.deg2rad(15 * (hour - 12))
+        self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.data_matrix.shape[1]))
         return
