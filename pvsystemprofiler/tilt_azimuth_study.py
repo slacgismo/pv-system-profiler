@@ -11,7 +11,7 @@ from pvsystemprofiler.utilities.progress import progress
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
     def __init__(self, data_handler, gmt_offset=-8, summer_flag=False,
-                 init_values=None, daytime_threshold=None, tilt_true_value=None,
+                 init_values=None, daytime_threshold=None, lat_true_value=None, tilt_true_value=None,
                  azim_true_value=None):
         self.data_handler = data_handler
         if not data_handler._ran_pipeline:
@@ -22,6 +22,7 @@ class TiltAzimuthStudy():
         self.summer_flag = summer_flag
         self.init_values = init_values
         self.daytime_threshold = daytime_threshold
+        self.phi_real = lat_true_value
         self.ground_beta = tilt_true_value
         self.ground_gamma = azim_true_value
         self.day_of_year = self.data_handler.day_index.dayofyear
@@ -77,8 +78,8 @@ class TiltAzimuthStudy():
     def run(self):
         self.make_delta()
         self.make_omega()
-      # self.find_fit_costheta()
-        # self.ground_truth_costheta()
+        self.find_fit_costheta()
+        self.ground_truth_costheta()
         # dh = DataHandler(raw_data_matrix=self.data_matrix)
         # dh.run_pipeline(verbose=False)
         # if self.fixed_power_thr == None:
@@ -98,3 +99,41 @@ class TiltAzimuthStudy():
         omega_1 = np.deg2rad(15 * (hour - 12))
         self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.data_matrix.shape[1]))
         return
+
+    def find_fit_costheta(self):
+        data = np.max(self.data_matrix, axis=0)
+        s1 = cvx.Variable(len(data))
+        s2 = cvx.Variable(len(data))
+        cost = 1e1 * cvx.norm(cvx.diff(s1, k=2), p=2) + cvx.norm(s2[self.clear_index_set])
+        objective = cvx.Minimize(cost)
+        constraints = [
+            data == s1 + s2,
+            s1[365:] == s1[:-365]
+        ]
+        problem = cvx.Problem(objective, constraints)
+        problem.solve(solver='MOSEK');
+        self.scale_factor_costheta = s1.value
+        self.costheta_fit = self.data_matrix / np.max(s1.value)
+        return
+
+    def ground_truth_costheta(self):
+        X = np.array([self.omega, self.delta])
+        phi_real_2d = np.tile(self.phi_real,
+                              (self.daily_meas, self.num_days))
+        ground_beta_2d = np.tile(self.ground_beta,
+                                 (self.daily_meas, self.num_days))
+        ground_gamma_2d = np.tile(self.ground_gamma,
+                                  (self.daily_meas, self.num_days))
+        self.costheta_ground_truth_calculate = \
+            self.func2(X, phi_real_2d, ground_beta_2d, ground_gamma_2d)
+        return
+
+    def func2(self, X, phi, beta, gamma):
+        w = X[0]
+        d = X[1]
+        A = np.sin(d) * np.sin(phi) * np.cos(beta)
+        B = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
+        C = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
+        D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
+        E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
+        return A - B + C + D + E
