@@ -28,6 +28,7 @@ class TiltAzimuthStudy():
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.solarnoon = None
         self.days = None
+        self.scsf = data_handler.scsf
 
         self.init_values = init_values
         self.power_threshold_fit = None
@@ -39,9 +40,10 @@ class TiltAzimuthStudy():
         self.clear_index_set = self.data_handler.daily_flags.clear
 
         if self.daytime_threshold is None:
-            self.boolean_daylight = np.empty([self.daily_meas, self.num_days], dtype=bool)
+            self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
         else:
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
+
 
         if self.summer_flag:
             # self.slct_summer = (self.day_of_year>152) & (self.day_of_year<245) #summer only
@@ -80,13 +82,11 @@ class TiltAzimuthStudy():
         self.make_omega()
         self.find_fit_costheta()
         self.ground_truth_costheta()
-        # dh = DataHandler(raw_data_matrix=self.data_matrix)
-        # dh.run_pipeline(verbose=False)
-        # if self.fixed_power_thr == None:
-        #     self.power_threshold_fit = self.find_power_threshold_quantile_seasonality()
-        #     for d in range(0, self.num_days - 1):
-        #         self.boolean_daylight[:, d] = self.data_matrix[:, d] > 1 * self.power_threshold_fit[d]
-        # self.select_days()
+        if self.daytime_threshold is None:
+           self.power_threshold_fit = self.find_power_threshold_quantile_seasonality()
+           for d in range(0, self.num_days - 1):
+               self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.power_threshold_fit[d]
+        self.select_days()
         return
 
     def make_delta(self):
@@ -137,3 +137,30 @@ class TiltAzimuthStudy():
         D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
         E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
         return A - B + C + D + E
+
+    def find_power_threshold_quantile_seasonality(self):
+        m = cvx.Parameter(nonneg=True, value=10 ** 6)
+        t = cvx.Parameter(nonneg=True, value=0.9)
+        y = np.quantile(self.data_matrix, .9, axis=0)
+        x1 = cvx.Variable(len(y))
+        x2 = cvx.Variable(len(y))
+        if self.data_matrix.shape[1] > 365:
+            constraints = [
+                x2[365:] == x2[:-365], x1 + x2 == y
+            ]
+        else:
+            constraints = []
+        c1 = cvx.sum(1 / 2 * cvx.abs(x1) + (t - 1 / 2) * x1)
+        c2 = cvx.sum_squares(cvx.diff(x2, 2))
+        objective = cvx.Minimize(c1 + m * c2)
+        prob = cvx.Problem(objective, constraints=constraints)
+        prob.solve(solver='MOSEK')
+        return x2.value
+
+    def select_days(self):
+        if self.scsf:
+            self.slct_curve_fit = self.boolean_daytime * self.slct_summer
+        else:
+            self.slct_curve_fit = self.boolean_daytime * self.clear_index_set * self.slct_summer
+            self.delta_f = self.delta[self.slct_curve_fit]
+            self.omega_f = self.omega[self.slct_curve_fit]
