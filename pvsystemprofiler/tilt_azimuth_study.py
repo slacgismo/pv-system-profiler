@@ -6,7 +6,7 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, summer_flag=False,init_values=None,
+    def __init__(self, data_handler, summer_flag=False, init_values=None,
                  daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None,
                  azim_true_value=None):
@@ -52,16 +52,19 @@ class TiltAzimuthStudy():
         self.costheta_ground_truth_calculate = None
         self.costheta_fit = None
         self.costheta_fit_f = None
+        self.slct_curve_fit = None
+        self.delta_f = None
+        self.omega_f = None
 
-    def run(self):
+def run(self):
         self.make_delta()
         self.make_omega()
         self.find_fit_costheta()
         self.ground_truth_costheta()
         if self.daytime_threshold is None:
-           self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
-           for d in range(0, self.num_days - 1):
-               self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
+            self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
+            for d in range(0, self.num_days - 1):
+                self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
         self.select_days()
         self.run_curve_fit_1()
         self.estimate_costheta()
@@ -109,15 +112,15 @@ class TiltAzimuthStudy():
 
     def estimate_costheta(self):
         X = np.array([self.omega, self.delta])
-        phi_estimate_2d = np.tile(np.deg2rad(self.latitude_estimate),(self.daily_meas,self.num_days))
-        beta_estimate_2d = np.tile(np.deg2rad(self.tilt_estimate),(self.daily_meas,self.num_days))
-        gamma_estimate_2d = np.tile(np.deg2rad(self.azimuth_estimate),(self.daily_meas,self.num_days))
-        self.costheta_estimated = self.func2(X,phi_estimate_2d, beta_estimate_2d, gamma_estimate_2d)
+        phi_estimate_2d = np.tile(np.deg2rad(self.latitude_estimate), (self.daily_meas, self.num_days))
+        beta_estimate_2d = np.tile(np.deg2rad(self.tilt_estimate), (self.daily_meas, self.num_days))
+        gamma_estimate_2d = np.tile(np.deg2rad(self.azimuth_estimate), (self.daily_meas, self.num_days))
+        self.costheta_estimated = self.func2(X, phi_estimate_2d, beta_estimate_2d, gamma_estimate_2d)
         return
 
-    def func2(self, X, phi, beta, gamma):
-        w = X[0]
-        d = X[1]
+    def func2(self, x, phi, beta, gamma):
+        w = x[0]
+        d = x[1]
         A = np.sin(d) * np.sin(phi) * np.cos(beta)
         B = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
         C = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
@@ -152,17 +155,16 @@ class TiltAzimuthStudy():
             self.delta_f = self.delta[self.slct_curve_fit]
             self.omega_f = self.omega[self.slct_curve_fit]
 
-
     def run_curve_fit_1(self, bootstrap_iterations=None):
         self.costheta_fit_f = self.costheta_fit[self.slct_curve_fit]
         X = np.array([self.omega_f, self.delta_f])
-        popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.init_values), bounds=([0,-3.14],[1.57,3.14]))
+        popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.init_values),
+                               bounds=([0, -3.14], [1.57, 3.14]))
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
-
-    def func(self, X, beta, gamma):
-        w = X[0]
-        d = X[1]
+    def func(self, x, beta, gamma):
+        w = x[0]
+        d = x[1]
         phi = np.deg2rad(self.latitude_estimate)
         A = np.sin(d) * np.sin(phi) * np.cos(beta)
         B = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
