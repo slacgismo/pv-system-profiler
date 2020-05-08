@@ -56,7 +56,7 @@ class TiltAzimuthStudy():
         self.delta_f = None
         self.omega_f = None
 
-def run(self):
+    def run(self):
         self.make_delta()
         self.make_omega()
         self.find_fit_costheta()
@@ -73,13 +73,13 @@ def run(self):
 
     def make_delta(self):
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
-        self.delta = np.tile(delta_1, (self.data_matrix.shape[0], 1))
+        self.delta = np.tile(delta_1, (self.daily_meas, 1))
         return
 
     def make_omega(self):
         hour = np.arange(0, 24, self.data_sampling / 60)
         omega_1 = np.deg2rad(15 * (hour - 12))
-        self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.data_matrix.shape[1]))
+        self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.num_days))
         return
 
     def find_fit_costheta(self):
