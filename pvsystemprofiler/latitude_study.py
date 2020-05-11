@@ -20,14 +20,14 @@ class LatitudeStudy():
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
-        self.boolean_daytime = find_daytime(self.data_matrix,
-                                            self.daytime_threshold)
-        #self.boolean_daytime = find_daytime(self.raw_data_matrix,
-                                            # self.daytime_threshold)
+        self.boolean_daytime = None
         self.discrete_latitude = None
         self.latitude_estimate = None
         self.hours_daylight = None
+        self.hours_daylight2 = None
         self.delta = None
+        self.residual = None
+
 
         # Results
         #self.results = None
@@ -35,16 +35,55 @@ class LatitudeStudy():
 
     def run(self, verbose=True):
         self.make_delta()
-        self.estimate_latitude()
+        rs1 = rs2 = rs3 = rs4 = None
+        self.estimate_latitude(self.raw_data_matrix, sunrise_sunset=False)
+        rs1 = self.residual
+        self.estimate_latitude(self.data_matrix, sunrise_sunset=False)
+        rs2 = self.residual
+        self.estimate_latitude(self.raw_data_matrix, sunrise_sunset=True)
+        rs3 = self.residual
+        self.estimate_latitude(self.data_matrix, sunrise_sunset=True)
+        rs4 = self.residual
+        results = pd.DataFrame(columns=[
+            'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
+            'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix'])
 
-    def estimate_latitude(self):
-        self.hours_daylight = (np.sum(self.boolean_daytime, axis=0))*self.data_sampling/60
+        results.loc[0] = [self.true_value,
+                          rs1, rs2, rs3, rs4]
+        self.results =results
+
+    def estimate_latitude(self, data_matrix=None, sunrise_sunset=False):
+        if not sunrise_sunset:
+            self.boolean_daytime = find_daytime(data_matrix,
+                                                self.daytime_threshold)
+            self.hours_daylight = (np.sum(self.boolean_daytime, axis=0))*self.data_sampling/60
+        else:
+            self.hours_daylight = self.avg_sunrise_sunset(data_matrix, self.daytime_threshold)
+
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/
                                                        (np.tan(self.delta[0]))))
         self.latitude_estimate = np.median(self.discrete_latitude)
+        self.residual = self.true_value - self.latitude_estimate
         return
 
     def make_delta(self):
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
         self.delta = np.tile(delta_1, (self.data_matrix.shape[0], 1))
         return
+
+    def avg_sunrise_sunset(self,data_in, threshold=0.01):
+        data = np.copy(data_in).astype(np.float)
+        num_meas_per_hour = data.shape[0] / 24
+        x = np.arange(0, 24, 1. / num_meas_per_hour)
+        night_msk = ~find_daytime(data_in, threshold=threshold)
+        data[night_msk] = np.nan
+        good_vals = (~np.isnan(data)).astype(int)
+        sunrise_idxs = np.argmax(good_vals, axis=0)
+        sunset_idxs = data.shape[0] - np.argmax(np.flip(good_vals, 0), axis=0)
+        sunset_idxs[sunset_idxs == data.shape[0]] = data.shape[0] - 1
+        hour_of_day = x
+        sunset_times = hour_of_day[sunset_idxs]
+        sunrise_times = hour_of_day[sunrise_idxs]
+        return sunset_times - sunrise_times
+
+
