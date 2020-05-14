@@ -7,10 +7,12 @@ from pvsystemprofiler.utilities.progress import progress
 from solardatatools.daytime import find_daytime
 
 class LatitudeStudy():
-    def __init__(self, data_handler, daytime_threshold=0.01, true_value=None):
+    def __init__(self, data_handler, daytime_threshold=0.01, select_day_range=None, true_value=None):
         self.data_handler = data_handler
         self.daytime_threshold = daytime_threshold
         self.true_value = true_value
+        self.select_day_range = select_day_range
+
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
@@ -24,14 +26,26 @@ class LatitudeStudy():
         self.discrete_latitude = None
         self.latitude_estimate = None
         self.hours_daylight = None
-        self.hours_daylight2 = None
         self.delta = None
         self.residual = None
 
 
+        # select days variables
+        self.range_curve_fit = None
+        self.scsf = data_handler.scsf
+        self.clear_index = data_handler.daily_flags.clear
+        self.omega_f = None
+        self.delta_f = None
+
+        if self.select_day_range:
+            # self.slct_summer = (self.day_of_year>152) & (self.day_of_year<245) #summer only
+            # self.slct_summer = (self.day_of_year>60) & (self.day_of_year<335) #no winter
+            # self.slct_summer = (self.day_of_year>60) & (self.day_of_year<153) #spring only
+            self.day_range = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
+        else:
+            self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
         # Results
-        #self.results = None
-        #self.best_result = None
+        self.results = None
 
     def run(self, verbose=True):
         self.make_delta()
@@ -50,7 +64,7 @@ class LatitudeStudy():
 
         results.loc[0] = [self.true_value,
                           rs1, rs2, rs3, rs4]
-        self.results =results
+        self.results = results
 
     def estimate_latitude(self, data_matrix=None, sunrise_sunset=False):
         if not sunrise_sunset:
@@ -86,4 +100,10 @@ class LatitudeStudy():
         sunrise_times = hour_of_day[sunrise_idxs]
         return sunset_times - sunrise_times
 
-
+    def select_days(self):
+        if self.scsf:
+            self.range_curve_fit = self.boolean_daytime * self.day_range
+        else:
+            self.range_curve_fit = self.boolean_daytime * self.clear_index * self.day_range
+            self.delta_f = self.delta[self.range_curve_fit]
+            self.omega_f = self.omega[self.range_curve_fit]
