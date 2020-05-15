@@ -7,8 +7,9 @@ from pvsystemprofiler.utilities.progress import progress
 from solardatatools.daytime import find_daytime
 
 class LatitudeStudy():
-    def __init__(self, data_handler, daytime_threshold=0.01, select_day_range=None, true_value=None):
+    def __init__(self, data_handler, daytime_threshold=[0.01, 0.01, 0.01, 0.01], select_day_range=None, true_value=None):
         self.data_handler = data_handler
+
         self.daytime_threshold = daytime_threshold
         self.true_value = true_value
         self.select_day_range = select_day_range
@@ -29,7 +30,6 @@ class LatitudeStudy():
         self.delta = None
         self.residual = None
 
-
         # select days variables
         self.range_curve_fit = None
         self.scsf = data_handler.scsf
@@ -48,31 +48,36 @@ class LatitudeStudy():
         self.results = None
 
     def run(self, verbose=True):
+
         self.make_delta()
         rs1 = rs2 = rs3 = rs4 = None
-        self.estimate_latitude(self.raw_data_matrix, sunrise_sunset=False)
+        self.estimate_latitude(self.raw_data_matrix, daytime_threshold=self.daytime_threshold[0],
+                               sunrise_sunset=False)
         rs1 = self.residual
-        self.estimate_latitude(self.data_matrix, sunrise_sunset=False)
+        self.estimate_latitude(self.data_matrix, daytime_threshold=self.daytime_threshold[1],
+                               sunrise_sunset=False)
         rs2 = self.residual
-        self.estimate_latitude(self.raw_data_matrix, sunrise_sunset=True)
+        self.estimate_latitude(self.raw_data_matrix, daytime_threshold=self.daytime_threshold[2],
+                               sunrise_sunset=True)
         rs3 = self.residual
-        self.estimate_latitude(self.data_matrix, sunrise_sunset=True)
+        self.estimate_latitude(self.data_matrix, daytime_threshold=self.daytime_threshold[3],
+                               sunrise_sunset=True)
         rs4 = self.residual
         results = pd.DataFrame(columns=[
-            'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
-            'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix'])
+             'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
+             'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix'])
 
         results.loc[0] = [self.true_value,
                           rs1, rs2, rs3, rs4]
         self.results = results
 
-    def estimate_latitude(self, data_matrix=None, sunrise_sunset=False):
+    def estimate_latitude(self, data_matrix=None, daytime_threshold=0.01, sunrise_sunset=False):
         if not sunrise_sunset:
             self.boolean_daytime = find_daytime(data_matrix,
-                                                self.daytime_threshold)
+                                                daytime_threshold)
             self.hours_daylight = (np.sum(self.boolean_daytime, axis=0))*self.data_sampling/60
         else:
-            self.hours_daylight = self.avg_sunrise_sunset(data_matrix, self.daytime_threshold)
+            self.hours_daylight = self.avg_sunrise_sunset(data_matrix, daytime_threshold)
 
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/
                                                        (np.tan(self.delta[0]))))
