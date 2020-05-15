@@ -6,16 +6,16 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, summer_flag=False, init_values=None,
+    def __init__(self, data_handler, select_day_range=None, init_values=None,
                  daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None,
                  azim_true_value=None):
         self.data_handler = data_handler
+        self.select_day_range = select_day_range
         self.data_matrix = self.data_handler.filled_data_matrix
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
-        self.summer_flag = summer_flag
         self.init_values = init_values
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
@@ -35,13 +35,6 @@ class TiltAzimuthStudy():
             self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
         else:
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
-        if self.summer_flag:
-            # self.slct_summer = (self.day_of_year>152) & (self.day_of_year<245) #summer only
-            # self.slct_summer = (self.day_of_year>60) & (self.day_of_year<335) #no winter
-            # self.slct_summer = (self.day_of_year>60) & (self.day_of_year<153) #spring only
-            self.slct_summer = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
-        else:
-            self.slct_summer = np.ones(self.day_of_year.shape, dtype=bool)
 
         self.delta = None
         self.omega = None
@@ -52,9 +45,24 @@ class TiltAzimuthStudy():
         self.costheta_ground_truth_calculate = None
         self.costheta_fit = None
         self.costheta_fit_f = None
-        self.slct_curve_fit = None
-        self.delta_f = None
+
+        # select days variables
+        self.range_curve_fit = None
+        self.scsf = data_handler.scsf
+        self.clear_index = data_handler.daily_flags.clear
         self.omega_f = None
+        self.delta_f = None
+
+        if self.select_day_range:
+            # self.day_range = (self.day_of_year>152) & (self.day_of_year<245) #summer only
+            # self.day_range = (self.day_of_year>60) & (self.day_of_year<335) #no winter
+            # self.day_range = (self.day_of_year>60) & (self.day_of_year<153) #spring only
+            self.day_range = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
+        else:
+            self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
+
+
+
 
     def run(self):
         self.make_delta()
@@ -149,14 +157,14 @@ class TiltAzimuthStudy():
 
     def select_days(self):
         if self.scsf:
-            self.slct_curve_fit = self.boolean_daytime * self.slct_summer
+            self.range_curve_fit = self.boolean_daytime * self.day_range
         else:
-            self.slct_curve_fit = self.boolean_daytime * self.clear_index_set * self.slct_summer
-            self.delta_f = self.delta[self.slct_curve_fit]
-            self.omega_f = self.omega[self.slct_curve_fit]
+            self.range_curve_fit = self.boolean_daytime * self.clear_index_set * self.day_range
+            self.delta_f = self.delta[self.range_curve_fit]
+            self.omega_f = self.omega[self.range_curve_fit]
 
     def run_curve_fit_1(self, bootstrap_iterations=None):
-        self.costheta_fit_f = self.costheta_fit[self.slct_curve_fit]
+        self.costheta_fit_f = self.costheta_fit[self.range_curve_fit]
         X = np.array([self.omega_f, self.delta_f])
         popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.init_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
@@ -172,3 +180,11 @@ class TiltAzimuthStudy():
         D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
         E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
         return A - B + C + D + E
+
+    def select_days(self):
+        if self.scsf:
+            self.range_curve_fit = self.boolean_daytime * self.day_range
+        else:
+            self.range_curve_fit = self.boolean_daytime * self.clear_index * self.day_range
+            self.delta_f = self.delta[self.range_curve_fit]
+            self.omega_f = self.omega[self.range_curve_fit]
