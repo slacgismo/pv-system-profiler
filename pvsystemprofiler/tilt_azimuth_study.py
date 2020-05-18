@@ -29,7 +29,7 @@ class TiltAzimuthStudy():
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
         self.scsf = data_handler.scsf
-        self.clear_index_set = self.data_handler.daily_flags.clear
+        self.clear_index = data_handler.daily_flags.clear
 
         if self.daytime_threshold is None:
             self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
@@ -48,8 +48,6 @@ class TiltAzimuthStudy():
 
         # select days variables
         self.range_curve_fit = None
-        self.scsf = data_handler.scsf
-        self.clear_index = data_handler.daily_flags.clear
         self.omega_f = None
         self.delta_f = None
 
@@ -60,9 +58,6 @@ class TiltAzimuthStudy():
             self.day_range = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
         else:
             self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
-
-
-
 
     def run(self):
         self.make_delta()
@@ -94,7 +89,7 @@ class TiltAzimuthStudy():
         data = np.max(self.data_matrix, axis=0)
         s1 = cvx.Variable(len(data))
         s2 = cvx.Variable(len(data))
-        cost = 1e1 * cvx.norm(cvx.diff(s1, k=2), p=2) + cvx.norm(s2[self.clear_index_set])
+        cost = 1e1 * cvx.norm(cvx.diff(s1, k=2), p=2) + cvx.norm(s2[self.clear_index])
         objective = cvx.Minimize(cost)
         constraints = [
             data == s1 + s2,
@@ -159,7 +154,7 @@ class TiltAzimuthStudy():
         if self.scsf:
             self.range_curve_fit = self.boolean_daytime * self.day_range
         else:
-            self.range_curve_fit = self.boolean_daytime * self.clear_index_set * self.day_range
+            self.range_curve_fit = self.boolean_daytime * self.clear_index * self.day_range
             self.delta_f = self.delta[self.range_curve_fit]
             self.omega_f = self.omega[self.range_curve_fit]
 
