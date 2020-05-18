@@ -40,11 +40,10 @@ class TiltAzimuthStudy():
             self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
             self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
             for d in range(0, self.num_days - 1):
-                 self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
-                #self.boolean_daytime[:, d] = find_daytime(self.data_matrix, self.daytime_threshold_fit[d])
+                self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
+                #should be calculated using find_daytime instead
         else:
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
-
 
         self.delta = None
         self.omega = None
@@ -77,7 +76,6 @@ class TiltAzimuthStudy():
         self.select_days()
         self.run_curve_fit_1()
         self.estimate_costheta()
-
         return
 
     def make_delta(self):
@@ -181,11 +179,3 @@ class TiltAzimuthStudy():
         D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
         E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
         return A - B + C + D + E
-
-    def select_days(self):
-        if self.scsf:
-            self.range_curve_fit = self.boolean_daytime * self.day_range
-        else:
-            self.range_curve_fit = self.boolean_daytime * self.clear_index * self.day_range
-            self.delta_f = self.delta[self.range_curve_fit]
-            self.omega_f = self.omega[self.range_curve_fit]
