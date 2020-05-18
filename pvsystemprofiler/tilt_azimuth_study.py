@@ -31,10 +31,20 @@ class TiltAzimuthStudy():
         self.scsf = data_handler.scsf
         self.clear_index = data_handler.daily_flags.clear
 
+        #if self.daytime_threshold is None:
+        #    self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
+        #else:
+        #    self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
+
         if self.daytime_threshold is None:
             self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
+            self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
+            for d in range(0, self.num_days - 1):
+                 self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
+                #self.boolean_daytime[:, d] = find_daytime(self.data_matrix, self.daytime_threshold_fit[d])
         else:
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
+
 
         self.delta = None
         self.omega = None
@@ -64,10 +74,6 @@ class TiltAzimuthStudy():
         self.make_omega()
         self.find_fit_costheta()
         self.ground_truth_costheta()
-        if self.daytime_threshold is None:
-            self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
-            for d in range(0, self.num_days - 1):
-                self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
         self.select_days()
         self.run_curve_fit_1()
         self.estimate_costheta()
