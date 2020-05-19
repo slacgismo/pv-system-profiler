@@ -23,28 +23,13 @@ class TiltAzimuthStudy():
         self.phi_real = lat_true_value
         self.real_beta = tilt_true_value
         self.real_gamma = azim_true_value
-
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
         self.scsf = data_handler.scsf
         self.clear_index = data_handler.daily_flags.clear
-
-        #if self.daytime_threshold is None:
-        #    self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
-        #else:
-        #    self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
-
-        if self.daytime_threshold is None:
-            self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
-            self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
-            for d in range(0, self.num_days - 1):
-                self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
-                #should be calculated using find_daytime instead
-        else:
-            self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
-
+        self.boolean_daytime = None
         self.delta = None
         self.omega = None
         self.tilt_estimate = None
@@ -69,6 +54,7 @@ class TiltAzimuthStudy():
             self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
 
     def run(self):
+        self.find_boolean_daytime()
         self.make_delta()
         self.make_omega()
         self.find_fit_costheta()
@@ -77,6 +63,21 @@ class TiltAzimuthStudy():
         self.run_curve_fit_1()
         self.estimate_costheta()
         return
+
+    def find_boolean_daytime(self):
+        if self.daytime_threshold is None:
+            self.boolean_daytime = np.empty([self.daily_meas, self.num_days], dtype=bool)
+            dummy = np.empty([self.daily_meas, self.num_days], dtype=bool)
+            self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
+            for d in range(0, self.num_days - 1):
+                self.boolean_daytime[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
+                dummy[:, d] = self.data_matrix[:, d] > 1 * self.daytime_threshold_fit[d]
+                # this expression can be converted in terms of find_daytime
+        # print(np.average(self.boolean_daytime))
+        # print(np.average(self.dummy))
+            self.boolean_daytime = dummy
+        else:
+            self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
 
     def make_delta(self):
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
