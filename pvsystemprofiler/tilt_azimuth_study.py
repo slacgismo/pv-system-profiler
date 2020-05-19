@@ -20,9 +20,9 @@ class TiltAzimuthStudy():
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
-        self.phi_real = lat_true_value
-        self.real_beta = tilt_true_value
-        self.real_gamma = azim_true_value
+        self.phi_true_value = lat_true_value
+        self.beta_true_value = tilt_true_value
+        self.gamma_true_value = azim_true_value
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
@@ -108,14 +108,14 @@ class TiltAzimuthStudy():
 
     def ground_truth_costheta(self):
         X = np.array([self.omega, self.delta])
-        phi_real_2d = np.tile(self.phi_real,
+        phi_true_value_2d = np.tile(self.phi_true_value,
                               (self.daily_meas, self.num_days))
-        real_beta_2d = np.tile(self.real_beta,
+        beta_true_value_2d = np.tile(self.beta_true_value,
                                  (self.daily_meas, self.num_days))
-        real_gamma_2d = np.tile(self.real_gamma,
+        gamma_true_value_2d = np.tile(self.gamma_true_value,
                                   (self.daily_meas, self.num_days))
         self.costheta_ground_truth_calculate = \
-            self.func2(X, phi_real_2d, real_beta_2d, real_gamma_2d)
+            self.func2(X, phi_true_value_2d, beta_true_value_2d, gamma_true_value_2d)
         return
 
     def estimate_costheta(self):
