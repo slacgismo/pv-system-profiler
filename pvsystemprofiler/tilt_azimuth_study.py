@@ -21,9 +21,9 @@ class TiltAzimuthStudy():
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
-        self.phi_true_value = lat_true_value
-        self.ground_beta = ground_tilt
-        self.ground_gamma = ground_azimuth
+        self.phi_true_value = np.deg2rad(lat_true_value)
+        self.ground_beta = np.deg2rad(ground_tilt)
+        self.ground_gamma = np.deg2rad(ground_azimuth)
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
