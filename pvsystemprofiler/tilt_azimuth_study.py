@@ -8,8 +8,8 @@ from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
     def __init__(self, data_handler, select_day_range=None, init_values=None,
                  daytime_threshold=None, lat_estimate=None,
-                 lat_true_value=None, tilt_true_value=None,
-                 azim_true_value=None):
+                 lat_true_value=None, ground_tilt=None,
+                 ground_azimuth=None):
         self.data_handler = data_handler
         self.select_day_range = select_day_range
         self.data_matrix = self.data_handler.filled_data_matrix
@@ -21,8 +21,8 @@ class TiltAzimuthStudy():
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
         self.phi_true_value = lat_true_value
-        self.beta_true_value = tilt_true_value
-        self.gamma_true_value = azim_true_value
+        self.ground_beta = ground_tilt
+        self.ground_gamma = ground_azimuth
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
@@ -110,12 +110,12 @@ class TiltAzimuthStudy():
         X = np.array([self.omega, self.delta])
         phi_true_value_2d = np.tile(self.phi_true_value,
                               (self.daily_meas, self.num_days))
-        beta_true_value_2d = np.tile(self.beta_true_value,
+        ground_beta_2d = np.tile(self.ground_beta,
                                  (self.daily_meas, self.num_days))
-        gamma_true_value_2d = np.tile(self.gamma_true_value,
+        ground_gamma_2d = np.tile(self.ground_gamma,
                                   (self.daily_meas, self.num_days))
         self.costheta_ground_truth_calculate = \
-            self.func2(X, phi_true_value_2d, beta_true_value_2d, gamma_true_value_2d)
+            self.func2(X, phi_true_value_2d, ground_beta_2d, ground_gamma_2d)
         return
 
     def estimate_costheta(self):
