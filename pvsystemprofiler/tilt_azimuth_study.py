@@ -2,6 +2,7 @@
 
 '''
 import numpy as np
+import pandas as pd
 import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
@@ -39,12 +40,10 @@ class TiltAzimuthStudy():
         self.costheta_ground_truth_calculate = None
         self.costheta_fit = None
         self.costheta_fit_f = None
-
-        # select days variables
         self.range_curve_fit = None
         self.omega_f = None
         self.delta_f = None
-
+        self.results = None
         if self.select_day_range:
             # self.day_range = (self.day_of_year>152) & (self.day_of_year<245) #summer only
             # self.day_range = (self.day_of_year>60) & (self.day_of_year<335) #no winter
@@ -52,6 +51,7 @@ class TiltAzimuthStudy():
             self.day_range = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
         else:
             self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
+
 
     def run(self):
         self.find_boolean_daytime()
@@ -62,6 +62,16 @@ class TiltAzimuthStudy():
         self.select_days()
         self.run_curve_fit_1()
         self.estimate_costheta()
+
+        self.results = pd.DataFrame(columns=['Latitude Residual', 'Tilt Residual', 'Azimuth Residual'])
+        # self.results['Latitude Residual'] = self.phi_true_value - self.latitude_estimate
+        # self.results['Tilt Residual'] = self.ground_beta - self.tilt_estimate
+        # self.results['Azimuth Residual'] = self.ground_gamma - self.azimuth_estimate
+        r1 = np.rad2deg(self.phi_true_value) - self.latitude_estimate
+        r2 = np.rad2deg(self.ground_beta) - self.tilt_estimate
+        r3 = np.rad2deg(self.ground_gamma) - self.azimuth_estimate
+        self.results.loc[0] = [r1, r2, r3]
+
         return
 
     def find_boolean_daytime(self):
