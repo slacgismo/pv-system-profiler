@@ -36,24 +36,33 @@ class LatitudeStudy():
 
         self.make_delta()
         rs1 = rs2 = rs3 = rs4 = None
+        le1 = le2 = le3 = le4 = None
         self.estimate_latitude(self.raw_data_matrix, daytime_threshold=self.daytime_threshold[0],
                                sunrise_sunset=False)
         rs1 = self.residual
+        le1 = self.latitude_estimate
         self.estimate_latitude(self.data_matrix, daytime_threshold=self.daytime_threshold[1],
                                sunrise_sunset=False)
         rs2 = self.residual
+        le2 = self.latitude_estimate
         self.estimate_latitude(self.raw_data_matrix, daytime_threshold=self.daytime_threshold[2],
                                sunrise_sunset=True)
         rs3 = self.residual
+        le3 = self.latitude_estimate
         self.estimate_latitude(self.data_matrix, daytime_threshold=self.daytime_threshold[3],
                                sunrise_sunset=True)
         rs4 = self.residual
+        le4 = self.latitude_estimate
         results = pd.DataFrame(columns=[
              'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
-             'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix'])
+             'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix',
+             'Lat. raw calc-raw matrix', 'Lat. raw calc-filled matrix',
+             'Lat. solarnoon calc-raw matrix', 'Lat. solarnoon calc-filled matrix'
+        ])
 
         results.loc[0] = [self.true_value,
-                          rs1, rs2, rs3, rs4]
+                          rs1, rs2, rs3, rs4,
+                          le1, le2, le3, le4]
         self.results = results
 
     def estimate_latitude(self, data_matrix=None, daytime_threshold=0.01, sunrise_sunset=False):
