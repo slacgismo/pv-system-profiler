@@ -69,7 +69,7 @@ class TiltAzimuthStudy():
         r1 = np.rad2deg(self.phi_true_value) - self.latitude_estimate
         r2 = np.rad2deg(self.ground_beta) - self.tilt_estimate
         r3 = np.rad2deg(self.ground_gamma) - self.azimuth_estimate
-        self.results.loc[0] = [abs(r1), abs(r2), abs(r3)]
+        self.results.loc[0] = [r1, r2, r3]
         return
 
     def find_boolean_daytime(self):
