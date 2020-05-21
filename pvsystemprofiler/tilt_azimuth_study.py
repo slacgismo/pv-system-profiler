@@ -7,12 +7,13 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, select_day_range=None, init_values=None,
+    def __init__(self, data_handler, set_day_range=None, day_range=None, init_values=None,
                  daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, ground_tilt=None,
                  ground_azimuth=None):
         self.data_handler = data_handler
-        self.select_day_range = select_day_range
+        self.set_day_range = set_day_range
+        self.day_range = day_range
         self.data_matrix = self.data_handler.filled_data_matrix
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
@@ -44,11 +45,14 @@ class TiltAzimuthStudy():
         self.omega_f = None
         self.delta_f = None
         self.results = None
-        if self.select_day_range:
+        if self.set_day_range:
+
             # self.day_range = (self.day_of_year>152) & (self.day_of_year<245) #summer only
             # self.day_range = (self.day_of_year>60) & (self.day_of_year<335) #no winter
             # self.day_range = (self.day_of_year>60) & (self.day_of_year<153) #spring only
-            self.day_range = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
+            #self.day_range = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
+            self.day_range = (self.day_of_year > self.day_range[0]) & \
+                             (self.day_of_year < self.day_range[1])
         else:
             self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
 
