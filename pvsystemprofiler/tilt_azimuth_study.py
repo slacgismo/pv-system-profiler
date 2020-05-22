@@ -46,11 +46,6 @@ class TiltAzimuthStudy():
         self.delta_f = None
         self.results = None
         if self.set_day_range:
-
-            # self.day_range = (self.day_of_year>152) & (self.day_of_year<245) #summer only
-            # self.day_range = (self.day_of_year>60) & (self.day_of_year<335) #no winter
-            # self.day_range = (self.day_of_year>60) & (self.day_of_year<153) #spring only
-            #self.day_range = (self.day_of_year > 85) & (self.day_of_year < 167)  # manual set only
             self.day_range = (self.day_of_year > self.day_range[0]) & \
                              (self.day_of_year < self.day_range[1])
         else:
