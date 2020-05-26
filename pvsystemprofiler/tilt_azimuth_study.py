@@ -1,5 +1,12 @@
 ''' Tilt and Azimuth Study Module
-
+This module contains a class for conducting a study
+to estimating Tilt and Azimuth from solar power data. This code accepts solar power
+data in the form of a `solar-data-tools` `DataHandler` object, which is used
+to standardize and pre-process the data. The provided class will then estimate
+the Tilt and Azimuth of the site that produced the data, using the `run` method.
+Tilt and Azimuth are estimated via numerical fit using equation (1.6.2) in:
+    Duffie, John A., and William A. Beckman. Solar engineering of thermal
+    processes. New York: Wiley, 1991.
 '''
 import numpy as np
 import pandas as pd
@@ -9,8 +16,22 @@ from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
     def __init__(self, data_handler, set_day_range=None, day_range=None, init_values=None,
                  daytime_threshold=None, lat_estimate=None,
-                 lat_true_value=None, ground_tilt=None,
-                 ground_azimuth=None):
+                 lat_true_value=None, tilt_true_value=None,
+                 azimuth_true_value=None):
+        '''
+
+        :param data_handler: `DataHandler` class instance loaded with a solar power data set
+        :param set_day_range: (optional) True if running the study over a day range
+        :param day_range: (optional) the desired day range to run the study. An array of the form
+                              [first day, last day]
+        :param init_values: (optional) Initial values for numerical fit
+        :param daytime_threshold: daytime threshold
+        :param lat_estimate: latitude estimate as obtained from the Latitude Study module
+        :param lat_true_value: the ground truth value for the system's latitude
+        :param real_tilt: (optional) the ground truth value for the system's tilt
+        :param real_azimuth: (optional) the ground truth value for the system's azimuth
+        '''
+
         self.data_handler = data_handler
         self.set_day_range = set_day_range
         self.day_range = day_range
@@ -23,8 +44,8 @@ class TiltAzimuthStudy():
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
         self.phi_true_value = np.deg2rad(lat_true_value)
-        self.ground_beta = np.deg2rad(ground_tilt)
-        self.ground_gamma = np.deg2rad(ground_azimuth)
+        self.beta_true_value = np.deg2rad(tilt_true_value)
+        self.gamma_true_value = np.deg2rad(azimuth_true_value)
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
@@ -62,8 +83,8 @@ class TiltAzimuthStudy():
         self.estimate_costheta()
         self.results = pd.DataFrame(columns=['Latitude Residual', 'Tilt Residual', 'Azimuth Residual'])
         r1 = np.rad2deg(self.phi_true_value) - self.latitude_estimate
-        r2 = np.rad2deg(self.ground_beta) - self.tilt_estimate
-        r3 = np.rad2deg(self.ground_gamma) - self.azimuth_estimate
+        r2 = np.rad2deg(self.beta_true_value) - self.tilt_estimate
+        r3 = np.rad2deg(self.gamma_true_value) - self.azimuth_estimate
         self.results.loc[0] = [r1, r2, r3]
         return
 
@@ -107,12 +128,12 @@ class TiltAzimuthStudy():
         X = np.array([self.omega, self.delta])
         phi_true_value_2d = np.tile(self.phi_true_value,
                               (self.daily_meas, self.num_days))
-        ground_beta_2d = np.tile(self.ground_beta,
+        beta_true_value_2d = np.tile(self.beta_true_value,
                                  (self.daily_meas, self.num_days))
-        ground_gamma_2d = np.tile(self.ground_gamma,
+        gamma_true_value_2d = np.tile(self.gamma_true_value,
                                   (self.daily_meas, self.num_days))
         self.costheta_ground_truth_calculate = \
-            self.func2(X, phi_true_value_2d, ground_beta_2d, ground_gamma_2d)
+            self.func2(X, phi_true_value_2d, beta_true_value_2d, gamma_true_value_2d)
         return
 
     def estimate_costheta(self):
