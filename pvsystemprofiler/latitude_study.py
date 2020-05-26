@@ -66,16 +66,21 @@ class LatitudeStudy():
                                sunrise_sunset=True)
         rs4 = self.residual
         le4 = self.latitude_estimate
-        results = pd.DataFrame(columns=[
-             'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
-             'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix',
-             'Lat. raw calc-raw matrix', 'Lat. raw calc-filled matrix',
-             'Lat. solarnoon calc-raw matrix', 'Lat. solarnoon calc-filled matrix'
-        ])
+        if self.true_value is not None:
+            results = pd.DataFrame(columns=[
+                'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
+                'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix',
+                'Lat. raw calc-raw matrix', 'Lat. raw calc-filled matrix',
+                'Lat. solarnoon calc-raw matrix', 'Lat. solarnoon calc-filled matrix'])
+            results.loc[0] = [self.true_value, rs1, rs2, rs3, rs4, le1, le2, le3, le4]
+        else:
+            results = pd.DataFrame(columns=['Lat. raw calc-raw matrix',
+                                            'Lat. raw calc-filled matrix',
+                                            'Lat. solarnoon calc-raw matrix',
+                                            'Lat. solarnoon calc-filled matrix'])
 
-        results.loc[0] = [self.true_value,
-                          rs1, rs2, rs3, rs4,
-                          le1, le2, le3, le4]
+            results.loc[0] = [le1, le2, le3, le4]
+
         self.results = results
 
     def estimate_latitude(self, data_matrix=None, daytime_threshold=0.01, sunrise_sunset=False):
@@ -89,7 +94,8 @@ class LatitudeStudy():
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/
                                                        (np.tan(self.delta[0]))))
         self.latitude_estimate = np.median(self.discrete_latitude)
-        self.residual = self.true_value - self.latitude_estimate
+        if self.true_value is not None:
+            self.residual = self.true_value - self.latitude_estimate
         return
 
     def make_delta(self):
