@@ -1,5 +1,12 @@
 ''' Latitude Study Module
-
+This module contains a class for conducting a study
+to estimating latitude from solar power data. This code accepts solar power
+data in the form of a `solar-data-tools` `DataHandler` object, which is used
+to standardize and pre-process the data. The provided class will then estimate
+the latitude of the site that produced the data, using the `run` method.
+Latitude is estimated from equation (1.6.10) in:
+    Duffie, John A., and William A. Beckman. Solar engineering of thermal
+    processes. New York: Wiley, 1991.
 '''
 import numpy as np
 import pandas as pd
@@ -9,6 +16,12 @@ from solardatatools.daytime import find_daytime
 class LatitudeStudy():
     def __init__(self, data_handler, daytime_threshold=[0.01, 0.01, 0.01, 0.01],
                  true_value=None):
+        '''
+        :param data_handler: `DataHandler` class instance loaded with a solar power data set
+        :param daytime_threshold: daytime threshold
+        :param true_value: (optional) the ground truth value for the system's latitude
+        '''
+
         self.data_handler = data_handler
         self.daytime_threshold = daytime_threshold
         self.true_value = true_value
@@ -84,7 +97,7 @@ class LatitudeStudy():
         self.delta = np.tile(delta_1, (self.data_matrix.shape[0], 1))
         return
 
-    def avg_sunrise_sunset(self,data_in, threshold=0.01):
+    def avg_sunrise_sunset(self, data_in, threshold=0.01):
         data = np.copy(data_in).astype(np.float)
         num_meas_per_hour = data.shape[0] / 24
         x = np.arange(0, 24, 1. / num_meas_per_hour)
