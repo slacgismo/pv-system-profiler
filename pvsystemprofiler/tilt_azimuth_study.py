@@ -14,7 +14,7 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, set_day_range=None, day_range=None, init_values=[10, 10],
+    def __init__(self, data_handler, set_day_range=None, day_range=None, guess_values=[10, 10],
                  daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None,
                  azimuth_true_value=None):
@@ -23,13 +23,14 @@ class TiltAzimuthStudy():
         :param set_day_range: (optional) True if running the study over a day range
         :param day_range: (optional) the desired day range to run the study. An array of the form
                               [first day, last day]
-        :param init_values: (optional) Initial values for numerical fit. Default values of [10, 10]
+        :param guess_values: (optional) Tilt and Azimuth guess values for numerical fit.
+                                Default values are [10, 10]. (Degrees).
                                 are used otherwise
         :param daytime_threshold: daytime threshold
-        :param lat_estimate: latitude estimate as obtained from the Latitude Study module
-        :param lat_true_value: (optional) the ground truth value for the system's latitude
-        :param tilt_true_value: (optional) the ground truth value for the system's tilt
-        :param azimuth_true_value: (optional) the ground truth value for the system's azimuth
+        :param lat_estimate: latitude estimate as obtained from the Latitude Study module. (Degrees).
+        :param lat_true_value: (optional) ground truth value for the system's latitude. (Degrees).
+        :param tilt_true_value: (optional) ground truth value for the system's tilt. (Degrees).
+        :param azimuth_true_value: (optional) ground truth value for the system's azimuth. (Degrees)
         '''
 
         self.data_handler = data_handler
@@ -39,7 +40,7 @@ class TiltAzimuthStudy():
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
-        self.init_values = init_values
+        self.guess_values = guess_values
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
@@ -203,7 +204,7 @@ class TiltAzimuthStudy():
     def run_curve_fit_1(self, bootstrap_iterations=None):
         self.costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
         X = np.array([self.omega_f, self.delta_f])
-        popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.init_values),
+        popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.guess_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
