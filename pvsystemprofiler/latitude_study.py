@@ -15,16 +15,16 @@ from solardatatools.daytime import find_daytime
 
 class LatitudeStudy():
     def __init__(self, data_handler, daytime_threshold=[0.01, 0.01, 0.01, 0.01],
-                 true_value=None):
+                 lat_true_value=None):
         '''
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param daytime_threshold: daytime threshold
-        :param true_value: (optional) the ground truth value for the system's latitude
+        :param lat_true_value: (optional) the ground truth value for the system's latitude. (Degrees).
         '''
 
         self.data_handler = data_handler
         self.daytime_threshold = daytime_threshold
-        self.true_value = true_value
+        self.phi_true_value = lat_true_value
 
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
@@ -66,13 +66,13 @@ class LatitudeStudy():
                                sunrise_sunset=True)
         rs4 = self.residual
         le4 = self.latitude_estimate
-        if self.true_value is not None:
+        if self.phi_true_value is not None:
             results = pd.DataFrame(columns=[
                 'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
                 'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix',
                 'Lat. raw calc-raw matrix', 'Lat. raw calc-filled matrix',
                 'Lat. solarnoon calc-raw matrix', 'Lat. solarnoon calc-filled matrix'])
-            results.loc[0] = [self.true_value, rs1, rs2, rs3, rs4, le1, le2, le3, le4]
+            results.loc[0] = [self.phi_true_value, rs1, rs2, rs3, rs4, le1, le2, le3, le4]
         else:
             results = pd.DataFrame(columns=['Lat. raw calc-raw matrix',
                                             'Lat. raw calc-filled matrix',
@@ -94,8 +94,8 @@ class LatitudeStudy():
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/
                                                        (np.tan(self.delta[0]))))
         self.latitude_estimate = np.median(self.discrete_latitude)
-        if self.true_value is not None:
-            self.residual = self.true_value - self.latitude_estimate
+        if self.phi_true_value is not None:
+            self.residual = self.phi_true_value - self.latitude_estimate
         return
 
     def make_delta(self):
