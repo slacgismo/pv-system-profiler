@@ -87,8 +87,11 @@ class TiltAzimuthStudy():
         self.make_delta()
         self.make_omega()
         self.find_fit_costheta()
-
         self.select_days()
+        if True not in self.boolean_daytime_range:
+            print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.\n'
+                  'Please increase or shift the day range')
+            return
         self.run_curve_fit_1()
         self.estimate_costheta()
         if self.phi_true_value is not None:
