@@ -14,27 +14,25 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, set_day_range=None, day_range=None, guess_values=[10, 10],
+    def __init__(self, data_handler, day_range=None, guess_values=[10, 10],
                  daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None,
                  azimuth_true_value=None):
         '''
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
-        :param set_day_range: (optional) True if running the study over a day range
         :param day_range: (optional) the desired day range to run the study. An array of the form
                               [first day, last day]
         :param guess_values: (optional) Tilt and Azimuth guess values for numerical fit.
                                 Default values are [10, 10]. (Degrees).
                                 are used otherwise
-        :param daytime_threshold: daytime threshold
+        :param daytime_threshold: (optional) daytime threshold
         :param lat_estimate: latitude estimate as obtained from the Latitude Study module. (Degrees).
-        :param lat_true_value: (optional) ground truth value for the system's latitude. (Degrees).
-        :param tilt_true_value: (optional) ground truth value for the system's tilt. (Degrees).
-        :param azimuth_true_value: (optional) ground truth value for the system's azimuth. (Degrees)
+        :param lat_true_value: (optional) ground truth value for the system's Latitude. (Degrees).
+        :param tilt_true_value: (optional) ground truth value for the system's Tilt. (Degrees).
+        :param azimuth_true_value: (optional) ground truth value for the system's Azimuth. (Degrees)
         '''
 
         self.data_handler = data_handler
-        self.set_day_range = set_day_range
         self.day_range = day_range
         self.data_matrix = self.data_handler.filled_data_matrix
         if not data_handler._ran_pipeline:
@@ -73,13 +71,9 @@ class TiltAzimuthStudy():
         self.omega_f = None
         self.delta_f = None
         self.results = None
-        if self.set_day_range:
-            try:
-                self.day_range = (self.day_of_year > self.day_range[0]) & \
-                                 (self.day_of_year < self.day_range[1])
-            except TypeError:
-                print('select_day_range flag is set to True but no day range was provided.\n'
-                      'Please provide day range or set select_day_range flag=False')
+        if self.day_range is not None:
+            self.day_range = (self.day_of_year > self.day_range[0]) & \
+                             (self.day_of_year < self.day_range[1])
         else:
             self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
 
