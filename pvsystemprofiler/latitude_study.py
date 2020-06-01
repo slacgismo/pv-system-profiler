@@ -13,6 +13,7 @@ import pandas as pd
 from pvsystemprofiler.utilities.progress import progress
 from solardatatools.daytime import find_daytime
 
+
 class LatitudeStudy():
     def __init__(self, data_handler, daytime_threshold=[0.01, 0.01, 0.01, 0.01],
                  lat_true_value=None):
@@ -46,40 +47,33 @@ class LatitudeStudy():
         self.results = None
 
     def run(self, verbose=True):
-
         self.make_delta()
-        rs1 = rs2 = rs3 = rs4 = None
-        le1 = le2 = le3 = le4 = None
-        self.estimate_latitude(self.raw_data_matrix, daytime_threshold=self.daytime_threshold[0],
-                               sunrise_sunset=False)
-        rs1 = self.residual
-        le1 = self.latitude_estimate
-        self.estimate_latitude(self.data_matrix, daytime_threshold=self.daytime_threshold[1],
-                               sunrise_sunset=False)
-        rs2 = self.residual
-        le2 = self.latitude_estimate
-        self.estimate_latitude(self.raw_data_matrix, daytime_threshold=self.daytime_threshold[2],
-                               sunrise_sunset=True)
-        rs3 = self.residual
-        le3 = self.latitude_estimate
-        self.estimate_latitude(self.data_matrix, daytime_threshold=self.daytime_threshold[3],
-                               sunrise_sunset=True)
-        rs4 = self.residual
-        le4 = self.latitude_estimate
+        counter = 0
+        lat_res = np.zeros(4)
+        lat_est = np.zeros(4)
+        for daytime_flag in [False, True]:
+            for matrix in [self.raw_data_matrix, self.data_matrix]:
+                self.estimate_latitude(matrix, daytime_threshold=self.daytime_threshold[counter],
+                                       sunrise_sunset=daytime_flag)
+                lat_est[counter] = self.latitude_estimate
+                lat_res[counter] = self.residual
+                counter += 1
+
         if self.phi_true_value is not None:
             results = pd.DataFrame(columns=[
                 'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
                 'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix',
                 'Lat. raw calc-raw matrix', 'Lat. raw calc-filled matrix',
                 'Lat. solarnoon calc-raw matrix', 'Lat. solarnoon calc-filled matrix'])
-            results.loc[0] = [self.phi_true_value, rs1, rs2, rs3, rs4, le1, le2, le3, le4]
+            results.loc[0] = [self.phi_true_value, lat_res[0], lat_res[1], lat_res[2], lat_res[3],
+                              lat_est[0], lat_est[1], lat_est[2], lat_est[3]]
         else:
             results = pd.DataFrame(columns=['Lat. raw calc-raw matrix',
                                             'Lat. raw calc-filled matrix',
                                             'Lat. solarnoon calc-raw matrix',
                                             'Lat. solarnoon calc-filled matrix'])
 
-            results.loc[0] = [le1, le2, le3, le4]
+            results.loc[0] = [lat_est[0], lat_est[1], lat_est[2], lat_est[3]]
 
         self.results = results
 
@@ -87,12 +81,12 @@ class LatitudeStudy():
         if not sunrise_sunset:
             self.boolean_daytime = find_daytime(data_matrix,
                                                 daytime_threshold)
-            self.hours_daylight = (np.sum(self.boolean_daytime, axis=0))*self.data_sampling/60
+            self.hours_daylight = (np.sum(self.boolean_daytime, axis=0)) * self.data_sampling / 60
         else:
             self.hours_daylight = self.avg_sunrise_sunset(data_matrix, daytime_threshold)
 
-        self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15/2*self.hours_daylight))/
-                                                       (np.tan(self.delta[0]))))
+        self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
+                                                      (np.tan(self.delta[0]))))
         self.latitude_estimate = np.median(self.discrete_latitude)
         if self.phi_true_value is not None:
             self.residual = self.phi_true_value - self.latitude_estimate
