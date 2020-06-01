@@ -87,7 +87,7 @@ class TiltAzimuthStudy():
             print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.\n'
                   'Please increase or shift the day range')
             return
-        self.run_curve_fit_1()
+        self.run_curve_fit()
         self.estimate_costheta()
         if self.phi_true_value is not None:
             if self.beta_true_value is not None:
@@ -139,34 +139,25 @@ class TiltAzimuthStudy():
         return
 
     def ground_truth_costheta(self):
-        X = np.array([self.omega, self.delta])
+
         phi_true_value_2d = np.tile(self.phi_true_value,
                               (self.daily_meas, self.num_days))
         beta_true_value_2d = np.tile(self.beta_true_value,
                                  (self.daily_meas, self.num_days))
         gamma_true_value_2d = np.tile(self.gamma_true_value,
                                   (self.daily_meas, self.num_days))
+        X = np.array([self.omega, self.delta, phi_true_value_2d])
         self.costheta_ground_truth_calculate = \
-            self.func2(X, phi_true_value_2d, beta_true_value_2d, gamma_true_value_2d)
+            self.func(X, beta_true_value_2d, gamma_true_value_2d)
         return
 
     def estimate_costheta(self):
-        X = np.array([self.omega, self.delta])
         phi_estimate_2d = np.tile(np.deg2rad(self.latitude_estimate), (self.daily_meas, self.num_days))
         beta_estimate_2d = np.tile(np.deg2rad(self.tilt_estimate), (self.daily_meas, self.num_days))
         gamma_estimate_2d = np.tile(np.deg2rad(self.azimuth_estimate), (self.daily_meas, self.num_days))
-        self.costheta_estimated = self.func2(X, phi_estimate_2d, beta_estimate_2d, gamma_estimate_2d)
+        X = np.array([self.omega, self.delta, phi_estimate_2d])
+        self.costheta_estimated = self.func(X, beta_estimate_2d, gamma_estimate_2d)
         return
-
-    def func2(self, x, phi, beta, gamma):
-        w = x[0]
-        d = x[1]
-        A = np.sin(d) * np.sin(phi) * np.cos(beta)
-        B = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
-        C = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
-        D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
-        E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
-        return A - B + C + D + E
 
     def find_daytime_threshold_quantile_seasonality(self):
         m = cvx.Parameter(nonneg=True, value=10 ** 6)
@@ -195,20 +186,25 @@ class TiltAzimuthStudy():
             self.delta_f = self.delta[self.boolean_daytime_range]
             self.omega_f = self.omega[self.boolean_daytime_range]
 
-    def run_curve_fit_1(self, bootstrap_iterations=None):
+    def run_curve_fit(self, bootstrap_iterations=None):
         self.costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
-        X = np.array([self.omega_f, self.delta_f])
-        popt, pcov = curve_fit(self.func, X, self.costheta_fit_f, p0=np.deg2rad(self.guess_values),
+        phi = np.deg2rad(self.latitude_estimate)
+        phi_estimate_f = np.tile(phi, len(self.omega_f))
+        x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
+        popt, pcov = curve_fit(self.func, x, self.costheta_fit_f, p0=np.deg2rad(self.guess_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
+
     def func(self, x, beta, gamma):
         w = x[0]
         d = x[1]
-        phi = np.deg2rad(self.latitude_estimate)
+        phi = x[2]
+
         A = np.sin(d) * np.sin(phi) * np.cos(beta)
         B = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
         C = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
         D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
         E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
         return A - B + C + D + E
+
