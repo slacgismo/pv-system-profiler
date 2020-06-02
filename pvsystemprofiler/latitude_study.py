@@ -4,7 +4,7 @@ to estimating latitude from solar power data. This code accepts solar power
 data in the form of a `solar-data-tools` `DataHandler` object, which is used
 to standardize and pre-process the data. The provided class will then estimate
 the latitude of the site that produced the data, using the `run` method.
-Latitude is estimated from equation (1.6.10) in:
+Latitude is estimated from equation (1.6.11) in:
     Duffie, John A., and William A. Beckman. Solar engineering of thermal
     processes. New York: Wiley, 1991.
 '''
