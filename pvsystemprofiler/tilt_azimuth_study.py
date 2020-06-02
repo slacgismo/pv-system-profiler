@@ -112,11 +112,17 @@ class TiltAzimuthStudy():
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
 
     def make_delta(self):
+        '''Delta is estimated  using equation (1.6.1a) in:
+        Duffie, John A., and William A. Beckman. Solar engineering of thermal
+        processes. New York: Wiley, 1991.'''
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
         self.delta = np.tile(delta_1, (self.daily_meas, 1))
         return
 
     def make_omega(self):
+        '''Omega is estimated  as in example (1.6.1) in:
+        Duffie, John A., and William A. Beckman. Solar engineering of thermal
+        processes. New York: Wiley, 1991.'''
         hour = np.arange(0, 24, self.data_sampling / 60)
         omega_1 = np.deg2rad(15 * (hour - 12))
         self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.num_days))
@@ -139,7 +145,6 @@ class TiltAzimuthStudy():
         return
 
     def ground_truth_costheta(self):
-
         phi_true_value_2d = np.tile(self.phi_true_value,
                               (self.daily_meas, self.num_days))
         beta_true_value_2d = np.tile(self.beta_true_value,
@@ -197,6 +202,9 @@ class TiltAzimuthStudy():
         return
 
     def func(self, x, beta, gamma):
+        '''The function cos(theta) is  calculated using equation (1.6.2) in:
+        Duffie, John A., and William A. Beckman. Solar engineering of thermal
+        processes. New York: Wiley, 1991.'''
         w = x[0]
         d = x[1]
         phi = x[2]
