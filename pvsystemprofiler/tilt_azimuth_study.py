@@ -45,11 +45,11 @@ class TiltAzimuthStudy():
         self.phi_true_value = None
         self.beta_true_value = None
         self.gamma_true_value = None
-        if lat_true_value is not None:
+        if lat_true_value:
             self.phi_true_value = np.deg2rad(lat_true_value)
-        if tilt_true_value is not None:
+        if tilt_true_value:
             self.beta_true_value = np.deg2rad(tilt_true_value)
-        if azimuth_true_value is not None:
+        if azimuth_true_value:
             self.gamma_true_value = np.deg2rad(azimuth_true_value)
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
@@ -70,7 +70,7 @@ class TiltAzimuthStudy():
         self.boolean_daytime_range = None
         self.omega_f = None
         self.delta_f = None
-        if self.day_range is not None:
+        if self.day_range:
             self.day_range = (self.day_of_year > self.day_range[0]) & \
                              (self.day_of_year < self.day_range[1])
         else:
@@ -89,17 +89,14 @@ class TiltAzimuthStudy():
             return
         self.run_curve_fit()
         self.estimate_costheta()
-        if self.phi_true_value is not None:
-            if self.beta_true_value is not None:
-                if self.gamma_true_value is not None:
-                    self.ground_truth_costheta()
-                    self.results = pd.DataFrame(columns=['Latitude Residual',
-                                                         'Tilt Residual',
-                                                         'Azimuth Residual'])
-                    r1 = np.rad2deg(self.phi_true_value) - self.latitude_estimate
-                    r2 = np.rad2deg(self.beta_true_value) - self.tilt_estimate
-                    r3 = np.rad2deg(self.gamma_true_value) - self.azimuth_estimate
-                    self.results.loc[0] = [r1, r2, r3]
+        if self.phi_true_value and self.beta_true_value and self.gamma_true_value:
+            self.ground_truth_costheta()
+            self.results = pd.DataFrame(columns=['Latitude Residual', 'Tilt Residual',
+                                                 'Azimuth Residual'])
+            r1 = np.rad2deg(self.phi_true_value) - self.latitude_estimate
+            r2 = np.rad2deg(self.beta_true_value) - self.tilt_estimate
+            r3 = np.rad2deg(self.gamma_true_value) - self.azimuth_estimate
+            self.results.loc[0] = [r1, r2, r3]
         return
 
     def find_boolean_daytime(self):
@@ -139,7 +136,7 @@ class TiltAzimuthStudy():
             s1[365:] == s1[:-365]
         ]
         problem = cvx.Problem(objective, constraints)
-        problem.solve(solver='MOSEK');
+        problem.solve(solver='MOSEK')
         self.scale_factor_costheta = s1.value
         self.costheta_fit = self.data_matrix / np.max(s1.value)
         return
