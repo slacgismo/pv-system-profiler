@@ -64,18 +64,18 @@ class TiltAzimuthStudy():
         self.azimuth_estimate = None
         self.scale_factor_costheta = None
         self.costheta_estimated = None
-        self.costheta_ground_truth_calculate = None
+        self.costheta_ground_truth = None
         self.costheta_fit = None
         self.costheta_fit_f = None
         self.boolean_daytime_range = None
         self.omega_f = None
         self.delta_f = None
-        self.results = None
         if self.day_range is not None:
             self.day_range = (self.day_of_year > self.day_range[0]) & \
                              (self.day_of_year < self.day_range[1])
         else:
             self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
+        self.results = None
 
     def run(self):
         self.find_boolean_daytime()
@@ -146,13 +146,13 @@ class TiltAzimuthStudy():
 
     def ground_truth_costheta(self):
         phi_true_value_2d = np.tile(self.phi_true_value,
-                              (self.daily_meas, self.num_days))
+                                    (self.daily_meas, self.num_days))
         beta_true_value_2d = np.tile(self.beta_true_value,
-                                 (self.daily_meas, self.num_days))
+                                     (self.daily_meas, self.num_days))
         gamma_true_value_2d = np.tile(self.gamma_true_value,
-                                  (self.daily_meas, self.num_days))
+                                      (self.daily_meas, self.num_days))
         X = np.array([self.omega, self.delta, phi_true_value_2d])
-        self.costheta_ground_truth_calculate = \
+        self.costheta_ground_truth = \
             self.func(X, beta_true_value_2d, gamma_true_value_2d)
         return
 
@@ -209,10 +209,10 @@ class TiltAzimuthStudy():
         d = x[1]
         phi = x[2]
 
-        A = np.sin(d) * np.sin(phi) * np.cos(beta)
-        B = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
-        C = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
-        D = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
-        E = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
-        return A - B + C + D + E
+        a = np.sin(d) * np.sin(phi) * np.cos(beta)
+        b = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
+        c = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
+        d = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
+        e = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
+        return a - b + c + d + e
 
