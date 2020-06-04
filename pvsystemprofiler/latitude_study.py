@@ -15,11 +15,11 @@ from solardatatools.daytime import find_daytime
 
 
 class LatitudeStudy():
-    def __init__(self, data_handler, daytime_threshold=[0.01, 0.01, 0.01, 0.01],
+    def __init__(self, data_handler, daytime_threshold=[0.001, 0.001, 0.001, 0.001],
                  lat_true_value=None):
         '''
-        :param data_handler: `DataHandler` class instance loaded with a solar power data set
-        :param daytime_threshold: daytime threshold
+        :param data_handler: `DataHandler` class instance loaded with a solar power data set.
+        :param daytime_threshold: (optional) daytime threshold.
         :param lat_true_value: (optional) the ground truth value for the system's latitude. (Degrees).
         '''
 
@@ -77,7 +77,7 @@ class LatitudeStudy():
 
         self.results = results
 
-    def estimate_latitude(self, data_matrix=None, daytime_threshold=0.01, sunrise_sunset=False):
+    def estimate_latitude(self, data_matrix=None, daytime_threshold=0.001, sunrise_sunset=False):
         if not sunrise_sunset:
             self.boolean_daytime = find_daytime(data_matrix,
                                                 daytime_threshold)
