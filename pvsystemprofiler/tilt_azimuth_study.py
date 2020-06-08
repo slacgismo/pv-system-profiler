@@ -204,14 +204,14 @@ class TiltAzimuthStudy():
         """The function cos(theta) is  calculated using equation (1.6.2) in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
         processes. New York: Wiley, 1991."""
-        w = x[0]
-        d = x[1]
+        omega = x[0]
+        delta = x[1]
         phi = x[2]
 
-        a = np.sin(d) * np.sin(phi) * np.cos(beta)
-        b = np.sin(d) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
-        c = np.cos(d) * np.cos(phi) * np.cos(beta) * np.cos(w)
-        d = np.cos(d) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(w)
-        e = np.cos(d) * np.sin(beta) * np.sin(gamma) * np.sin(w)
+        a = np.sin(delta) * np.sin(phi) * np.cos(beta)
+        b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
+        c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
+        d = np.cos(delta) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(omega)
+        e = np.cos(delta) * np.sin(beta) * np.sin(gamma) * np.sin(omega)
         return a - b + c + d + e
 
