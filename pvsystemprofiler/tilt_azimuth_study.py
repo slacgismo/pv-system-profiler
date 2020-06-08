@@ -18,7 +18,7 @@ class TiltAzimuthStudy():
                  daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None,
                  azimuth_true_value=None):
-        '''
+        """
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param day_range: (optional) the desired day range to run the study. An array of the form
                               [first day, last day]
@@ -30,7 +30,7 @@ class TiltAzimuthStudy():
         :param lat_true_value: (optional) ground truth value for the system's Latitude. (Degrees).
         :param tilt_true_value: (optional) ground truth value for the system's Tilt. (Degrees).
         :param azimuth_true_value: (optional) ground truth value for the system's Azimuth. (Degrees)
-        '''
+        """
 
         self.data_handler = data_handler
         self.day_range = day_range
@@ -83,7 +83,7 @@ class TiltAzimuthStudy():
         self.make_omega()
         self.find_fit_costheta()
         self.select_days()
-        if True not in self.boolean_daytime_range:
+        if ~np.any(self.boolean_daytime_range):
             print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.\n'
                   'Please increase or shift the day range')
             return
@@ -111,17 +111,17 @@ class TiltAzimuthStudy():
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
 
     def make_delta(self):
-        '''Delta is estimated  using equation (1.6.1a) in:
+        """Delta is estimated  using equation (1.6.1a) in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991.'''
+        processes. New York: Wiley, 1991."""
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
         self.delta = np.tile(delta_1, (self.daily_meas, 1))
         return
 
     def make_omega(self):
-        '''Omega is estimated  as in example (1.6.1) in:
+        """Omega is estimated  as in example (1.6.1) in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991.'''
+        processes. New York: Wiley, 1991."""
         hour = np.arange(0, 24, self.data_sampling / 60)
         omega_1 = np.deg2rad(15 * (hour - 12))
         self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.num_days))
@@ -201,9 +201,9 @@ class TiltAzimuthStudy():
         return
 
     def func(self, x, beta, gamma):
-        '''The function cos(theta) is  calculated using equation (1.6.2) in:
+        """The function cos(theta) is  calculated using equation (1.6.2) in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991.'''
+        processes. New York: Wiley, 1991."""
         w = x[0]
         d = x[1]
         phi = x[2]
