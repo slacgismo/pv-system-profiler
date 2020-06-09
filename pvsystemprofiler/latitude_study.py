@@ -83,7 +83,7 @@ class LatitudeStudy():
                                                 daytime_threshold)
             self.hours_daylight = (np.sum(self.boolean_daytime, axis=0)) * self.data_sampling / 60
         else:
-            self.hours_daylight = self.avg_sunrise_sunset(data_matrix, daytime_threshold)
+            self.hours_daylight = self.calculate_hours_daylight(data_matrix, daytime_threshold)
 
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
                                                       (np.tan(self.delta[0]))))
@@ -97,7 +97,7 @@ class LatitudeStudy():
         self.delta = np.tile(delta_1, (self.data_matrix.shape[0], 1))
         return
 
-    def avg_sunrise_sunset(self, data_in, threshold=0.01):
+    def calculate_hours_daylight(self, data_in, threshold=0.01):
         data = np.copy(data_in).astype(np.float)
         num_meas_per_hour = data.shape[0] / 24
         x = np.arange(0, 24, 1. / num_meas_per_hour)
