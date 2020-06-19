@@ -42,15 +42,9 @@ class TiltAzimuthStudy():
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
-        self.phi_true_value = None
-        self.beta_true_value = None
-        self.gamma_true_value = None
-        if lat_true_value is not None:
-            self.phi_true_value = np.deg2rad(lat_true_value)
-        if tilt_true_value is not None:
-            self.beta_true_value = np.deg2rad(tilt_true_value)
-        if azimuth_true_value is not None:
-            self.gamma_true_value = np.deg2rad(azimuth_true_value)
+        self.phi_true_value = lat_true_value
+        self.beta_true_value = tilt_true_value
+        self.gamma_true_value = azimuth_true_value
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
@@ -107,17 +101,17 @@ class TiltAzimuthStudy():
                     self.ground_truth_costheta()
                     self.results = pd.DataFrame(columns=['Latitude Residual', 'Tilt Residual',
                                                  'Azimuth Residual'])
-                    r1 = np.rad2deg(self.phi_true_value) - self.latitude_estimate
-                    r2 = np.rad2deg(self.beta_true_value) - self.tilt_estimate
-                    r3 = np.rad2deg(self.gamma_true_value) - self.azimuth_estimate
+                    r1 = self.phi_true_value - self.latitude_estimate
+                    r2 = self.beta_true_value - self.tilt_estimate
+                    r3 = self.gamma_true_value - self.azimuth_estimate
                     self.results.loc[0] = [r1, r2, r3]
 
                     # uncoupled tilt and azimuth results
                     self.results_uncoupled = pd.DataFrame(columns=['Latitude Residual', 'Tilt Residual',
                                                  'Azimuth Residual'])
-                    r1 = np.rad2deg(self.phi_true_value) - self.latitude_estimate
-                    r2 = np.rad2deg(self.beta_true_value) - self.tilt_estimate_uncoupled
-                    r3 = np.rad2deg(self.gamma_true_value) - self.azimuth_estimate_uncoupled
+                    r1 = self.phi_true_value - self.latitude_estimate
+                    r2 = self.beta_true_value - self.tilt_estimate_uncoupled
+                    r3 = self.gamma_true_value - self.azimuth_estimate_uncoupled
                     self.results_uncoupled.loc[0] = [r1, r2, r3]
 
         return
@@ -165,11 +159,11 @@ class TiltAzimuthStudy():
         return
 
     def ground_truth_costheta(self):
-        phi_true_value_2d = np.tile(self.phi_true_value,
+        phi_true_value_2d = np.tile(np.deg2rad(self.phi_true_value),
                                     (self.daily_meas, self.num_days))
-        beta_true_value_2d = np.tile(self.beta_true_value,
+        beta_true_value_2d = np.tile(np.deg2rad(self.beta_true_value),
                                      (self.daily_meas, self.num_days))
-        gamma_true_value_2d = np.tile(self.gamma_true_value,
+        gamma_true_value_2d = np.tile(np.deg2rad(self.gamma_true_value),
                                       (self.daily_meas, self.num_days))
         X = np.array([self.omega, self.delta, phi_true_value_2d])
         self.costheta_ground_truth = \
@@ -264,7 +258,7 @@ class TiltAzimuthStudy():
         omega = x[0]
         delta = x[1]
         phi = x[2]
-        gamma = self.gamma_true_value
+        gamma = np.deg2rad(self.gamma_true_value)
         a = np.sin(delta) * np.sin(phi) * np.cos(beta)
         b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
         c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
@@ -279,7 +273,7 @@ class TiltAzimuthStudy():
         omega = x[0]
         delta = x[1]
         phi = x[2]
-        beta = self.beta_true_value
+        beta = np.deg2rad(self.beta_true_value)
         a = np.sin(delta) * np.sin(phi) * np.cos(beta)
         b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
         c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
