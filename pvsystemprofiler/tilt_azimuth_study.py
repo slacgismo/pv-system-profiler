@@ -14,7 +14,7 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, day_range=None, guess_values=[10, 10],
+    def __init__(self, data_handler, day_range=None, init_values=[10, 10],
                  daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None,
                  azimuth_true_value=None):
@@ -22,7 +22,7 @@ class TiltAzimuthStudy():
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param day_range: (optional) the desired day range to run the study. An array of the form
                               [first day, last day]
-        :param guess_values: (optional) Tilt and Azimuth guess values for numerical fit.
+        :param init_values: (optional) Tilt and Azimuth guess values for numerical fit.
                                 Default values are [10, 10]. (Degrees).
                                 are used otherwise
         :param daytime_threshold: (optional) daytime threshold
@@ -38,7 +38,7 @@ class TiltAzimuthStudy():
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
-        self.guess_values = guess_values
+        self.init_values = init_values
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
@@ -209,7 +209,7 @@ class TiltAzimuthStudy():
         phi = np.deg2rad(self.latitude_estimate)
         phi_estimate_f = np.tile(phi, len(self.omega_f))
         x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func, x, self.costheta_fit_f, p0=np.deg2rad(self.guess_values),
+        popt, pcov = curve_fit(self.func, x, self.costheta_fit_f, p0=np.deg2rad(self.init_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
@@ -219,7 +219,7 @@ class TiltAzimuthStudy():
         phi = np.deg2rad(self.latitude_estimate)
         phi_estimate_f = np.tile(phi, len(self.omega_f))
         x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func_tilt, x, self.costheta_fit_f, p0=np.deg2rad(self.guess_values[0]),
+        popt, pcov = curve_fit(self.func_tilt, x, self.costheta_fit_f, p0=np.deg2rad(self.init_values[0]),
                                bounds=([0, 1.57]))
         self.tilt_estimate_uncoupled = np.degrees(popt)[0]
         return
@@ -229,7 +229,7 @@ class TiltAzimuthStudy():
         phi = np.deg2rad(self.latitude_estimate)
         phi_estimate_f = np.tile(phi, len(self.omega_f))
         x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func_azimuth, x, self.costheta_fit_f, p0=np.deg2rad(self.guess_values[1]),
+        popt, pcov = curve_fit(self.func_azimuth, x, self.costheta_fit_f, p0=np.deg2rad(self.init_values[1]),
                                 bounds=([-3.14, 3.14]))
         self.azimuth_estimate_uncoupled = np.degrees(popt)[0]
         return
