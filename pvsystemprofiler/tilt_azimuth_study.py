@@ -14,10 +14,8 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, day_range=None, init_values=[10, 10],
-                 daytime_threshold=None, lat_estimate=None,
-                 lat_true_value=None, tilt_true_value=None,
-                 azimuth_true_value=None):
+    def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lat_estimate=None,
+                 lat_true_value=None, tilt_true_value=None, azimuth_true_value=None):
         """
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param day_range: (optional) the desired day range to run the study. An array of the form
@@ -39,6 +37,8 @@ class TiltAzimuthStudy():
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.init_values = init_values
+        if self.init_values == None:
+            self.init_values = [10, 10]
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
