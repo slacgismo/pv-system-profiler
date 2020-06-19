@@ -15,8 +15,7 @@ from solardatatools.daytime import find_daytime
 
 
 class LatitudeStudy():
-    def __init__(self, data_handler, daytime_threshold=[0.001, 0.001, 0.001, 0.001],
-                 lat_true_value=None):
+    def __init__(self, data_handler, daytime_threshold=None, lat_true_value=None):
         '''
         :param data_handler: `DataHandler` class instance loaded with a solar power data set.
         :param daytime_threshold: (optional) daytime threshold.
@@ -25,6 +24,8 @@ class LatitudeStudy():
 
         self.data_handler = data_handler
         self.daytime_threshold = daytime_threshold
+        if self.daytime_threshold is None:
+            self.daytime_threshold = [0.001, 0.001, 0.001, 0.001]
         self.phi_true_value = lat_true_value
 
         if not data_handler._ran_pipeline:
