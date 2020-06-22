@@ -15,19 +15,16 @@ from solardatatools.daytime import find_daytime
 
 
 class LatitudeStudy():
-    def __init__(self, data_handler, daytime_threshold=None, lat_true_value=None):
+    def __init__(self, data_handler, lat_true_value=None):
         '''
         :param data_handler: `DataHandler` class instance loaded with a solar power data set.
-        :param daytime_threshold: (optional) daytime threshold.
+
         :param lat_true_value: (optional) the ground truth value for the system's latitude. (Degrees).
         '''
 
         self.data_handler = data_handler
-        self.daytime_threshold = daytime_threshold
-        if self.daytime_threshold is None:
-            self.daytime_threshold = [0.001, 0.001]
         self.phi_true_value = lat_true_value
-
+        self.phi_true_value = lat_true_value
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
@@ -45,13 +42,15 @@ class LatitudeStudy():
         # Results
         self.results = None
 
-    def run(self, threshold_method=('raw data matrix', 'filled data matrix'), verbose=True):
+    def run(self, threshold_method=('raw data matrix', 'filled data matrix'), daytime_threshold=None, verbose=True):
         method = np.atleast_1d(threshold_method)
+        if daytime_threshold is None:
+            threshold_values = [0.001, 0.001]
         self.make_delta()
         
         results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold matrix'])
         for matrix_ix, matrix_id in enumerate(method):
-            dtt = self.daytime_threshold[matrix_ix]
+            dtt = daytime_threshold[matrix_ix]
             met = method[matrix_ix]
             lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt)
 
