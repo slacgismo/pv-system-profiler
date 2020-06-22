@@ -43,16 +43,16 @@ class LatitudeStudy():
         self.delta = None
         self.residual = None
         # Results
-        self.methods = ['raw data matrix', 'filled data matrix']
         self.results = None
 
-    def run(self, verbose=True):
+    def run(self, threshold_method=('raw data matrix', 'filled data matrix'), verbose=True):
+        method = np.atleast_1d(threshold_method)
         self.make_delta()
         
-        results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold method'])
-        for matrix_ix, matrix_id in enumerate([self.raw_data_matrix, self.data_matrix]):
+        results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold matrix'])
+        for matrix_ix, matrix_id in enumerate(method):
             dtt = self.daytime_threshold[matrix_ix]
-            met = self.methods[matrix_ix]
+            met = method[matrix_ix]
             lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt)
 
             results.loc[matrix_ix] = [lat_est, dtt, met]
@@ -73,7 +73,12 @@ class LatitudeStudy():
         self.delta = np.tile(delta_1, (self.data_matrix.shape[0], 1))
         return
 
-    def calculate_hours_daylight(self, data_in, threshold=0.01):
+    def calculate_hours_daylight(self, matrix, threshold=0.01):
+        if matrix in ('raw data matrix', 'raw_data_matrix', 'raw'):
+            data_in = self.raw_data_matrix
+        if matrix in ('filled data matrix', 'filled_data_matrix', 'filled'):
+            data_in = self.data_matrix
+
         data = np.copy(data_in).astype(np.float)
         num_meas_per_hour = data.shape[0] / 24
         x = np.arange(0, 24, 1. / num_meas_per_hour)
