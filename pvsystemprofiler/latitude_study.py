@@ -25,7 +25,7 @@ class LatitudeStudy():
         self.data_handler = data_handler
         self.daytime_threshold = daytime_threshold
         if self.daytime_threshold is None:
-            self.daytime_threshold = [0.001, 0.001, 0.001, 0.001]
+            self.daytime_threshold = [0.001, 0.001]
         self.phi_true_value = lat_true_value
 
         if not data_handler._ran_pipeline:
@@ -43,7 +43,6 @@ class LatitudeStudy():
         self.hours_daylight = None
         self.delta = None
         self.residual = None
-
         # Results
         self.results = None
 
@@ -52,13 +51,11 @@ class LatitudeStudy():
         counter = 0
         lat_res = np.zeros(4)
         lat_est = np.zeros(4)
-        for daytime_flag in [False, True]:
-            for matrix in [self.raw_data_matrix, self.data_matrix]:
-                self.estimate_latitude(matrix, daytime_threshold=self.daytime_threshold[counter],
-                                       sunrise_sunset=daytime_flag)
-                lat_est[counter] = self.latitude_estimate
-                lat_res[counter] = self.residual
-                counter += 1
+        for matrix in [self.raw_data_matrix, self.data_matrix]:
+            self.estimate_latitude(matrix, daytime_threshold=self.daytime_threshold[counter])
+            lat_est[counter] = self.latitude_estimate
+            lat_res[counter] = self.residual
+            counter += 1
 
         if self.phi_true_value is not None:
             results = pd.DataFrame(columns=[
@@ -78,13 +75,8 @@ class LatitudeStudy():
 
         self.results = results
 
-    def estimate_latitude(self, data_matrix=None, daytime_threshold=0.001, sunrise_sunset=False):
-        if not sunrise_sunset:
-            self.boolean_daytime = find_daytime(data_matrix,
-                                                daytime_threshold)
-            self.hours_daylight = (np.sum(self.boolean_daytime, axis=0)) * self.data_sampling / 60
-        else:
-            self.hours_daylight = self.calculate_hours_daylight(data_matrix, daytime_threshold)
+    def estimate_latitude(self, data_matrix=None, daytime_threshold=0.001):
+        self.hours_daylight = self.calculate_hours_daylight(data_matrix, daytime_threshold)
 
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
                                                       (np.tan(self.delta[0]))))
