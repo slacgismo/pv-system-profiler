@@ -188,7 +188,7 @@ class TiltAzimuthStudy():
                 x2[365:] == x2[:-365], x1 + x2 == y
             ]
         else:
-            constraints = []
+            constraints = [x1 + x2 == y]
         c1 = cvx.sum(1 / 2 * cvx.abs(x1) + (t - 1 / 2) * x1)
         c2 = cvx.sum_squares(cvx.diff(x2, 2))
         objective = cvx.Minimize(c1 + m * c2)
