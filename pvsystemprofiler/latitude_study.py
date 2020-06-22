@@ -39,51 +39,33 @@ class LatitudeStudy():
         self.data_sampling = self.data_handler.data_sampling
         self.boolean_daytime = None
         self.discrete_latitude = None
-        self.latitude_estimate = None
         self.hours_daylight = None
         self.delta = None
         self.residual = None
         # Results
+        self.methods = ['raw data matrix', 'filled data matrix']
         self.results = None
 
     def run(self, verbose=True):
         self.make_delta()
-        counter = 0
-        lat_res = np.zeros(4)
-        lat_est = np.zeros(4)
-        for matrix in [self.raw_data_matrix, self.data_matrix]:
-            self.estimate_latitude(matrix, daytime_threshold=self.daytime_threshold[counter])
-            lat_est[counter] = self.latitude_estimate
-            lat_res[counter] = self.residual
-            counter += 1
+        
+        results = pd.DataFrame(columns=['latitude', 'threshold', 'method'])
+        for matrix_ix, matrix_id in enumerate([self.raw_data_matrix, self.data_matrix]):
+            dtt = self.daytime_threshold[matrix_ix]
+            met = self.methods[matrix_ix]
+            lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt)
 
-        if self.phi_true_value is not None:
-            results = pd.DataFrame(columns=[
-                'latitude', 'Residual. raw calc-raw matrix', 'Residual. raw calc-filled matrix',
-                'Residual. solarnoon calc-raw matrix', 'Residual. solarnoon calc-filled matrix',
-                'Lat. raw calc-raw matrix', 'Lat. raw calc-filled matrix',
-                'Lat. solarnoon calc-raw matrix', 'Lat. solarnoon calc-filled matrix'])
-            results.loc[0] = [self.phi_true_value, lat_res[0], lat_res[1], lat_res[2], lat_res[3],
-                              lat_est[0], lat_est[1], lat_est[2], lat_est[3]]
-        else:
-            results = pd.DataFrame(columns=['Lat. raw calc-raw matrix',
-                                            'Lat. raw calc-filled matrix',
-                                            'Lat. solarnoon calc-raw matrix',
-                                            'Lat. solarnoon calc-filled matrix'])
+            results.loc[matrix_ix] = [lat_est, dtt, met]
 
-            results.loc[0] = [lat_est[0], lat_est[1], lat_est[2], lat_est[3]]
 
-        self.results = results
+            self.results = results
 
     def estimate_latitude(self, data_matrix=None, daytime_threshold=0.001):
         self.hours_daylight = self.calculate_hours_daylight(data_matrix, daytime_threshold)
 
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
                                                       (np.tan(self.delta[0]))))
-        self.latitude_estimate = np.median(self.discrete_latitude)
-        if self.phi_true_value is not None:
-            self.residual = self.phi_true_value - self.latitude_estimate
-        return
+        return np.median(self.discrete_latitude)
 
     def make_delta(self):
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
