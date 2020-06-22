@@ -49,14 +49,15 @@ class LatitudeStudy():
     def run(self, verbose=True):
         self.make_delta()
         
-        results = pd.DataFrame(columns=['latitude', 'threshold', 'method'])
+        results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold method'])
         for matrix_ix, matrix_id in enumerate([self.raw_data_matrix, self.data_matrix]):
             dtt = self.daytime_threshold[matrix_ix]
             met = self.methods[matrix_ix]
             lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt)
 
             results.loc[matrix_ix] = [lat_est, dtt, met]
-
+        if self.phi_true_value is not None:
+            results['residual'] = self.phi_true_value - results['latitude']
 
             self.results = results
 
