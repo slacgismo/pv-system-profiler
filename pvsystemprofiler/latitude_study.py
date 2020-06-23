@@ -44,7 +44,14 @@ class LatitudeStudy():
 
     def run(self, threshold_method=('raw data matrix', 'filled data matrix'),
             daylight_method=('raw daylight', 'sunrise-sunset'),
-            threshold=None, verbose=True):
+            threshold=None):
+        '''
+
+        :param threshold_method: 'raw data matrix', 'filled data matrix'
+        :param daylight_method: 'raw daylight', 'sunrise-sunset'
+        :param threshold: (optional) daylight threshold values, tuple of length one to four
+        :return:
+        '''
         threshold_method = np.atleast_1d(threshold_method)
         daylight_method = np.atleast_1d(daylight_method)
 
@@ -53,16 +60,17 @@ class LatitudeStudy():
             thres = 0.001*np.ones(len(threshold_method)*len(daylight_method))
         self.make_delta()
 
-        results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold matrix'])
+        results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold matrix', 'daylight calculation'])
         counter = 0
         for matrix_ix, matrix_id in enumerate(threshold_method):
             for daylight_method_id in daylight_method:
                 dtt = thres[counter]
                 dlm = daylight_method_id
                 met = threshold_method[matrix_ix]
+                dcc = daylight_method_id
                 lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm)
 
-                results.loc[counter] = [lat_est, dtt, met]
+                results.loc[counter] = [lat_est, dtt, met, dcc]
                 counter += 1
         if self.phi_true_value is not None:
             results['residual'] = self.phi_true_value - results['latitude']
