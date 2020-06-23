@@ -42,15 +42,16 @@ class LatitudeStudy():
         # Results
         self.results = None
 
-    def run(self, threshold_method=('raw data matrix', 'filled data matrix'), daytime_threshold=None, verbose=True):
+    def run(self, threshold_method=('raw data matrix', 'filled data matrix'), threshold=None, verbose=True):
         method = np.atleast_1d(threshold_method)
-        if daytime_threshold is None:
-            threshold_values = [0.001, 0.001]
+        thres = threshold
+        if threshold == None:
+            thres = 0.01*np.ones(len(method))
         self.make_delta()
-        
+
         results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold matrix'])
         for matrix_ix, matrix_id in enumerate(method):
-            dtt = daytime_threshold[matrix_ix]
+            dtt = thres[matrix_ix]
             met = method[matrix_ix]
             lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt)
 
@@ -58,7 +59,7 @@ class LatitudeStudy():
         if self.phi_true_value is not None:
             results['residual'] = self.phi_true_value - results['latitude']
 
-            self.results = results
+        self.results = results
 
     def estimate_latitude(self, data_matrix=None, daytime_threshold=0.001):
         self.hours_daylight = self.calculate_hours_daylight(data_matrix, daytime_threshold)
