@@ -60,7 +60,7 @@ class LatitudeStudy():
             thres = 0.001*np.ones(len(threshold_method)*len(daylight_method))
         self.make_delta()
 
-        results = pd.DataFrame(columns=['latitude', ' threshold', 'threshold matrix', 'daylight calculation'])
+        results = pd.DataFrame(columns=['latitude', 'threshold', 'threshold matrix', 'daylight calculation'])
         counter = 0
         for matrix_ix, matrix_id in enumerate(threshold_method):
             for daylight_method_id in daylight_method:
