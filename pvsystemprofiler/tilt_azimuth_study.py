@@ -118,7 +118,6 @@ class TiltAzimuthStudy():
 
     def find_boolean_daytime(self):
         if self.daytime_threshold is None:
-            self.boolean_daytime = np.zeros([self.daily_meas, self.num_days], dtype=bool)
             self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality()
             self.boolean_daytime = self.data_matrix > self.daytime_threshold_fit
         else:
