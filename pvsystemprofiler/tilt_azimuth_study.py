@@ -36,7 +36,6 @@ class TiltAzimuthStudy():
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
-        self.init_values = init_values
         if init_values is None:
             self.init_values = [10, 10]
         else:
