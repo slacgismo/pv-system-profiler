@@ -4,9 +4,6 @@ to estimating latitude from solar power data. This code accepts solar power
 data in the form of a `solar-data-tools` `DataHandler` object, which is used
 to standardize and pre-process the data. The provided class will then estimate
 the latitude of the site that produced the data, using the `run` method.
-Latitude is estimated from equation (1.6.11) in:
-    Duffie, John A., and William A. Beckman. Solar engineering of thermal
-    processes. New York: Wiley, 1991.
 '''
 import numpy as np
 import pandas as pd
@@ -79,6 +76,12 @@ class LatitudeStudy():
 
     def estimate_latitude(self, matrix_id=None, daytime_threshold=0.001, daylight_method=('sunrise-sunset',
                                                                                           'raw daylight')):
+        """"
+        Latitude is estimated from equation (1.6.11) in:
+        Duffie, John A., and William A. Beckman. Solar engineering of thermal
+        processes. New York: Wiley, 1991.
+        """
+
         if matrix_id in ('raw data matrix', 'raw_data_matrix', 'raw'):
             data_in = self.raw_data_matrix
         if matrix_id in ('filled data matrix', 'filled_data_matrix', 'filled'):
