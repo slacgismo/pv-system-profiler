@@ -37,7 +37,7 @@ class TiltAzimuthStudy():
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.init_values = init_values
-        if self.init_values == None:
+        if self.init_values is None:
             self.init_values = [10, 10]
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
