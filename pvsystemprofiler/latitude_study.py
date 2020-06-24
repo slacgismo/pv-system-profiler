@@ -19,7 +19,8 @@ class LatitudeStudy():
         :param lat_true_value: (optional) the ground truth value for the system's latitude. (Degrees).
         '''
 
-        self.data_handler = data_handler
+        if data_handler is not None:
+            self.data_handler = data_handler
         self.phi_true_value = lat_true_value
         self.phi_true_value = lat_true_value
         if not data_handler._ran_pipeline:
@@ -37,6 +38,7 @@ class LatitudeStudy():
         self.delta_cooper = None
         self.delta_spencer = None
         self.residual = None
+        self.daytime_threshold = None
         # Results
         self.results = None
 
@@ -54,9 +56,11 @@ class LatitudeStudy():
         threshold_method = np.atleast_1d(threshold_method)
         daylight_method = np.atleast_1d(daylight_method)
 
-        thres = threshold
         if threshold is None:
-            thres = 0.001*np.ones(len(threshold_method)*len(daylight_method)*len(delta_method))
+            self.daytime_threshold = 0.001*np.ones(len(threshold_method)*len(daylight_method)*len(delta_method))
+        else:
+            self.daytime_threshold = threshold
+
         self.make_delta_cooper()
         self.make_delta_spencer()
 
@@ -66,7 +70,7 @@ class LatitudeStudy():
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(threshold_method):
                 for daylight_method_id in daylight_method:
-                    dtt = thres[counter]
+                    dtt = self.daytime_threshold[counter]
                     dlm = daylight_method_id
                     met = threshold_method[matrix_ix]
                     dcc = daylight_method_id
