@@ -108,8 +108,6 @@ class LatitudeStudy():
         if delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
 
-        #self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
-        #                                              (np.tan(delta[0]))))
         self.discrete_latitude = calc_lat(self.hours_daylight, delta)
         return np.median(self.discrete_latitude)
 
