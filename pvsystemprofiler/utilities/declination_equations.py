@@ -7,8 +7,8 @@ def delta_cooper(day_of_year, daily_meas):
     processes. New York: Wiley, 1991.
     """
     delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + day_of_year) / 365)))
-
-    return np.tile(delta_1, (daily_meas, 1))
+    delta = np.tile(delta_1, (daily_meas, 1))
+    return delta
 
 def delta_spencer(day_of_year, daily_meas):
     """"
@@ -20,4 +20,5 @@ def delta_spencer(day_of_year, daily_meas):
     delta_1 = np.deg2rad((180 / np.pi) * (0.006918 - 0.399912 * np.cos(b) + 0.070257 * np.sin(b) - 0.006758 *
                                           np.cos(2 * b) + 0.000907 * np.sin(2 * b) - 0.002697 * np.cos(3 * b) +
                                              0.00148 * np.sin(3 * b)))
-    return np.tile(delta_1, (daily_meas, 1))
+    delta = np.tile(delta_1, (daily_meas, 1))
+    return delta
