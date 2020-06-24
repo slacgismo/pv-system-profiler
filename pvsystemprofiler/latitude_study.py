@@ -33,7 +33,6 @@ class LatitudeStudy():
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
         self.boolean_daytime = None
-        self.discrete_latitude = None
         self.hours_daylight = None
         self.delta_cooper = None
         self.delta_spencer = None
@@ -108,8 +107,8 @@ class LatitudeStudy():
         if delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
 
-        self.discrete_latitude = calc_lat(self.hours_daylight, delta)
-        return np.median(self.discrete_latitude)
+        latitude_estimate = calc_lat(self.hours_daylight, delta)
+        return np.median(latitude_estimate)
 
     def calculate_hours_daylight_raw(self, data_in, threshold=0.001):
         self.boolean_daytime = find_daytime(data_in, threshold)
