@@ -7,9 +7,9 @@ the latitude of the site that produced the data, using the `run` method.
 '''
 import numpy as np
 import pandas as pd
-from pvsystemprofiler.utilities.progress import progress
+from pvsystemprofiler.utilities.declination_equations import delta_spencer
+from pvsystemprofiler.utilities.declination_equations import delta_cooper
 from solardatatools.daytime import find_daytime
-
 
 class LatitudeStudy():
     def __init__(self, data_handler, lat_true_value=None):
@@ -61,8 +61,8 @@ class LatitudeStudy():
         else:
             self.daytime_threshold = threshold
 
-        self.make_delta_cooper()
-        self.make_delta_spencer()
+        self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
+        self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
         results = pd.DataFrame(columns=['latitude', 'threshold', 'threshold matrix', 'daylight calculation',
                                         'declination method'])
@@ -111,29 +111,6 @@ class LatitudeStudy():
         self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
                                                       (np.tan(delta[0]))))
         return np.median(self.discrete_latitude)
-
-    def make_delta_cooper(self):
-        """"
-        Declination delta1 is estimated from equation (1.6.1a) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991.
-        """
-        delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
-        self.delta_cooper = np.tile(delta_1, (self.daily_meas, 1))
-        return
-
-    def make_delta_spencer(self):
-        """"
-        Declination delta1 is estimated from equation (1.6.1b) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991.
-        """
-        b = np.deg2rad((self.day_of_year - 1)*360/365)
-        delta_1 = np.deg2rad((180 / np.pi) * (0.006918 - 0.399912 * np.cos(b) + 0.070257 * np.sin(b) - 0.006758 *
-                                             np.cos(2 * b) + 0.000907 * np.sin(2 * b) - 0.002697 * np.cos(3 * b) +
-                                             0.00148 * np.sin(3 * b)))
-        self.delta_spencer = np.tile(delta_1, (self.daily_meas, 1))
-        return
 
     def calculate_hours_daylight_raw(self, data_in, threshold=0.001):
         self.boolean_daytime = find_daytime(data_in, threshold)
