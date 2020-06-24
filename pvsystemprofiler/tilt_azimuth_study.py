@@ -135,7 +135,7 @@ class TiltAzimuthStudy():
         return
 
     def make_omega(self):
-        """Omega is estimated  as in example (1.6.1) in:
+        """Omega, the hour angle is estimated as defined on p. 13 in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
         processes. New York: Wiley, 1991."""
         hour = np.arange(0, 24, self.data_sampling / 60)
