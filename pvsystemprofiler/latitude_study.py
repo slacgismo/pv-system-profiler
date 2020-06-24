@@ -47,7 +47,7 @@ class LatitudeStudy():
         '''
         :param threshold_method: 'raw data matrix', 'filled data matrix'
         :param daylight_method: 'raw daylight', 'sunrise-sunset'
-        :param threshold: (optional) daylight threshold values, tuple of length one to four
+        :param threshold: (optional) daylight threshold values, tuple of length one to eight
         :param delta_method: (optional) 'cooper', 'spencer'
         :return:
         '''
@@ -56,11 +56,12 @@ class LatitudeStudy():
 
         thres = threshold
         if threshold is None:
-            thres = 0.001*np.ones(len(threshold_method)*len(daylight_method))
+            thres = 0.001*np.ones(len(threshold_method)*len(daylight_method)*len(delta_method))
         self.make_delta_cooper()
         self.make_delta_spencer()
 
-        results = pd.DataFrame(columns=['latitude', 'threshold', 'threshold matrix', 'daylight calculation'])
+        results = pd.DataFrame(columns=['latitude', 'threshold', 'threshold matrix', 'daylight calculation',
+                                        'declination method'])
         counter = 0
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(threshold_method):
@@ -69,11 +70,12 @@ class LatitudeStudy():
                     dlm = daylight_method_id
                     met = threshold_method[matrix_ix]
                     dcc = daylight_method_id
+                    dm = delta_id
                     lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                      delta_method=delta_id)
 
-                results.loc[counter] = [lat_est, dtt, met, dcc]
-                counter += 1
+                    results.loc[counter] = [lat_est, dtt, met, dcc, dm]
+                    counter += 1
         if self.phi_true_value is not None:
             results['residual'] = self.phi_true_value - results['latitude']
 
@@ -122,7 +124,7 @@ class LatitudeStudy():
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
         processes. New York: Wiley, 1991.
         """
-        b = (self.day_of_year - 1)*360/365
+        b = np.deg2rad((self.day_of_year - 1)*360/365)
         delta_1 = np.deg2rad((180 / np.pi) * (0.006918 - 0.399912 * np.cos(b) + 0.070257 * np.sin(b) - 0.006758 *
                                              np.cos(2 * b) + 0.000907 * np.sin(2 * b) - 0.002697 * np.cos(3 * b) +
                                              0.00148 * np.sin(3 * b)))
