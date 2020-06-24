@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.declination_equations import delta_spencer
 from pvsystemprofiler.utilities.declination_equations import delta_cooper
+from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.daytime import find_daytime
 
 class LatitudeStudy():
@@ -19,8 +20,7 @@ class LatitudeStudy():
         :param lat_true_value: (optional) the ground truth value for the system's latitude. (Degrees).
         '''
 
-        if data_handler is not None:
-            self.data_handler = data_handler
+        self.data_handler = data_handler
         self.phi_true_value = lat_true_value
         self.phi_true_value = lat_true_value
         if not data_handler._ran_pipeline:
@@ -108,8 +108,9 @@ class LatitudeStudy():
         if delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
 
-        self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
-                                                      (np.tan(delta[0]))))
+        #self.discrete_latitude = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * self.hours_daylight)) /
+        #                                              (np.tan(delta[0]))))
+        self.discrete_latitude = calc_lat(self.hours_daylight, delta)
         return np.median(self.discrete_latitude)
 
     def calculate_hours_daylight_raw(self, data_in, threshold=0.001):
