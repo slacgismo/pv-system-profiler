@@ -58,7 +58,6 @@ class TiltAzimuthStudy():
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
-        self.scsf = data_handler.scsf
         self.clear_index = data_handler.daily_flags.clear
         self.boolean_daytime = None
         self.delta_cooper = None
@@ -181,12 +180,9 @@ class TiltAzimuthStudy():
         return x2.value
 
     def select_days(self, day_range, delta):
-        if self.scsf:
-            self.boolean_daytime_range = self.boolean_daytime * day_range
-        else:
-            self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
-            self.delta_f = delta[self.boolean_daytime_range]
-            self.omega_f = self.omega[self.boolean_daytime_range]
+        self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
+        self.delta_f = delta[self.boolean_daytime_range]
+        self.omega_f = self.omega[self.boolean_daytime_range]
 
     def run_curve_fit(self, func, init_values, costheta, boolean_daytime_range, delta, omega, latitude_estimate,
                       bootstrap_iterations=None):
