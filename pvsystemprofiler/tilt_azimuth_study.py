@@ -106,26 +106,9 @@ class TiltAzimuthStudy():
                       'Please increase or shift the day range')
                 self.run_curve_fit(costheta=costheta_fit)
 
-                # try:
-                #     self.run_curve_fit_tilt_only()
-                # except RuntimeError:
-                #     self.tilt_estimate_uncoupled = np.nan
-                # try:
-                #     self.run_curve_fit_azimuth_only()
-                # except RuntimeError:
-                #     self.azimuth_estimate_uncoupled = np.nan
-
-                #self.costheta_estimated = self.estimate_costheta(delta, self.omega, self.latitude_estimate,
-                #                                                 self.tilt_estimate, self.azimuth_estimate)
                 self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
-                                                                 self.tilt_estimate, self.azimuth_estimate)
-        #     phi_estimate_2d = np.tile(np.deg2rad(self.latitude_estimate), (self.daily_meas, self.num_days))
-        #     beta_estimate_2d = np.tile(np.deg2rad(self.tilt_estimate), (self.daily_meas, self.num_days))
-        #     gamma_estimate_2d = np.tile(np.deg2rad(self.azimuth_estimate), (self.daily_meas, self.num_days))
-        #     X = np.array([self.omega, delta, phi_estimate_2d])
-        #     self.costheta_estimated = self.func(X, beta_estimate_2d, gamma_estimate_2d)
-        #     return
-
+                                                                  self.tilt_estimate, self.azimuth_estimate)
+        
                 if self.phi_true_value is not None:
                     if self.beta_true_value is not None:
                         if self.gamma_true_value is not None:
@@ -136,14 +119,6 @@ class TiltAzimuthStudy():
                             r3 = day_range_id
                             r4 = delta_id
                             self.results.loc[counter] = [r1, r2, r3, r4]
-
-                #     # uncoupled tilt and azimuth results
-                #
-                #             r1 = self.beta_true_value - self.tilt_estimate
-                #             r2 = self.gamma_true_value - self.azimuth_estimate
-                #             r3 = day_range_id
-                #             r4 = delta_id
-                #             self.results.loc[counter] = [r1, r2, r3, r4]
                 counter += 1
         return
 
@@ -153,8 +128,6 @@ class TiltAzimuthStudy():
         else:
             day_range = np.ones(self.day_of_year.shape, dtype=bool)
         return day_range
-
-
 
     def find_boolean_daytime(self):
         if self.daytime_threshold is None:
