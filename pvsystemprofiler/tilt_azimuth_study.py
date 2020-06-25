@@ -70,8 +70,6 @@ class TiltAzimuthStudy():
         self.costheta_ground_truth = None
         self.costheta_fit = None
         self.boolean_daytime_range = None
-        self.omega_f = None
-        self.delta_f = None
         self.results = None
         self.results_uncoupled = None
         self.tilt_estimate_uncoupled = None
@@ -97,13 +95,16 @@ class TiltAzimuthStudy():
             for day_range_id in self.day_range_dict:
                 day_interval = self.day_range_dict[day_range_id]
                 day_range = self.get_day_range(day_interval)
-                self.select_days(day_range=day_range, delta=delta)
+                self.select_days(day_range=day_range)
+                delta_f = delta[self.boolean_daytime_range]
+                omega_f = self.omega[self.boolean_daytime_range]
+
                 if ~np.any(self.boolean_daytime_range):
                     print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.'
                       'Please increase or shift the day range')
                 self.run_curve_fit(func=self.func, init_values=self.init_values, costheta=costheta_fit,
-                                   boolean_daytime_range=self.boolean_daytime_range, delta=self.delta_f,
-                                   omega=self.omega_f, latitude_estimate=self.latitude_estimate)
+                                   boolean_daytime_range=self.boolean_daytime_range, delta=delta_f,
+                                   omega=omega_f, latitude_estimate=self.latitude_estimate)
 
                 self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
                                                                   self.tilt_estimate, self.azimuth_estimate)
@@ -179,10 +180,8 @@ class TiltAzimuthStudy():
         prob.solve(solver='MOSEK')
         return x2.value
 
-    def select_days(self, day_range, delta):
+    def select_days(self, day_range):
         self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
-        self.delta_f = delta[self.boolean_daytime_range]
-        self.omega_f = self.omega[self.boolean_daytime_range]
 
     def run_curve_fit(self, func, init_values, costheta, boolean_daytime_range, delta, omega, latitude_estimate,
                       bootstrap_iterations=None):
