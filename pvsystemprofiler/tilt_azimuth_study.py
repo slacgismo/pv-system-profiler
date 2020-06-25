@@ -98,11 +98,13 @@ class TiltAzimuthStudy():
             for day_range_id in self.day_range_dict:
                 day_interval = self.day_range_dict[day_range_id]
                 day_range = self.get_day_range(day_interval)
-                self.select_days(day_range, delta)
+                self.select_days(day_range=day_range, delta=delta)
                 if ~np.any(self.boolean_daytime_range):
                     print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.'
                       'Please increase or shift the day range')
-                self.run_curve_fit(costheta=costheta_fit)
+                self.run_curve_fit(func=self.func, init_values=self.init_values, costheta=costheta_fit,
+                                   boolean_daytime_range=self.boolean_daytime_range, delta=self.delta_f,
+                                   omega=self.omega_f, latitude_estimate=self.latitude_estimate)
 
                 self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
                                                                   self.tilt_estimate, self.azimuth_estimate)
@@ -186,12 +188,13 @@ class TiltAzimuthStudy():
             self.delta_f = delta[self.boolean_daytime_range]
             self.omega_f = self.omega[self.boolean_daytime_range]
 
-    def run_curve_fit(self, costheta, bootstrap_iterations=None):
-        costheta_fit_f = costheta[self.boolean_daytime_range]
-        phi = np.deg2rad(self.latitude_estimate)
-        phi_estimate_f = np.tile(phi, len(self.omega_f))
-        x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func, x, costheta_fit_f, p0=np.deg2rad(self.init_values),
+    def run_curve_fit(self, func, init_values, costheta, boolean_daytime_range, delta, omega, latitude_estimate,
+                      bootstrap_iterations=None):
+        costheta_fit = costheta[boolean_daytime_range]
+        phi = np.deg2rad(latitude_estimate)
+        phi_estimate = np.tile(phi, len(omega))
+        x = np.array([omega, delta, phi_estimate])
+        popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
