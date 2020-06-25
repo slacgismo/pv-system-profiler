@@ -54,6 +54,7 @@ class LatitudeStudy():
         '''
         threshold_method = np.atleast_1d(threshold_method)
         daylight_method = np.atleast_1d(daylight_method)
+        delta_method = np.atleast_1d(delta_method)
 
         if threshold is None:
             self.daytime_threshold = 0.001*np.ones(len(threshold_method)*len(daylight_method)*len(delta_method))
@@ -97,7 +98,6 @@ class LatitudeStudy():
             data_in = self.raw_data_matrix
         if matrix_id in ('filled data matrix', 'filled_data_matrix', 'filled'):
             data_in = self.data_matrix
-
         if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
             self.hours_daylight = self.calculate_hours_daylight(data_in, daytime_threshold)
         if daylight_method in ('raw_daylight', 'raw daylight'):
