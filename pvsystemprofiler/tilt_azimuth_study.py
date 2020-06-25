@@ -115,7 +115,9 @@ class TiltAzimuthStudy():
                 # except RuntimeError:
                 #     self.azimuth_estimate_uncoupled = np.nan
 
-                self.costheta_estimated = self.estimate_costheta(delta, self.omega, self.latitude_estimate,
+                #self.costheta_estimated = self.estimate_costheta(delta, self.omega, self.latitude_estimate,
+                #                                                 self.tilt_estimate, self.azimuth_estimate)
+                self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
                                                                  self.tilt_estimate, self.azimuth_estimate)
         #     phi_estimate_2d = np.tile(np.deg2rad(self.latitude_estimate), (self.daily_meas, self.num_days))
         #     beta_estimate_2d = np.tile(np.deg2rad(self.tilt_estimate), (self.daily_meas, self.num_days))
@@ -185,13 +187,13 @@ class TiltAzimuthStudy():
         self.costheta_ground_truth = self.func(X, beta_true_value_2d, gamma_true_value_2d)
         return
 
-    def estimate_costheta(self, delta, omega, latitude, tilt, azimuth):
+    def calculate_costheta(self, delta, omega, latitude, tilt, azimuth):
         phi_estimate_2d = np.tile(np.deg2rad(latitude), (self.daily_meas, self.num_days))
         beta_estimate_2d = np.tile(np.deg2rad(tilt), (self.daily_meas, self.num_days))
         gamma_estimate_2d = np.tile(np.deg2rad(azimuth), (self.daily_meas, self.num_days))
         x = np.array([omega, delta, phi_estimate_2d])
-        costheta_estimated = self.func(x, beta_estimate_2d, gamma_estimate_2d)
-        return costheta_estimated
+        costheta = self.func(x, beta_estimate_2d, gamma_estimate_2d)
+        return costheta
 
     def find_daytime_threshold_quantile_seasonality(self):
         m = cvx.Parameter(nonneg=True, value=10 ** 6)
