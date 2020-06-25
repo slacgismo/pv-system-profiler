@@ -13,6 +13,7 @@ import pandas as pd
 import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
+from pvsystemprofiler.utilities.hour_angle_equation import find_omega
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None, azimuth_true_value=None):
@@ -80,7 +81,7 @@ class TiltAzimuthStudy():
     def run(self):
         self.find_boolean_daytime()
         self.make_delta()
-        self.make_omega()
+        self.omega = find_omega(self.data_sampling, self.num_days)
         self.find_fit_costheta()
         self.select_days()
         if ~np.any(self.boolean_daytime_range):
@@ -132,15 +133,6 @@ class TiltAzimuthStudy():
         processes. New York: Wiley, 1991."""
         delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
         self.delta = np.tile(delta_1, (self.daily_meas, 1))
-        return
-
-    def make_omega(self):
-        """Omega, the hour angle is estimated as defined on p. 13 in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991."""
-        hour = np.arange(0, 24, self.data_sampling / 60)
-        omega_1 = np.deg2rad(15 * (hour - 12))
-        self.omega = np.tile(omega_1.reshape(-1, 1), (1, self.num_days))
         return
 
     def find_fit_costheta(self):
