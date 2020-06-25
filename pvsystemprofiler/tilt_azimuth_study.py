@@ -105,7 +105,6 @@ class TiltAzimuthStudy():
                 if ~np.any(self.boolean_daytime_range):
                     print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.\n'
                       'Please increase or shift the day range')
-                    return
                 self.run_curve_fit()
                 try:
                     self.run_curve_fit_tilt_only()
