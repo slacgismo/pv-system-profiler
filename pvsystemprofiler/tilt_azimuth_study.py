@@ -32,7 +32,12 @@ class TiltAzimuthStudy():
         """
 
         self.data_handler = data_handler
-        self.day_range = day_range
+
+        if day_range is None:
+            self.day_range_dict = {}
+            self.day_range_dict = {'summer': [152, 245], 'no winter': [60, 335], 'spring': [60, 153], 'Full Year': None}
+        else:
+            self.day_range_dict = {'manual': day_range}
         self.data_matrix = self.data_handler.filled_data_matrix
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
@@ -41,8 +46,6 @@ class TiltAzimuthStudy():
             self.init_values = [10, 10]
         else:
             self.init_values = init_values
-
-
         self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
@@ -68,11 +71,6 @@ class TiltAzimuthStudy():
         self.boolean_daytime_range = None
         self.omega_f = None
         self.delta_f = None
-        if self.day_range:
-            self.day_range = (self.day_of_year > self.day_range[0]) & \
-                             (self.day_of_year < self.day_range[1])
-        else:
-            self.day_range = np.ones(self.day_of_year.shape, dtype=bool)
         self.results = None
         self.results_uncoupled = None
         self.tilt_estimate_uncoupled = None
@@ -80,45 +78,61 @@ class TiltAzimuthStudy():
 
     def run(self):
         self.find_boolean_daytime()
-        self.make_delta()
         self.omega = find_omega(self.data_sampling, self.num_days)
         self.find_fit_costheta()
-        self.select_days()
-        if ~np.any(self.boolean_daytime_range):
-            print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.\n'
-                  'Please increase or shift the day range')
-            return
-        self.run_curve_fit()
-        try:
-            self.run_curve_fit_tilt_only()
-        except RuntimeError:
-            self.tilt_estimate_uncoupled = np.nan
-        try:
-            self.run_curve_fit_azimuth_only()
-        except RuntimeError:
-           self.azimuth_estimate_uncoupled = np.nan
 
-        self.estimate_costheta()
-        if self.phi_true_value is not None:
-            if self.beta_true_value is not None:
-                if self.gamma_true_value is not None:
-                    self.ground_truth_costheta()
-                    self.results = pd.DataFrame(columns=['Latitude Residual', 'Tilt Residual',
-                                                 'Azimuth Residual'])
-                    r1 = self.phi_true_value - self.latitude_estimate
-                    r2 = self.beta_true_value - self.tilt_estimate
-                    r3 = self.gamma_true_value - self.azimuth_estimate
-                    self.results.loc[0] = [r1, r2, r3]
+        counter = 0
+        self.results = pd.DataFrame(columns=['tilt residual', 'azimuth residual', 'day range'])
+        self.results_uncoupled = pd.DataFrame(columns=['tilt Residual', 'azimuth residual', 'day_range'])
+        for day_range_id in self.day_range_dict:
+            day_interval = self.day_range_dict[day_range_id]
+            day_range = self.get_day_range(day_interval)
 
-                    # uncoupled tilt and azimuth results
-                    self.results_uncoupled = pd.DataFrame(columns=['Latitude Residual', 'Tilt Residual',
-                                                 'Azimuth Residual'])
-                    r1 = self.phi_true_value - self.latitude_estimate
-                    r2 = self.beta_true_value - self.tilt_estimate_uncoupled
-                    r3 = self.gamma_true_value - self.azimuth_estimate_uncoupled
-                    self.results_uncoupled.loc[0] = [r1, r2, r3]
+            self.make_delta()
+            self.select_days(day_range)
+            if ~np.any(self.boolean_daytime_range):
+                print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.\n'
+                      'Please increase or shift the day range')
+                return
+            self.run_curve_fit()
+            try:
+                self.run_curve_fit_tilt_only()
+            except RuntimeError:
+                self.tilt_estimate_uncoupled = np.nan
+            try:
+                self.run_curve_fit_azimuth_only()
+            except RuntimeError:
+                self.azimuth_estimate_uncoupled = np.nan
 
+            self.estimate_costheta()
+            if self.phi_true_value is not None:
+                if self.beta_true_value is not None:
+                    if self.gamma_true_value is not None:
+                        self.ground_truth_costheta()
+
+                        r1 = self.beta_true_value - self.tilt_estimate
+                        r2 = self.gamma_true_value - self.azimuth_estimate
+                        r3 = day_range_id
+                        self.results.loc[counter] = [r1, r2, r3]
+
+                # uncoupled tilt and azimuth results
+
+                        r1 = self.beta_true_value - self.tilt_estimate
+                        r2 = self.gamma_true_value - self.azimuth_estimate
+                        r3 = day_range_id
+                        self.results.loc[counter] = [r1, r2, r3]
+            print(counter)
+            counter += 1
         return
+
+    def get_day_range(self, interval):
+        if interval is not None:
+            day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
+        else:
+            day_range = np.ones(self.day_of_year.shape, dtype=bool)
+        return day_range
+
+
 
     def find_boolean_daytime(self):
         if self.daytime_threshold is None:
@@ -190,11 +204,11 @@ class TiltAzimuthStudy():
         prob.solve(solver='MOSEK')
         return x2.value
 
-    def select_days(self):
+    def select_days(self, day_range):
         if self.scsf:
-            self.boolean_daytime_range = self.boolean_daytime * self.day_range
+            self.boolean_daytime_range = self.boolean_daytime * day_range
         else:
-            self.boolean_daytime_range = self.boolean_daytime * self.clear_index * self.day_range
+            self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
             self.delta_f = self.delta[self.boolean_daytime_range]
             self.omega_f = self.omega[self.boolean_daytime_range]
 
