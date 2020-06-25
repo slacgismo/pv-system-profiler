@@ -70,7 +70,6 @@ class TiltAzimuthStudy():
         self.costheta_estimated = None
         self.costheta_ground_truth = None
         self.costheta_fit = None
-        self.costheta_fit_f = None
         self.boolean_daytime_range = None
         self.omega_f = None
         self.delta_f = None
@@ -114,7 +113,6 @@ class TiltAzimuthStudy():
                             self.costheta_ground_truth = self.calculate_costheta(delta, self.omega, self.phi_true_value,
                                                                                  self.beta_true_value,
                                                                                  self.gamma_true_value)
-
                             r1 = self.beta_true_value - self.tilt_estimate
                             r2 = self.gamma_true_value - self.azimuth_estimate
                             r3 = day_range_id
@@ -189,31 +187,31 @@ class TiltAzimuthStudy():
             self.omega_f = self.omega[self.boolean_daytime_range]
 
     def run_curve_fit(self, costheta, bootstrap_iterations=None):
-        self.costheta_fit_f = costheta[self.boolean_daytime_range]
+        costheta_fit_f = costheta[self.boolean_daytime_range]
         phi = np.deg2rad(self.latitude_estimate)
         phi_estimate_f = np.tile(phi, len(self.omega_f))
         x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func, x, self.costheta_fit_f, p0=np.deg2rad(self.init_values),
+        popt, pcov = curve_fit(self.func, x, costheta_fit_f, p0=np.deg2rad(self.init_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
         self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         return
 
     def run_curve_fit_tilt_only(self, bootstrap_iterations=None):
-        self.costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
+        costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
         phi = np.deg2rad(self.latitude_estimate)
         phi_estimate_f = np.tile(phi, len(self.omega_f))
         x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func_tilt, x, self.costheta_fit_f, p0=np.deg2rad(self.init_values[0]),
+        popt, pcov = curve_fit(self.func_tilt, x, costheta_fit_f, p0=np.deg2rad(self.init_values[0]),
                                bounds=([0, 1.57]))
         self.tilt_estimate_uncoupled = np.degrees(popt)[0]
         return
 
     def run_curve_fit_azimuth_only(self, bootstrap_iterations=None):
-        self.costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
+        costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
         phi = np.deg2rad(self.latitude_estimate)
         phi_estimate_f = np.tile(phi, len(self.omega_f))
         x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func_azimuth, x, self.costheta_fit_f, p0=np.deg2rad(self.init_values[1]),
+        popt, pcov = curve_fit(self.func_azimuth, x, costheta_fit_f, p0=np.deg2rad(self.init_values[1]),
                                 bounds=([-3.14, 3.14]))
         self.azimuth_estimate_uncoupled = np.degrees(popt)[0]
         return
