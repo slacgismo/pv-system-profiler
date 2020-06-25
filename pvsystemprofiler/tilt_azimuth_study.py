@@ -14,6 +14,8 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.hour_angle_equation import find_omega
+from pvsystemprofiler.utilities.declination_equations import delta_spencer
+from pvsystemprofiler.utilities.declination_equations import delta_cooper
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None, azimuth_true_value=None):
@@ -60,6 +62,8 @@ class TiltAzimuthStudy():
         self.clear_index = data_handler.daily_flags.clear
         self.boolean_daytime = None
         self.delta = None
+        self.delta_cooper = None
+        self.delta_spencer = None
         self.omega = None
         self.tilt_estimate = None
         self.azimuth_estimate = None
@@ -76,11 +80,16 @@ class TiltAzimuthStudy():
         self.tilt_estimate_uncoupled = None
         self.azimuth_estimate_uncoupled = None
 
-    def run(self):
+    def run(self, delta_method=('cooper', 'spencer')):
+
+        delta_method = np.atleast_1d(delta_method)
         self.find_boolean_daytime()
         self.omega = find_omega(self.data_sampling, self.num_days)
         self.find_fit_costheta()
 
+        self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
+        self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
+        self.delta = self.delta_cooper
         counter = 0
         self.results = pd.DataFrame(columns=['tilt residual', 'azimuth residual', 'day range'])
         self.results_uncoupled = pd.DataFrame(columns=['tilt Residual', 'azimuth residual', 'day_range'])
@@ -88,7 +97,7 @@ class TiltAzimuthStudy():
             day_interval = self.day_range_dict[day_range_id]
             day_range = self.get_day_range(day_interval)
 
-            self.make_delta()
+
             self.select_days(day_range)
             if ~np.any(self.boolean_daytime_range):
                 print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.\n'
@@ -121,7 +130,6 @@ class TiltAzimuthStudy():
                         r2 = self.gamma_true_value - self.azimuth_estimate
                         r3 = day_range_id
                         self.results.loc[counter] = [r1, r2, r3]
-            print(counter)
             counter += 1
         return
 
@@ -140,14 +148,6 @@ class TiltAzimuthStudy():
             self.boolean_daytime = self.data_matrix > self.daytime_threshold_fit
         else:
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
-
-    def make_delta(self):
-        """Delta is estimated  using equation (1.6.1a) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991."""
-        delta_1 = np.deg2rad(23.45 * np.sin(np.deg2rad(360 * (284 + self.day_of_year) / 365)))
-        self.delta = np.tile(delta_1, (self.daily_meas, 1))
-        return
 
     def find_fit_costheta(self):
         data = np.max(self.data_matrix, axis=0)
