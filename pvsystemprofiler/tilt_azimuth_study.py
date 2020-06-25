@@ -84,7 +84,6 @@ class TiltAzimuthStudy():
         delta_method = np.atleast_1d(delta_method)
         self.find_boolean_daytime()
         self.omega = find_omega(self.data_sampling, self.num_days)
-        #self.find_fit_costheta(self.data_matrix, self.clear_index))
         scale_factor_costheta, costheta_fit = self.find_fit_costheta(self.data_matrix, self.clear_index)
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
@@ -108,11 +107,13 @@ class TiltAzimuthStudy():
 
                 self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
                                                                   self.tilt_estimate, self.azimuth_estimate)
-        
+
                 if self.phi_true_value is not None:
                     if self.beta_true_value is not None:
                         if self.gamma_true_value is not None:
-                            self.ground_truth_costheta(delta)
+                            self.costheta_ground_truth = self.calculate_costheta(delta, self.omega, self.phi_true_value,
+                                                                                 self.beta_true_value,
+                                                                                 self.gamma_true_value)
 
                             r1 = self.beta_true_value - self.tilt_estimate
                             r2 = self.gamma_true_value - self.azimuth_estimate
@@ -151,14 +152,6 @@ class TiltAzimuthStudy():
         scale_factor_costheta = s1.value
         costheta_fit = self.data_matrix / np.max(s1.value)
         return scale_factor_costheta, costheta_fit
-
-    def ground_truth_costheta(self, delta):
-        phi_true_value_2d = np.tile(np.deg2rad(self.phi_true_value), (self.daily_meas, self.num_days))
-        beta_true_value_2d = np.tile(np.deg2rad(self.beta_true_value), (self.daily_meas, self.num_days))
-        gamma_true_value_2d = np.tile(np.deg2rad(self.gamma_true_value), (self.daily_meas, self.num_days))
-        X = np.array([self.omega, delta, phi_true_value_2d])
-        self.costheta_ground_truth = self.func(X, beta_true_value_2d, gamma_true_value_2d)
-        return
 
     def calculate_costheta(self, delta, omega, latitude, tilt, azimuth):
         phi_estimate_2d = np.tile(np.deg2rad(latitude), (self.daily_meas, self.num_days))
