@@ -64,21 +64,22 @@ class LatitudeStudy():
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        results = pd.DataFrame(columns=['latitude', 'threshold', 'threshold matrix', 'daylight calculation',
-                                        'declination method'])
+        results = pd.DataFrame(columns=['declination method', 'daylight calculation', 'threshold matrix', 'threshold',
+                                        'latitude'])
         counter = 0
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(threshold_method):
                 for daylight_method_id in daylight_method:
                     dtt = self.daytime_threshold[counter]
                     dlm = daylight_method_id
-                    met = threshold_method[matrix_ix]
+                    tm = threshold_method[matrix_ix]
                     dcc = daylight_method_id
                     dm = delta_id
                     lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                      delta_method=delta_id)
 
-                    results.loc[counter] = [lat_est, dtt, met, dcc, dm]
+                    #results.loc[counter] = [lat_est, dtt, met, dcc, dm]
+                    results.loc[counter] = [dm, dcc, tm, dtt, lat_est]
                     counter += 1
         if self.phi_true_value is not None:
             results['residual'] = self.phi_true_value - results['latitude']
