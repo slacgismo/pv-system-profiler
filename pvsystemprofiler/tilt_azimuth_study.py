@@ -94,8 +94,7 @@ class TiltAzimuthStudy():
                 delta = self.delta_spencer
             for day_range_id in self.day_range_dict:
                 day_interval = self.day_range_dict[day_range_id]
-                day_range = self.get_day_range(day_interval)
-                self.select_days(day_range=day_range)
+                self.get_day_range(day_interval)
                 delta_f = delta[self.boolean_daytime_range]
                 omega_f = self.omega[self.boolean_daytime_range]
 
@@ -128,7 +127,8 @@ class TiltAzimuthStudy():
             day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
         else:
             day_range = np.ones(self.day_of_year.shape, dtype=bool)
-        return day_range
+        self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
+        return
 
     def find_boolean_daytime(self):
         if self.daytime_threshold is None:
@@ -136,6 +136,7 @@ class TiltAzimuthStudy():
             self.boolean_daytime = self.data_matrix > self.daytime_threshold_fit
         else:
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
+        return
 
     def find_fit_costheta(self, data_matrix, clear_index):
         data = np.max(data_matrix, axis=0)
@@ -179,9 +180,6 @@ class TiltAzimuthStudy():
         prob = cvx.Problem(objective, constraints=constraints)
         prob.solve(solver='MOSEK')
         return x2.value
-
-    def select_days(self, day_range):
-        self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
 
     def run_curve_fit(self, func, init_values, costheta, boolean_daytime_range, delta, omega, latitude_estimate,
                       bootstrap_iterations=None):
