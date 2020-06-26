@@ -97,8 +97,7 @@ class TiltAzimuthStudy():
                 omega_f = self.omega[self.boolean_daytime_range]
 
                 if ~np.any(self.boolean_daytime_range):
-                    print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.'
-                      'Please increase or shift the day range')
+                    print('No data made it through selected day_range filter')
                 tilt_estimate, azimuth_estimate = self.run_curve_fit(func=self.func, init_values=self.init_values,
                                                                      costheta=self.costheta_fit,
                                                                      boolean_daytime_range=self.boolean_daytime_range,
