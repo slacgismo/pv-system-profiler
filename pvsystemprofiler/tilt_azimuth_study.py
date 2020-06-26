@@ -63,8 +63,6 @@ class TiltAzimuthStudy():
         self.delta_cooper = None
         self.delta_spencer = None
         self.omega = None
-        self.tilt_estimate = None
-        self.azimuth_estimate = None
         self.scale_factor_costheta = None
         self.costheta_estimated = None
         self.costheta_ground_truth = None
@@ -101,12 +99,15 @@ class TiltAzimuthStudy():
                 if ~np.any(self.boolean_daytime_range):
                     print('Data in selected day_range does not meet requirements for find tilt and azimuth estimation.'
                       'Please increase or shift the day range')
-                self.run_curve_fit(func=self.func, init_values=self.init_values, costheta=self.costheta_fit,
-                                   boolean_daytime_range=self.boolean_daytime_range, delta=delta_f,
-                                   omega=omega_f, latitude_estimate=self.latitude_estimate)
+                tilt_estimate, azimuth_estimate = self.run_curve_fit(func=self.func, init_values=self.init_values,
+                                                                     costheta=self.costheta_fit,
+                                                                     boolean_daytime_range=self.boolean_daytime_range,
+                                                                     delta=delta_f,
+                                                                     omega=omega_f,
+                                                                     latitude_estimate=self.latitude_estimate)
 
                 self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
-                                                                  self.tilt_estimate, self.azimuth_estimate)
+                                                                  tilt_estimate, azimuth_estimate)
 
                 if self.phi_true_value is not None:
                     if self.beta_true_value is not None:
@@ -114,8 +115,8 @@ class TiltAzimuthStudy():
                             self.costheta_ground_truth = self.calculate_costheta(delta, self.omega, self.phi_true_value,
                                                                                  self.beta_true_value,
                                                                                  self.gamma_true_value)
-                            r1 = self.beta_true_value - self.tilt_estimate
-                            r2 = self.gamma_true_value - self.azimuth_estimate
+                            r1 = self.beta_true_value - tilt_estimate
+                            r2 = self.gamma_true_value - azimuth_estimate
                             r3 = day_range_id
                             r4 = delta_id
                             self.results.loc[counter] = [r1, r2, r3, r4]
@@ -189,8 +190,9 @@ class TiltAzimuthStudy():
         x = np.array([omega, delta, phi_estimate])
         popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
-        self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
-        return
+        #self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
+        tilt_estimate, azimuth_estimate = np.degrees(popt)
+        return tilt_estimate, azimuth_estimate
 
     def run_curve_fit_tilt_only(self, bootstrap_iterations=None):
         costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
