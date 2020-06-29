@@ -14,8 +14,8 @@ import cvxpy as cvx
 from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.hour_angle_equation import find_omega
-from pvsystemprofiler.utilities.declination_equations import delta_spencer
-from pvsystemprofiler.utilities.declination_equations import delta_cooper
+from pvsystemprofiler.utilities.declination_equation import delta_spencer
+from pvsystemprofiler.utilities.declination_equation import delta_cooper
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lat_estimate=None,
                  lat_true_value=None, tilt_true_value=None, azimuth_true_value=None):

@@ -7,8 +7,8 @@ the latitude of the site that produced the data, using the `run` method.
 '''
 import numpy as np
 import pandas as pd
-from pvsystemprofiler.utilities.declination_equations import delta_spencer
-from pvsystemprofiler.utilities.declination_equations import delta_cooper
+from pvsystemprofiler.utilities.declination_equation import delta_spencer
+from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.daytime import find_daytime
 
