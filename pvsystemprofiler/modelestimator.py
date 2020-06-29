@@ -37,16 +37,16 @@ class ModelEstimator():
             self.data_sampling = 24 * 60 / self.data_matrix.shape[0]
             self.boolean_daylight_lat = self.data_matrix > 0.001 * np.percentile(self.data_matrix, 95)
             if self.fixed_power_thr == None:
-                self.boolean_daylight = np.empty([self.data_sampling_daily, self.num_days], dtype=bool)
+                self.boolean_daylight = np.zeros([self.data_sampling_daily, self.num_days], dtype=bool)
             else:
                 self.boolean_daylight = self.data_matrix > self.fix_param * np.percentile(self.data_matrix, 95)
         else:
             self.num_days = None
             self.data_sampling = None
         if self.summer_flag == True:
-            #self.slct_summer = (self.doy_list>152) & (self.doy_list<245) #summer only
-            #self.slct_summer = (self.doy_list>60) & (self.doy_list<335) #no winter
-            #self.slct_summer = (self.doy_list>60) & (self.doy_list<153) #spring only
+            self.slct_summer = (self.doy_list>152) & (self.doy_list<245) #summer only
+            self.slct_summer = (self.doy_list>60) & (self.doy_list<335) #no winter
+            self.slct_summer = (self.doy_list>60) & (self.doy_list<153) #spring only
             self.slct_summer = (self.doy_list>85) & (self.doy_list<167) #manual set only
         else:
             self.slct_summer = np.ones(self.doy_list.shape, dtype=bool)
@@ -77,12 +77,10 @@ class ModelEstimator():
         self.flag_clear_days()
         self.find_fit_costheta()
         self.ground_truth_costheta()
-        dh = DataHandler(raw_data_matrix=self.data_matrix)
-        dh.run_pipeline(verbose=False)
-        if self.fixed_power_thr == None:
-            self.power_threshold_fit = self.find_power_threshold_quantile_seasonality()
-            for d in range(0,self.num_days-1):
-                self.boolean_daylight[:,d] = self.data_matrix[:,d] > 1 * self.power_threshold_fit[d]
+        if self.fixed_power_thr is None:
+           self.power_threshold_fit = self.find_power_threshold_quantile_seasonality()
+           for d in range(0,self.num_days-1):
+               self.boolean_daylight[:,d] = self.data_matrix[:,d] > 1 * self.power_threshold_fit[d]
         self.select_days()
         return
 
@@ -108,7 +106,7 @@ class ModelEstimator():
             self.clear_index_set = np.s_[:]
         else:
             dh = DataHandler(raw_data_matrix=self.data_matrix)
-            dh.run_pipeline(verbose=False)
+            dh.run_pipeline(power_col = 0, verbose=False)
             self.clear_index_set = dh.daily_flags.clear
         return
 
