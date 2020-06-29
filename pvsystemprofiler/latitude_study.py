@@ -78,7 +78,6 @@ class LatitudeStudy():
                     lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                      delta_method=delta_id)
 
-                    #results.loc[counter] = [lat_est, dtt, met, dcc, dm]
                     results.loc[counter] = [dm, dcc, tm, dtt, lat_est]
                     counter += 1
         if self.phi_true_value is not None:
