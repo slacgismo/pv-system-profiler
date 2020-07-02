@@ -17,8 +17,8 @@ from pvsystemprofiler.utilities.hour_angle_equation import find_omega
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lat_estimate=None,
-                 lat_true_value=None, tilt_true_value=None, azimuth_true_value=None):
+    def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_estimate=None,
+                 lat_estimate=None, lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
         """
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param day_range: (optional) the desired day range to run the study. An array of the form
@@ -28,9 +28,11 @@ class TiltAzimuthStudy():
                                 are used otherwise
         :param daytime_threshold: (optional) daytime threshold
         :param lat_estimate: latitude estimate as obtained from the Latitude Study module. (Degrees).
+        :param lon_estimate: latitude estimate as obtained from the Latitude Study module. (Degrees).
         :param lat_true_value: (optional) ground truth value for the system's Latitude. (Degrees).
         :param tilt_true_value: (optional) ground truth value for the system's Tilt. (Degrees).
         :param azimuth_true_value: (optional) ground truth value for the system's Azimuth. (Degrees)
+        :param gmt_offset: The offset in hours between the local timezone and GMT/UTC
         """
 
         self.data_handler = data_handler
@@ -49,11 +51,13 @@ class TiltAzimuthStudy():
         else:
             self.init_values = init_values
         self.daytime_threshold = daytime_threshold
+        self.lon_estimate = lon_estimate
         self.daytime_threshold_fit = None
         self.latitude_estimate = lat_estimate
         self.phi_true_value = lat_true_value
         self.beta_true_value = tilt_true_value
         self.gamma_true_value = azimuth_true_value
+        self.gmt_offset = gmt_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
