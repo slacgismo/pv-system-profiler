@@ -81,7 +81,9 @@ class TiltAzimuthStudy():
 
         delta_method = np.atleast_1d(delta_method)
         self.find_boolean_daytime()
-        self.omega = find_omega(self.data_sampling, self.num_days)
+        self.omega = find_omega(self.data_sampling, self.num_days, self.lon_estimate, self.day_of_year,
+                                self.gmt_offset)
+
         self.scale_factor_costheta, self.costheta_fit = self.find_fit_costheta(self.data_matrix, self.clear_index)
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
