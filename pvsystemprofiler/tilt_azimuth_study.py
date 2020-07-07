@@ -87,7 +87,6 @@ class TiltAzimuthStudy():
 
         counter = 0
         self.results = pd.DataFrame(columns=['tilt residual', 'azimuth residual', 'day range', 'declination method'])
-        #self.results_uncoupled = pd.DataFrame(columns=['tilt Residual', 'azimuth residual', 'day_range', 'declination method'])
         for delta_id in delta_method:
             if delta_id in ('Cooper', 'cooper'):
                 delta = self.delta_cooper
