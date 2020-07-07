@@ -11,11 +11,11 @@ Tilt and Azimuth are estimated via numerical fit using equation (1.6.2) in:
 import numpy as np
 import pandas as pd
 import cvxpy as cvx
-from scipy.optimize import curve_fit
 from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.hour_angle_equation import find_omega
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
+from pvsystemprofiler.algorithms.azimuth.calculation import run_curve_fit
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_estimate=None,
                  lat_estimate=None, lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
@@ -108,7 +108,7 @@ class TiltAzimuthStudy():
 
                 func_cust = lambda x, beta, gamma: self.func(x, np.deg2rad(self.latitude_estimate), beta, gamma)
 
-                tilt_estimate, azimuth_estimate = self.run_curve_fit(func=func_cust, delta=delta_f, omega=omega_f,
+                tilt_estimate, azimuth_estimate = run_curve_fit(func=func_cust, delta=delta_f, omega=omega_f,
                                                                      costheta=self.costheta_fit,
                                                                      boolean_daytime_range=self.boolean_daytime_range,
                                                                      init_values=self.init_values)
@@ -117,18 +117,21 @@ class TiltAzimuthStudy():
                                                                   latitude_sys=self.latitude_estimate,
                                                                   tilt_sys=tilt_estimate, azimuth_sys=azimuth_estimate)
 
-                # if self.phi_true_value is not None:
-                #     if self.beta_true_value is not None:
-                #         if self.gamma_true_value is not None:
-                #             self.costheta_ground_truth = self.calculate_costheta(delta, self.omega, self.phi_true_value,
-                #                                                                  self.beta_true_value,
-                #                                                                  self.gamma_true_value)
-                #             r1 = self.beta_true_value - tilt_estimate
-                #             r2 = self.gamma_true_value - azimuth_estimate
-                #             r3 = day_range_id
-                #             r4 = delta_id
-                #             self.results.loc[counter] = [r1, r2, r3, r4]
-                #counter += 1
+                if self.phi_true_value is not None:
+                    if self.beta_true_value is not None:
+                        if self.gamma_true_value is not None:
+                            self.costheta_ground_truth = self.calculate_costheta(func=self.func, delta_sys=delta,
+                                                                                 omega_sys=self.omega,
+                                                                                 latitude_sys=self.phi_true_value,
+                                                                                 tilt_sys=self.beta_true_value,
+                                                                                 azimuth_sys=self.gamma_true_value)
+
+                            r1 = self.beta_true_value - tilt_estimate
+                            r2 = self.gamma_true_value - azimuth_estimate
+                            r3 = day_range_id
+                            r4 = delta_id
+                            self.results.loc[counter] = [r1, r2, r3, r4]
+                counter += 1
         return
 
     def get_day_range(self, interval):
@@ -163,7 +166,6 @@ class TiltAzimuthStudy():
         costheta_fit = self.data_matrix / np.max(s1.value)
         return scale_factor_costheta, costheta_fit
 
-
     def calculate_costheta(self, func, delta_sys, omega_sys, latitude_sys, tilt_sys, azimuth_sys):
         x = np.array([delta_sys, omega_sys])
         phi = np.deg2rad(latitude_sys)
@@ -190,14 +192,6 @@ class TiltAzimuthStudy():
         prob = cvx.Problem(objective, constraints=constraints)
         prob.solve(solver='MOSEK')
         return x2.value
-
-    def run_curve_fit(self, func, delta, omega, costheta, boolean_daytime_range, init_values):
-        costheta_fit = costheta[boolean_daytime_range]
-        x = np.array([delta, omega])
-        popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
-                               bounds=([0, -3.14], [1.57, 3.14]))
-        tilt_estimate, azimuth_estimate = np.degrees(popt)
-        return tilt_estimate, azimuth_estimate
 
     def func(self, x, phi, beta, gamma):
         """The function cos(theta) is  calculated using equation (1.6.2) in:
