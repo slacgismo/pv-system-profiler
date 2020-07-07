@@ -18,7 +18,7 @@ from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import run_curve_fit
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import find_fit_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import calculate_costheta
-
+from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_estimate=None,
                  lat_estimate=None, lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
@@ -108,21 +108,21 @@ class TiltAzimuthStudy():
                 self.omega_f = omega_f
                 self.delta = delta
 
-                func_cust = lambda x, beta, gamma: self.func_costheta(x, np.deg2rad(self.latitude_estimate), beta, gamma)
+                func_cust = lambda x, beta, gamma: func_costheta(x, np.deg2rad(self.latitude_estimate), beta, gamma)
 
                 tilt_estimate, azimuth_estimate = run_curve_fit(func=func_cust, delta=delta_f, omega=omega_f,
                                                                      costheta=self.costheta_fit,
                                                                      boolean_daytime_range=self.boolean_daytime_range,
                                                                      init_values=self.init_values)
 
-                self.costheta_estimated = calculate_costheta(func=self.func_costheta, delta_sys=delta, omega_sys=self.omega,
+                self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
                                                                   latitude_sys=self.latitude_estimate,
                                                                   tilt_sys=tilt_estimate, azimuth_sys=azimuth_estimate)
 
                 if self.phi_true_value is not None:
                     if self.beta_true_value is not None:
                         if self.gamma_true_value is not None:
-                            self.costheta_ground_truth = calculate_costheta(func=self.func_costheta, delta_sys=delta,
+                            self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
                                                                                  omega_sys=self.omega,
                                                                                  latitude_sys=self.phi_true_value,
                                                                                  tilt_sys=self.beta_true_value,
@@ -171,17 +171,3 @@ class TiltAzimuthStudy():
         prob = cvx.Problem(objective, constraints=constraints)
         prob.solve(solver='MOSEK')
         return x2.value
-
-    def func_costheta(self, x, phi, beta, gamma):
-        """The function cos(theta) is  calculated using equation (1.6.2) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991."""
-        delta = x[0]
-        omega = x[1]
-
-        a = np.sin(delta) * np.sin(phi) * np.cos(beta)
-        b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
-        c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
-        d = np.cos(delta) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(omega)
-        e = np.cos(delta) * np.sin(beta) * np.sin(gamma) * np.sin(omega)
-        return a - b + c + d + e
