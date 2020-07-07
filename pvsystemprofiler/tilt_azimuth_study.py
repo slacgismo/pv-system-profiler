@@ -113,9 +113,9 @@ class TiltAzimuthStudy():
                                                                      boolean_daytime_range=self.boolean_daytime_range,
                                                                      init_values=self.init_values)
 
-
-                #self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
-                #                                                  tilt_estimate, azimuth_estimate)
+                self.costheta_estimated = self.calculate_costheta(func=self.func, delta_sys=delta, omega_sys=self.omega,
+                                                                  latitude_sys=self.latitude_estimate,
+                                                                  tilt_sys=tilt_estimate, azimuth_sys=azimuth_estimate)
 
                 # if self.phi_true_value is not None:
                 #     if self.beta_true_value is not None:
@@ -163,12 +163,13 @@ class TiltAzimuthStudy():
         costheta_fit = self.data_matrix / np.max(s1.value)
         return scale_factor_costheta, costheta_fit
 
-    def calculate_costheta(self, delta, omega, latitude, tilt, azimuth):
-        phi_estimate_2d = np.tile(np.deg2rad(latitude), (self.daily_meas, self.num_days))
-        beta_estimate_2d = np.tile(np.deg2rad(tilt), (self.daily_meas, self.num_days))
-        gamma_estimate_2d = np.tile(np.deg2rad(azimuth), (self.daily_meas, self.num_days))
-        x = np.array([omega, delta, phi_estimate_2d])
-        costheta = self.func(x, beta_estimate_2d, gamma_estimate_2d)
+
+    def calculate_costheta(self, func, delta_sys, omega_sys, latitude_sys, tilt_sys, azimuth_sys):
+        x = np.array([delta_sys, omega_sys])
+        phi = np.deg2rad(latitude_sys)
+        beta = np.deg2rad(tilt_sys)
+        gamma = np.deg2rad(azimuth_sys)
+        costheta = func(x, phi, beta, gamma)
         return costheta
 
     def find_daytime_threshold_quantile_seasonality(self):
