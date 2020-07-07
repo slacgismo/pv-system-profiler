@@ -15,7 +15,7 @@ from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.hour_angle_equation import find_omega
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
-from pvsystemprofiler.algorithms.azimuth.calculation import run_curve_fit
+from pvsystemprofiler.algorithms.angle_of_incidence.calculation import run_curve_fit
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_estimate=None,
                  lat_estimate=None, lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
