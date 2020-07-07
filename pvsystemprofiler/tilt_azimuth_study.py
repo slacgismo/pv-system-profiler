@@ -195,30 +195,8 @@ class TiltAzimuthStudy():
         x = np.array([omega, delta, phi_estimate])
         popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
-        #self.tilt_estimate, self.azimuth_estimate = np.degrees(popt)
         tilt_estimate, azimuth_estimate = np.degrees(popt)
         return tilt_estimate, azimuth_estimate
-
-    def run_curve_fit_tilt_only(self, bootstrap_iterations=None):
-        costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
-        phi = np.deg2rad(self.latitude_estimate)
-        phi_estimate_f = np.tile(phi, len(self.omega_f))
-        x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func_tilt, x, costheta_fit_f, p0=np.deg2rad(self.init_values[0]),
-                               bounds=([0, 1.57]))
-        self.tilt_estimate_uncoupled = np.degrees(popt)[0]
-        return
-
-    def run_curve_fit_azimuth_only(self, bootstrap_iterations=None):
-        costheta_fit_f = self.costheta_fit[self.boolean_daytime_range]
-        phi = np.deg2rad(self.latitude_estimate)
-        phi_estimate_f = np.tile(phi, len(self.omega_f))
-        x = np.array([self.omega_f, self.delta_f, phi_estimate_f])
-        popt, pcov = curve_fit(self.func_azimuth, x, costheta_fit_f, p0=np.deg2rad(self.init_values[1]),
-                                bounds=([-3.14, 3.14]))
-        self.azimuth_estimate_uncoupled = np.degrees(popt)[0]
-        return
-
 
     def func(self, x, beta, gamma):
         """The function cos(theta) is  calculated using equation (1.6.2) in:
@@ -228,36 +206,6 @@ class TiltAzimuthStudy():
         delta = x[1]
         phi = x[2]
 
-        a = np.sin(delta) * np.sin(phi) * np.cos(beta)
-        b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
-        c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
-        d = np.cos(delta) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(omega)
-        e = np.cos(delta) * np.sin(beta) * np.sin(gamma) * np.sin(omega)
-        return a - b + c + d + e
-
-    def func_tilt(self, x, beta):
-        """The function cos(theta) is  calculated using equation (1.6.2) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991."""
-        omega = x[0]
-        delta = x[1]
-        phi = x[2]
-        gamma = np.deg2rad(self.gamma_true_value)
-        a = np.sin(delta) * np.sin(phi) * np.cos(beta)
-        b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
-        c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
-        d = np.cos(delta) * np.sin(phi) * np.sin(beta) * np.cos(gamma) * np.cos(omega)
-        e = np.cos(delta) * np.sin(beta) * np.sin(gamma) * np.sin(omega)
-        return a - b + c + d + e
-
-    def func_azimuth(self, x, gamma):
-        """The function cos(theta) is  calculated using equation (1.6.2) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991."""
-        omega = x[0]
-        delta = x[1]
-        phi = x[2]
-        beta = np.deg2rad(self.beta_true_value)
         a = np.sin(delta) * np.sin(phi) * np.cos(beta)
         b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
         c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
