@@ -73,9 +73,6 @@ class TiltAzimuthStudy():
         self.costheta_fit = None
         self.boolean_daytime_range = None
         self.results = None
-        self.results_uncoupled = None
-        self.tilt_estimate_uncoupled = None
-        self.azimuth_estimate_uncoupled = None
 
     def run(self, delta_method=('cooper', 'spencer')):
 
@@ -104,28 +101,34 @@ class TiltAzimuthStudy():
 
                 if ~np.any(self.boolean_daytime_range):
                     print('No data made it through selected day_range filter')
-                tilt_estimate, azimuth_estimate = self.run_curve_fit(func=self.func, init_values=self.init_values,
+
+                self.delta_f = delta_f
+                self.omega_f = omega_f
+                self.delta = delta
+
+                func_cust = lambda x, beta, gamma: self.func(x, np.deg2rad(self.latitude_estimate), beta, gamma)
+
+                tilt_estimate, azimuth_estimate = self.run_curve_fit(func=func_cust, delta=delta_f, omega=omega_f,
                                                                      costheta=self.costheta_fit,
                                                                      boolean_daytime_range=self.boolean_daytime_range,
-                                                                     delta=delta_f,
-                                                                     omega=omega_f,
-                                                                     latitude_estimate=self.latitude_estimate)
+                                                                     init_values=self.init_values)
 
-                self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
-                                                                  tilt_estimate, azimuth_estimate)
 
-                if self.phi_true_value is not None:
-                    if self.beta_true_value is not None:
-                        if self.gamma_true_value is not None:
-                            self.costheta_ground_truth = self.calculate_costheta(delta, self.omega, self.phi_true_value,
-                                                                                 self.beta_true_value,
-                                                                                 self.gamma_true_value)
-                            r1 = self.beta_true_value - tilt_estimate
-                            r2 = self.gamma_true_value - azimuth_estimate
-                            r3 = day_range_id
-                            r4 = delta_id
-                            self.results.loc[counter] = [r1, r2, r3, r4]
-                counter += 1
+                #self.costheta_estimated = self.calculate_costheta(delta, self.omega, self.latitude_estimate,
+                #                                                  tilt_estimate, azimuth_estimate)
+
+                # if self.phi_true_value is not None:
+                #     if self.beta_true_value is not None:
+                #         if self.gamma_true_value is not None:
+                #             self.costheta_ground_truth = self.calculate_costheta(delta, self.omega, self.phi_true_value,
+                #                                                                  self.beta_true_value,
+                #                                                                  self.gamma_true_value)
+                #             r1 = self.beta_true_value - tilt_estimate
+                #             r2 = self.gamma_true_value - azimuth_estimate
+                #             r3 = day_range_id
+                #             r4 = delta_id
+                #             self.results.loc[counter] = [r1, r2, r3, r4]
+                #counter += 1
         return
 
     def get_day_range(self, interval):
@@ -187,24 +190,20 @@ class TiltAzimuthStudy():
         prob.solve(solver='MOSEK')
         return x2.value
 
-    def run_curve_fit(self, func, init_values, costheta, boolean_daytime_range, delta, omega, latitude_estimate,
-                      bootstrap_iterations=None):
+    def run_curve_fit(self, func, delta, omega, costheta, boolean_daytime_range, init_values):
         costheta_fit = costheta[boolean_daytime_range]
-        phi = np.deg2rad(latitude_estimate)
-        phi_estimate = np.tile(phi, len(omega))
-        x = np.array([omega, delta, phi_estimate])
+        x = np.array([delta, omega])
         popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
                                bounds=([0, -3.14], [1.57, 3.14]))
         tilt_estimate, azimuth_estimate = np.degrees(popt)
         return tilt_estimate, azimuth_estimate
 
-    def func(self, x, beta, gamma):
+    def func(self, x, phi, beta, gamma):
         """The function cos(theta) is  calculated using equation (1.6.2) in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
         processes. New York: Wiley, 1991."""
-        omega = x[0]
-        delta = x[1]
-        phi = x[2]
+        delta = x[0]
+        omega = x[1]
 
         a = np.sin(delta) * np.sin(phi) * np.cos(beta)
         b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
