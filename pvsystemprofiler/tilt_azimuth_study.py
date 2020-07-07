@@ -105,21 +105,21 @@ class TiltAzimuthStudy():
                 self.omega_f = omega_f
                 self.delta = delta
 
-                func_cust = lambda x, beta, gamma: self.func(x, np.deg2rad(self.latitude_estimate), beta, gamma)
+                func_cust = lambda x, beta, gamma: self.func_costheta(x, np.deg2rad(self.latitude_estimate), beta, gamma)
 
                 tilt_estimate, azimuth_estimate = run_curve_fit(func=func_cust, delta=delta_f, omega=omega_f,
                                                                      costheta=self.costheta_fit,
                                                                      boolean_daytime_range=self.boolean_daytime_range,
                                                                      init_values=self.init_values)
 
-                self.costheta_estimated = self.calculate_costheta(func=self.func, delta_sys=delta, omega_sys=self.omega,
+                self.costheta_estimated = self.calculate_costheta(func=self.func_costheta, delta_sys=delta, omega_sys=self.omega,
                                                                   latitude_sys=self.latitude_estimate,
                                                                   tilt_sys=tilt_estimate, azimuth_sys=azimuth_estimate)
 
                 if self.phi_true_value is not None:
                     if self.beta_true_value is not None:
                         if self.gamma_true_value is not None:
-                            self.costheta_ground_truth = self.calculate_costheta(func=self.func, delta_sys=delta,
+                            self.costheta_ground_truth = self.calculate_costheta(func=self.func_costheta, delta_sys=delta,
                                                                                  omega_sys=self.omega,
                                                                                  latitude_sys=self.phi_true_value,
                                                                                  tilt_sys=self.beta_true_value,
@@ -192,7 +192,7 @@ class TiltAzimuthStudy():
         prob.solve(solver='MOSEK')
         return x2.value
 
-    def func(self, x, phi, beta, gamma):
+    def func_costheta(self, x, phi, beta, gamma):
         """The function cos(theta) is  calculated using equation (1.6.2) in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal
         processes. New York: Wiley, 1991."""
