@@ -17,6 +17,7 @@ from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import run_curve_fit
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import find_fit_costheta
+from pvsystemprofiler.algorithms.angle_of_incidence.calculation import calculate_costheta
 
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_estimate=None,
@@ -114,14 +115,14 @@ class TiltAzimuthStudy():
                                                                      boolean_daytime_range=self.boolean_daytime_range,
                                                                      init_values=self.init_values)
 
-                self.costheta_estimated = self.calculate_costheta(func=self.func_costheta, delta_sys=delta, omega_sys=self.omega,
+                self.costheta_estimated = calculate_costheta(func=self.func_costheta, delta_sys=delta, omega_sys=self.omega,
                                                                   latitude_sys=self.latitude_estimate,
                                                                   tilt_sys=tilt_estimate, azimuth_sys=azimuth_estimate)
 
                 if self.phi_true_value is not None:
                     if self.beta_true_value is not None:
                         if self.gamma_true_value is not None:
-                            self.costheta_ground_truth = self.calculate_costheta(func=self.func_costheta, delta_sys=delta,
+                            self.costheta_ground_truth = calculate_costheta(func=self.func_costheta, delta_sys=delta,
                                                                                  omega_sys=self.omega,
                                                                                  latitude_sys=self.phi_true_value,
                                                                                  tilt_sys=self.beta_true_value,
@@ -151,13 +152,6 @@ class TiltAzimuthStudy():
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
         return
 
-    def calculate_costheta(self, func, delta_sys, omega_sys, latitude_sys, tilt_sys, azimuth_sys):
-        x = np.array([delta_sys, omega_sys])
-        phi = np.deg2rad(latitude_sys)
-        beta = np.deg2rad(tilt_sys)
-        gamma = np.deg2rad(azimuth_sys)
-        costheta = func(x, phi, beta, gamma)
-        return costheta
 
     def find_daytime_threshold_quantile_seasonality(self):
         m = cvx.Parameter(nonneg=True, value=10 ** 6)
