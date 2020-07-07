@@ -16,6 +16,8 @@ from pvsystemprofiler.utilities.hour_angle_equation import find_omega
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import run_curve_fit
+from pvsystemprofiler.algorithms.angle_of_incidence.calculation import find_fit_costheta
+
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_estimate=None,
                  lat_estimate=None, lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
@@ -81,7 +83,7 @@ class TiltAzimuthStudy():
         self.omega = find_omega(self.data_sampling, self.num_days, self.lon_estimate, self.day_of_year,
                                 self.gmt_offset)
 
-        self.scale_factor_costheta, self.costheta_fit = self.find_fit_costheta(self.data_matrix, self.clear_index)
+        self.scale_factor_costheta, self.costheta_fit = find_fit_costheta(self.data_matrix, self.clear_index)
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
@@ -148,22 +150,6 @@ class TiltAzimuthStudy():
         else:
             self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
         return
-
-    def find_fit_costheta(self, data_matrix, clear_index):
-        data = np.max(data_matrix, axis=0)
-        s1 = cvx.Variable(len(data))
-        s2 = cvx.Variable(len(data))
-        cost = 1e1 * cvx.norm(cvx.diff(s1, k=2), p=2) + cvx.norm(s2[clear_index])
-        objective = cvx.Minimize(cost)
-        constraints = [
-            data == s1 + s2,
-            s1[365:] == s1[:-365]
-        ]
-        problem = cvx.Problem(objective, constraints)
-        problem.solve(solver='MOSEK')
-        scale_factor_costheta = s1.value
-        costheta_fit = self.data_matrix / np.max(s1.value)
-        return scale_factor_costheta, costheta_fit
 
     def calculate_costheta(self, func, delta_sys, omega_sys, latitude_sys, tilt_sys, azimuth_sys):
         x = np.array([delta_sys, omega_sys])
