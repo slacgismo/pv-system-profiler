@@ -20,9 +20,10 @@ from pvsystemprofiler.algorithms.angle_of_incidence.calculation import find_fit_
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import calculate_costheta
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 
+
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_precalculate=None,
-                 lat_precalculate=None, tilt_precalculate= None, azimuth_precalculate=None, lat_true_value=None,
+                 lat_precalculate=None, tilt_precalculate=None, azimuth_precalculate=None, lat_true_value=None,
                  tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
         """
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
@@ -114,8 +115,7 @@ class TiltAzimuthStudy():
                 self.omega_f = omega_f
                 self.delta = delta
 
-                func_customized = lambda x, beta, gamma: func_costheta(x, np.deg2rad(self.lat_precalc), beta,
-                                                                       gamma)
+                func_customized = self.select_function(self.lat_precalc, self.tilt_precalc, self.azim_precalc)
 
                 tilt_estimate, azimuth_estimate = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
                                                                 costheta=self.costheta_fit,
@@ -177,3 +177,10 @@ class TiltAzimuthStudy():
         prob = cvx.Problem(objective, constraints=constraints)
         prob.solve(solver='MOSEK')
         return x2.value
+
+    def select_function(self, lat_precalc, tilt_precalc, azim_precalc):
+        if lat_precalc is not None:
+            if tilt_precalc is None:
+                if azim_precalc is None:
+                    func = lambda x, beta, gamma: func_costheta(x, np.deg2rad(lat_precalc), beta, gamma)
+        return func
