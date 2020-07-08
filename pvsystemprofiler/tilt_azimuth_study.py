@@ -18,6 +18,7 @@ from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import run_curve_fit
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import find_fit_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import calculate_costheta
+from pvsystemprofiler.algorithms.angle_of_incidence.lambda_functions import select_function
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 
 
@@ -115,7 +116,7 @@ class TiltAzimuthStudy():
                 self.omega_f = omega_f
                 self.delta = delta
 
-                func_customized = self.select_function(self.lat_precalc, self.tilt_precalc, self.azim_precalc)
+                func_customized = select_function(self.lat_precalc, self.tilt_precalc, self.azim_precalc)
 
                 tilt_estimate, azimuth_estimate = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
                                                                 costheta=self.costheta_fit,
@@ -178,9 +179,3 @@ class TiltAzimuthStudy():
         prob.solve(solver='MOSEK')
         return x2.value
 
-    def select_function(self, lat_precalc, tilt_precalc, azim_precalc):
-        if lat_precalc is not None:
-            if tilt_precalc is None:
-                if azim_precalc is None:
-                    func = lambda x, beta, gamma: func_costheta(x, np.deg2rad(lat_precalc), beta, gamma)
-        return func
