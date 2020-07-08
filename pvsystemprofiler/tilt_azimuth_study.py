@@ -68,6 +68,7 @@ class TiltAzimuthStudy():
         self.beta_true_value = tilt_true_value
         self.gamma_true_value = azimuth_true_value
         self.gmt_offset = gmt_offset
+        self.bounds = None
         self.daytime_threshold_fit = None
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
@@ -116,6 +117,7 @@ class TiltAzimuthStudy():
                 self.omega_f = omega_f
                 self.delta = delta
                 bounds = ([0, -3.14], [1.57, 3.14])
+
                 func_customized = select_function(self.lat_precalc, self.tilt_precalc, self.azim_precalc)
 
                 tilt_estimate, azimuth_estimate = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
