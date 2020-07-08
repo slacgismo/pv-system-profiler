@@ -117,33 +117,36 @@ class TiltAzimuthStudy():
                 self.omega_f = omega_f
                 self.delta = delta
 
-                func_customized, bounds, init_values = select_function(self.lat_precalc, self.tilt_precalc,
-                                                                       self.azim_precalc)
+                func_customized, bounds, init_values, dict_keys = select_function(self.lat_precalc, self.tilt_precalc,
+                                                                                  self.azim_precalc)
 
-                tilt_estimate, azimuth_estimate = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
-                                                                costheta=self.costheta_fit,
-                                                                boolean_daytime_range=self.boolean_daytime_range,
-                                                                init_values=init_values, fit_bounds=bounds)
+                estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
+                                          costheta=self.costheta_fit, boolean_daytime_range=self.boolean_daytime_range,
+                                          init_values=init_values, fit_bounds=bounds)
+
+                estimates_dict = dict(zip(dict_keys, estimates))
+                print(estimates_dict)
+
 
                 # self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
                 #                                               latitude_sys=self.lat_precalc,
                 #                                               tilt_sys=tilt_estimate, azimuth_sys=azimuth_estimate)
 
-                if self.phi_true_value is not None:
-                    if self.beta_true_value is not None:
-                        if self.gamma_true_value is not None:
-                            self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
-                                                                            omega_sys=self.omega,
-                                                                            latitude_sys=self.phi_true_value,
-                                                                            tilt_sys=self.beta_true_value,
-                                                                            azimuth_sys=self.gamma_true_value)
-
-                            r1 = self.beta_true_value - tilt_estimate
-                            r2 = self.gamma_true_value - azimuth_estimate
-                            r3 = day_range_id
-                            r4 = delta_id
-                            self.results.loc[counter] = [r1, r2, r3, r4]
-                counter += 1
+                # if self.phi_true_value is not None:
+                #     if self.beta_true_value is not None:
+                #         if self.gamma_true_value is not None:
+                #             self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
+                #                                                             omega_sys=self.omega,
+                #                                                             latitude_sys=self.phi_true_value,
+                #                                                             tilt_sys=self.beta_true_value,
+                #                                                             azimuth_sys=self.gamma_true_value)
+                #
+                #             r1 = self.beta_true_value - tilt_estimate
+                #             r2 = self.gamma_true_value - azimuth_estimate
+                #             r3 = day_range_id
+                #             r4 = delta_id
+                #             self.results.loc[counter] = [r1, r2, r3, r4]
+                # counter += 1
         return
 
     def get_day_range(self, interval):

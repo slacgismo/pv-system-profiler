@@ -8,8 +8,8 @@ def run_curve_fit(func, delta, omega, costheta, boolean_daytime_range, init_valu
     x = np.array([delta, omega])
     popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
                            bounds=fit_bounds)
-    tilt_estimate, azimuth_estimate = np.degrees(popt)
-    return tilt_estimate, azimuth_estimate
+    estimates = np.degrees(popt)
+    return estimates
 
 
 def find_fit_costheta(data_matrix, clear_index):
