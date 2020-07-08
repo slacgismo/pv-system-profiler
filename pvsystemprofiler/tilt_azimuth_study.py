@@ -116,14 +116,14 @@ class TiltAzimuthStudy():
                 self.delta_f = delta_f
                 self.omega_f = omega_f
                 self.delta = delta
-                bounds = ([0, -3.14], [1.57, 3.14])
 
-                func_customized = select_function(self.lat_precalc, self.tilt_precalc, self.azim_precalc)
+                func_customized, bounds, init_values = select_function(self.lat_precalc, self.tilt_precalc,
+                                                                       self.azim_precalc)
 
                 tilt_estimate, azimuth_estimate = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
                                                                 costheta=self.costheta_fit,
                                                                 boolean_daytime_range=self.boolean_daytime_range,
-                                                                init_values=self.init_values, fit_bounds=bounds)
+                                                                init_values=init_values, fit_bounds=bounds)
 
                 # self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
                 #                                               latitude_sys=self.lat_precalc,
