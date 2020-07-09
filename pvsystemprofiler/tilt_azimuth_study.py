@@ -117,10 +117,6 @@ class TiltAzimuthStudy():
                 if ~np.any(self.boolean_daytime_range):
                     print('No data made it through selected day_range filter')
 
-                self.delta_f = delta_f
-                self.omega_f = omega_f
-                self.delta = delta
-
                 func_customized, bounds, init_values, dict_keys = select_function(self.lat_precalc, self.tilt_precalc,
                                                                                   self.azim_precalc)
                 if self.init_values is not None:
@@ -131,8 +127,7 @@ class TiltAzimuthStudy():
                                           init_values=init_values, fit_bounds=bounds)
 
                 estimates_dict = dict(zip(dict_keys, estimates))
-                print(estimates_dict)
-
+                
                 self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
                                                              lat=self.lat_precalc,
                                                              tilt=self.tilt_precalc,
