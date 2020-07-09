@@ -94,7 +94,15 @@ class TiltAzimuthStudy():
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
         counter = 0
-        self.results = pd.DataFrame(columns=['tilt residual', 'azimuth residual', 'day range', 'declination method'])
+        cols = ['declination method']
+        if self.lat_precalc is None:
+            cols.append('latitude')
+        if self.tilt_precalc is None:
+            cols.append('tilt')
+        if self.azim_precalc is None:
+            cols.append('azimuth')
+        self.results = pd.DataFrame(columns=cols)
+
         for delta_id in delta_method:
             if delta_id in ('Cooper', 'cooper'):
                 delta = self.delta_cooper
@@ -128,19 +136,16 @@ class TiltAzimuthStudy():
                 self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
                                                              lat=self.lat_precalc,
                                                              tilt=self.tilt_precalc,
-                                                             azim=self.azim_precalc, est_dict=estimates_dict)
+                                                             azim=self.azim_precalc, est_dict=estimates_dict,
+                                                             ground_truth=False)
 
                 self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
                                                                 omega_sys=self.omega, lat=self.phi_true_value,
                                                                 tilt=self.beta_true_value, azim=self.gamma_true_value,
                                                                 ground_truth=True)
 
-                #             r1 = self.beta_true_value - tilt_estimate
-                #             r2 = self.gamma_true_value - azimuth_estimate
-                #             r3 = day_range_id
-                #             r4 = delta_id
-                #             self.results.loc[counter] = [r1, r2, r3, r4]
-                # counter += 1
+                self.results.loc[counter] = [delta_id] + list(estimates)
+                counter += 1
         return
 
     def get_day_range(self, interval):
