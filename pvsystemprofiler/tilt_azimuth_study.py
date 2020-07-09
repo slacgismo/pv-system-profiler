@@ -55,10 +55,7 @@ class TiltAzimuthStudy():
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
-        if init_values is None:
-            self.init_values = [10, 10]
-        else:
-            self.init_values = init_values
+        self.init_values = init_values
         self.daytime_threshold = daytime_threshold
         self.lon_precalc = lon_precalculate
         self.lat_precalc = lat_precalculate
@@ -68,7 +65,6 @@ class TiltAzimuthStudy():
         self.beta_true_value = tilt_true_value
         self.gamma_true_value = azimuth_true_value
         self.gmt_offset = gmt_offset
-        self.bounds = None
         self.daytime_threshold_fit = None
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
@@ -119,6 +115,8 @@ class TiltAzimuthStudy():
 
                 func_customized, bounds, init_values, dict_keys = select_function(self.lat_precalc, self.tilt_precalc,
                                                                                   self.azim_precalc)
+                if self.init_values is not None:
+                    init_values = self.init_values
 
                 estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
                                           costheta=self.costheta_fit, boolean_daytime_range=self.boolean_daytime_range,
