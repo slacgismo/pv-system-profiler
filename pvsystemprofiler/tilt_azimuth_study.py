@@ -60,7 +60,7 @@ class TiltAzimuthStudy():
         self.lon_precalc = lon_precalculate
         self.lat_precalc = lat_precalculate
         self.tilt_precalc = tilt_precalculate
-        self.azim_precalc = azimuth_precalculate
+        self.azimuth_precalc = azimuth_precalculate
         self.phi_true_value = lat_true_value
         self.beta_true_value = tilt_true_value
         self.gamma_true_value = azimuth_true_value
@@ -111,7 +111,7 @@ class TiltAzimuthStudy():
                     print('No data made it through selected day_range filter')
 
                 func_customized, bounds, init_values, dict_keys = select_function(self.lat_precalc, self.tilt_precalc,
-                                                                                  self.azim_precalc)
+                                                                                  self.azimuth_precalc)
                 if self.init_values is not None:
                     init_values = self.init_values
 
@@ -124,7 +124,7 @@ class TiltAzimuthStudy():
                 self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
                                                              lat=self.lat_precalc,
                                                              tilt=self.tilt_precalc,
-                                                             azim=self.azim_precalc, est_dict=estimates_dict,
+                                                             azim=self.azimuth_precalc, est_dict=estimates_dict,
                                                              ground_truth=False)
 
                 self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
@@ -134,6 +134,15 @@ class TiltAzimuthStudy():
 
                 self.results.loc[counter] = [delta_id] + list(estimates)
                 counter += 1
+        if self.phi_true_value is not None and self.lat_precalc is None:
+            self.results['latitude residual'] = self.phi_true_value - self.results['latitude']
+        if self.beta_true_value is not None and self.tilt_precalc is None:
+            self.results['tilt residual'] = self.beta_true_value - self.results['tilt']
+        if self.gamma_true_value is not None and self.azimuth_precalc is None:
+            self.results['azimuth residual'] = self.gamma_true_value - self.results['azimuth']
+
+
+
         return
 
     def get_day_range(self, interval):
@@ -177,6 +186,7 @@ class TiltAzimuthStudy():
             cols.append('latitude')
         if self.tilt_precalc is None:
             cols.append('tilt')
-        if self.azim_precalc is None:
+        if self.azimuth_precalc is None:
             cols.append('azimuth')
+
         self.results = pd.DataFrame(columns=cols)
