@@ -94,14 +94,7 @@ class TiltAzimuthStudy():
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
         counter = 0
-        cols = ['declination method']
-        if self.lat_precalc is None:
-            cols.append('latitude')
-        if self.tilt_precalc is None:
-            cols.append('tilt')
-        if self.azim_precalc is None:
-            cols.append('azimuth')
-        self.results = pd.DataFrame(columns=cols)
+        self.create_results_table()
 
         for delta_id in delta_method:
             if delta_id in ('Cooper', 'cooper'):
@@ -127,7 +120,7 @@ class TiltAzimuthStudy():
                                           init_values=init_values, fit_bounds=bounds)
 
                 estimates_dict = dict(zip(dict_keys, estimates))
-                
+
                 self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
                                                              lat=self.lat_precalc,
                                                              tilt=self.tilt_precalc,
@@ -178,3 +171,12 @@ class TiltAzimuthStudy():
         prob.solve(solver='MOSEK')
         return x2.value
 
+    def create_results_table(self):
+        cols = ['declination method']
+        if self.lat_precalc is None:
+            cols.append('latitude')
+        if self.tilt_precalc is None:
+            cols.append('tilt')
+        if self.azim_precalc is None:
+            cols.append('azimuth')
+        self.results = pd.DataFrame(columns=cols)
