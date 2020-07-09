@@ -28,8 +28,8 @@ def find_fit_costheta(data_matrix, clear_index):
     costheta_fit = data_matrix / np.max(s1.value)
     return scale_factor_costheta, costheta_fit
 
-def calculate_costheta(func, delta_sys, omega_sys, lat, tilt, azim, est_dict=None, ground_truth=False):
 
+def calculate_costheta(func, delta_sys, omega_sys, lat, tilt, azim, est_dict=None, ground_truth=False):
     if ground_truth:
         if lat is None or tilt is None or azim is None:
             return None
