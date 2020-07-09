@@ -31,9 +31,12 @@ def find_fit_costheta(data_matrix, clear_index):
 def calculate_costheta(func, delta_sys, omega_sys, lat, tilt, azim, est_dict=None, ground_truth=False):
 
     if ground_truth:
-        latitude_sys = lat
-        tilt_sys = tilt
-        azimuth_sys = azim
+        if lat is None or tilt is None or azim is None:
+            return None
+        else:
+            latitude_sys = lat
+            tilt_sys = tilt
+            azimuth_sys = azim
     else:
         if lat is None:
             latitude_sys = est_dict['latitude_estimate']

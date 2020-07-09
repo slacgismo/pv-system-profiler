@@ -130,15 +130,10 @@ class TiltAzimuthStudy():
                                                              tilt=self.tilt_precalc,
                                                              azim=self.azim_precalc, est_dict=estimates_dict)
 
-                if self.phi_true_value is not None:
-                    if self.beta_true_value is not None:
-                        if self.gamma_true_value is not None:
-                            self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
-                                                                            omega_sys=self.omega,
-                                                                            lat=self.phi_true_value,
-                                                                            tilt=self.beta_true_value,
-                                                                            azim=self.gamma_true_value,
-                                                                            ground_truth=True)
+                self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
+                                                                omega_sys=self.omega, lat=self.phi_true_value,
+                                                                tilt=self.beta_true_value, azim=self.gamma_true_value,
+                                                                ground_truth=True)
 
                 #             r1 = self.beta_true_value - tilt_estimate
                 #             r2 = self.gamma_true_value - azimuth_estimate
