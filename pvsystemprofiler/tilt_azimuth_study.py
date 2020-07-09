@@ -125,10 +125,10 @@ class TiltAzimuthStudy():
                 estimates_dict = dict(zip(dict_keys, estimates))
                 print(estimates_dict)
 
-
-                # self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
-                #                                               latitude_sys=self.lat_precalc,
-                #                                               tilt_sys=tilt_estimate, azimuth_sys=azimuth_estimate)
+                self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
+                                                             lat_precalc=self.lat_precalc,
+                                                             tilt_precalc=self.tilt_precalc,
+                                                             azim_precalc=self.azim_precalc, est_dict=estimates_dict)
 
                 # if self.phi_true_value is not None:
                 #     if self.beta_true_value is not None:
