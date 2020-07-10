@@ -31,13 +31,17 @@ def select_function(lat_precalc, tilt_precalc, azim_precalc):
         func = lambda x, gamma: func_costheta(x, np.deg2rad(lat_precalc), np.deg2rad(tilt_precalc), gamma)
         dict_keys = ['azimuth_estimate']
 
+    #latitude -90 to 90
+    #tilt 0 to 180
+    #azimuth -180 to 180
+
     bounds_dict = {'latitude': [-1.57, 1.57], 'tilt': [0, 1.57], 'azimuth': [-3.14, 3.14]}
     bounds = []
     for el in dict_keys:
         g_param = el.split('_')[0]
         bounds.append(bounds_dict[g_param])
-
     bounds = tuple(np.transpose(bounds).tolist())
+
     init_values = 10 * np.ones(len(dict_keys))
 
     return func, bounds, init_values, dict_keys
