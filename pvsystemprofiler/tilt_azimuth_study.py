@@ -106,7 +106,6 @@ class TiltAzimuthStudy():
                 self.get_day_range(day_interval)
                 delta_f = delta[self.boolean_daytime_range]
                 omega_f = self.omega[self.boolean_daytime_range]
-
                 if ~np.any(self.boolean_daytime_range):
                     print('No data made it through selected day_range filter')
 
@@ -132,7 +131,7 @@ class TiltAzimuthStudy():
                                                                 tilt=self.beta_true_value, azim=self.gamma_true_value,
                                                                 ground_truth=True)
 
-                self.results.loc[counter] = [delta_id] + list(estimates)
+                self.results.loc[counter] = [day_range_id, delta_id] + list(estimates)
                 counter += 1
         if self.phi_true_value is not None and self.lat_precalc is None:
             self.results['latitude residual'] = self.phi_true_value - self.results['latitude']
@@ -140,9 +139,6 @@ class TiltAzimuthStudy():
             self.results['tilt residual'] = self.beta_true_value - self.results['tilt']
         if self.gamma_true_value is not None and self.azimuth_precalc is None:
             self.results['azimuth residual'] = self.gamma_true_value - self.results['azimuth']
-
-
-
         return
 
     def get_day_range(self, interval):
@@ -181,7 +177,7 @@ class TiltAzimuthStudy():
         return x2.value
 
     def create_results_table(self):
-        cols = ['declination method']
+        cols = ['day range', 'declination method']
         if self.lat_precalc is None:
             cols.append('latitude')
         if self.tilt_precalc is None:
