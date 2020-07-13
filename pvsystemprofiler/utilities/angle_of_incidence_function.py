@@ -1,10 +1,10 @@
+"""The function cos(theta) is  calculated using equation (1.6.2) in:
+ Duffie, John A., and William A. Beckman. Solar engineering of thermal
+ processes. New York: Wiley, 1991."""
+
 import numpy as np
-
-
 def func_costheta(x, phi, beta, gamma):
-    """The function cos(theta) is  calculated using equation (1.6.2) in:
-    Duffie, John A., and William A. Beckman. Solar engineering of thermal
-    processes. New York: Wiley, 1991."""
+
     delta = x[0]
     omega = x[1]
 

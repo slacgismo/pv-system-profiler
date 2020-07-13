@@ -1,8 +1,23 @@
+"""
+This module is used to set the hour_angle_equation in terms of the unknowns. The hour equation is a function of the
+declination (delta), the hour angle (omega) , latitude (phi), tilt (beta) and azimuth (gamma). The declination and the
+hour angle are treated as input parameters for all cases. Latitude, tilt and azimuth can be given as input parameters
+(precalculates) or left as unknowns. In total, seven different combinations arise from having these three parameters
+as an inputs or as a unknowns. The seven conditionals below correspond to those combinations. The output function "func"
+is used as one of the inputs to run_curve_fit which in turn is used to fit the unknowns.
+"""
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 import numpy as np
 
-
 def select_function(lat_precalc, tilt_precalc, azim_precalc):
+    '''
+    :param lat_precalc: (optional) Latitude precalculate in degrees.
+    :param tilt_precalc: (optional) Tilt precalculate in degrees.
+    :param azim_precalc: (optional) Azimuth precalculate in degrees.
+    :return: Customized function 'func', 'bounds' tuple and 'init_values' array used by run_curve_fit as
+             input. Array dict_keys containing the parameters left as variables.
+    '''
+
     if lat_precalc is None and tilt_precalc is None and azim_precalc is None:
         func = lambda x, phi, beta, gamma: func_costheta(x, phi, beta, gamma)
         dict_keys = ['latitude_estimate', 'tilt_estimate', 'azimuth_estimate']
