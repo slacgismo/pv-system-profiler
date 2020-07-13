@@ -120,16 +120,15 @@ class TiltAzimuthStudy():
 
                 estimates_dict = dict(zip(dict_keys, estimates))
 
-                self.costheta_estimated = calculate_costheta(func=func_costheta, delta_sys=delta, omega_sys=self.omega,
+                self.costheta_estimated = calculate_costheta(func=func_costheta, delta=delta, omega=self.omega,
                                                              lat=self.lat_precalc,
                                                              tilt=self.tilt_precalc,
-                                                             azim=self.azimuth_precalc, est_dict=estimates_dict,
-                                                             ground_truth=False)
+                                                             azim=self.azimuth_precalc, est_dict=estimates_dict)
 
-                self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta_sys=delta,
-                                                                omega_sys=self.omega, lat=self.phi_true_value,
-                                                                tilt=self.beta_true_value, azim=self.gamma_true_value,
-                                                                ground_truth=True)
+                self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta=delta, omega=self.omega,
+                                                                lat_true_value=self.phi_true_value,
+                                                                tilt_true_value=self.beta_true_value,
+                                                                azimuth_true_value=self.gamma_true_value)
 
                 self.results.loc[counter] = [day_range_id, delta_id] + list(estimates)
                 counter += 1
