@@ -9,7 +9,7 @@ is used as one of the inputs to run_curve_fit which in turn is used to fit the u
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 import numpy as np
 
-def select_function(lat_precalc, tilt_precalc, azim_precalc):
+def select_function(lat_precalc=None, tilt_precalc=None, azim_precalc=None):
     '''
     :param lat_precalc: (optional) Latitude precalculate in degrees.
     :param tilt_precalc: (optional) Tilt precalculate in degrees.
