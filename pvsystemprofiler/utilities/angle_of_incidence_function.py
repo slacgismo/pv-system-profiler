@@ -4,7 +4,6 @@
 
 import numpy as np
 def func_costheta(x, phi, beta, gamma):
-
     delta = x[0]
     omega = x[1]
 
