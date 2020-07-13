@@ -25,8 +25,15 @@ def run_curve_fit(func, delta, omega, costheta, boolean_daytime_range, init_valu
                            bounds=fit_bounds)
     estimates = np.degrees(popt)
     return estimates
-
+"""
+Calculates the angle incidence for a system based on its power matrix using signal decomposition.
+"""
 def find_fit_costheta(data_matrix, clear_index):
+    """
+    :param data_matrix: power matrix.
+    :param clear_index: boolean array specifying clear days.
+    :return: angle of incidence array.
+    """
     data = np.max(data_matrix, axis=0)
     s1 = cvx.Variable(len(data))
     s2 = cvx.Variable(len(data))
@@ -41,6 +48,10 @@ def find_fit_costheta(data_matrix, clear_index):
     scale_factor_costheta = s1.value
     costheta_fit = data_matrix / np.max(s1.value)
     return scale_factor_costheta, costheta_fit
+"""
+Calculates the angle incidence using the cos(theta) equation (1.6.2) in:
+Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
+"""
 
 
 def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None, lat_true_value=None, tilt_true_value=None,
@@ -58,7 +69,6 @@ def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None, lat_t
     :param est_dict: directory containing estimated parameters
     :return: angle of incidence array
     """
-
     if lat_true_value is not None and tilt_true_value is not None and azimuth_true_value is not None:
         latitude_sys = lat_true_value
         tilt_sys = tilt_true_value

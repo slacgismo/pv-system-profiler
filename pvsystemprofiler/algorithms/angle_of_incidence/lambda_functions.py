@@ -11,9 +11,9 @@ import numpy as np
 
 def select_function(lat_precalc=None, tilt_precalc=None, azim_precalc=None):
     '''
-    :param lat_precalc: (optional) Latitude precalculate in degrees.
-    :param tilt_precalc: (optional) Tilt precalculate in degrees.
-    :param azim_precalc: (optional) Azimuth precalculate in degrees.
+    :param lat_precalc: (optional) Latitude precalculate.
+    :param tilt_precalc: (optional) Tilt precalculate.
+    :param azim_precalc: (optional) Azimuth precalculate.
     :return: Customized function 'func', 'bounds' tuple and 'init_values' array used by run_curve_fit as
              input. Array dict_keys containing the parameters left as variables.
     '''
