@@ -21,8 +21,7 @@ class LatitudeStudy():
         '''
 
         self.data_handler = data_handler
-        self.phi_true_value = lat_true_value
-        self.phi_true_value = lat_true_value
+        self.latitude_true_value = lat_true_value
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
@@ -80,8 +79,8 @@ class LatitudeStudy():
 
                     results.loc[counter] = [dm, dcc, tm, dtt, lat_est]
                     counter += 1
-        if self.phi_true_value is not None:
-            results['residual'] = self.phi_true_value - results['latitude']
+        if self.latitude_true_value is not None:
+            results['residual'] = self.latitude_true_value - results['latitude']
 
         self.results = results
 
