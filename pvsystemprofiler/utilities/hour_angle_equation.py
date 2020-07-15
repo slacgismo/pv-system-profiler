@@ -5,8 +5,9 @@
 import numpy as np
 from pvsystemprofiler.utilities.time_convert import clock_to_solar
 
-def find_omega(data_sampling,num_days, lon, doy, gmt_offset):
-        """
+
+def find_omega(data_sampling, num_days, lon, doy, gmt_offset):
+    """
         :param data_sampling: daily data sampling.
         :param num_days: number of sampling days.
         :param lon: longitude in degrees (float)
@@ -14,9 +15,9 @@ def find_omega(data_sampling,num_days, lon, doy, gmt_offset):
         :param gmt_offset: local timezone offset in hours from UTC/GMT (float or int)
         :return: hour angle omega (float or array)
         """
-        minutes_day = np.arange(0, 1440, data_sampling)
-        minutes_doy = np.tile(minutes_day.reshape(-1, 1), (1, num_days))
-        hours_doy_solar = clock_to_solar(minutes_doy, lon, doy, gmt_offset, eot='duffie')
-        hours_doy_solar = hours_doy_solar / 60
-        omega = np.deg2rad(15 * (hours_doy_solar - 12))
-        return omega
+    minutes_day = np.arange(0, 1440, data_sampling)
+    minutes_doy = np.tile(minutes_day.reshape(-1, 1), (1, num_days))
+    hours_doy_solar = clock_to_solar(minutes_doy, lon, doy, gmt_offset, eot='duffie')
+    hours_doy_solar = hours_doy_solar / 60
+    omega = np.deg2rad(15 * (hours_doy_solar - 12))
+    return omega
