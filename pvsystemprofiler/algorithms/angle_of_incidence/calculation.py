@@ -54,8 +54,7 @@ Duffie, John A., and William A. Beckman. Solar engineering of thermal processes.
 """
 
 
-def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None, lat_true_value=None, tilt_true_value=None,
-                       azimuth_true_value=None, est_dict=None):
+def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None, est_dict=None):
     """
     :param func: angle of incidence model function.
     :param delta: System's declination (array).
@@ -63,29 +62,22 @@ def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None, lat_t
     :param lat: (optional) System's latitude.
     :param tilt: (optional) System's tilt.
     :param azim: (optional)System's azimuth.
-    :param lat_true_value: (optional) ground truth value for the system's Latitude.
-    :param tilt_true_value: (optional) ground truth value for the system's Tilt.
-    :param azimuth_true_value: (optional) ground truth value for the system's Azimuth.
     :param est_dict: directory containing estimated parameters
     :return: angle of incidence array
     """
-    if lat_true_value is not None and tilt_true_value is not None and azimuth_true_value is not None:
-        latitude_sys = lat_true_value
-        tilt_sys = tilt_true_value
-        azimuth_sys = azimuth_true_value
+
+    if lat is None:
+        latitude_sys = est_dict['latitude_estimate']
     else:
-        if lat is None:
-            latitude_sys = est_dict['latitude_estimate']
-        else:
-            latitude_sys = lat
-        if tilt is None:
-            tilt_sys = est_dict['tilt_estimate']
-        else:
-            tilt_sys = tilt
-        if azim is None:
-            azimuth_sys = est_dict['azimuth_estimate']
-        else:
-            azimuth_sys = azim
+        latitude_sys = lat
+    if tilt is None:
+        tilt_sys = est_dict['tilt_estimate']
+    else:
+        tilt_sys = tilt
+    if azim is None:
+        azimuth_sys = est_dict['azimuth_estimate']
+    else:
+        azimuth_sys = azim
 
     x = np.array([delta, omega])
     phi = np.deg2rad(latitude_sys)
