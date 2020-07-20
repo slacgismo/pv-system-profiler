@@ -31,7 +31,7 @@ def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None, est_d
     else:
         azimuth_sys = azim
 
-    x = np.array([delta, np.deg2rad(omega)])
+    x = np.array([np.deg2rad(delta), np.deg2rad(omega)])
     phi = np.deg2rad(latitude_sys)
     beta = np.deg2rad(tilt_sys)
     gamma = np.deg2rad(azimuth_sys)

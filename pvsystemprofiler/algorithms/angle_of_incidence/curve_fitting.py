@@ -19,7 +19,7 @@ def run_curve_fit(func, delta, omega, costheta, boolean_daytime_range, init_valu
     :return: Optimal values for the parameters.
     """
     costheta_fit = costheta[boolean_daytime_range]
-    x = np.array([delta, np.deg2rad(omega)])
+    x = np.array([np.deg2rad(delta), np.deg2rad(omega)])
 
     popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
                            bounds=fit_bounds)
