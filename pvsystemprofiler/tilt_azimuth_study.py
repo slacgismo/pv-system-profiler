@@ -104,8 +104,8 @@ class TiltAzimuthStudy():
                 self.get_day_range(day_interval)
                 delta_f = delta[self.boolean_daytime_range]
                 omega_f = self.omega[self.boolean_daytime_range]
-                if ~np.any(self.boolean_daytime_range):
-                    print('No data made it through selected day_range filter')
+                if ~np.any(self.boolean_daytime_range):ƒfil
+                    print('No data made it through filters')
 
                 func_customized, bounds, init_values, dict_keys = select_function(self.lat_precalc, self.tilt_precalc,
                                                                                   self.azimuth_precalc)
