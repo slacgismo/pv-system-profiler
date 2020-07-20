@@ -1,6 +1,5 @@
 from scipy.optimize import curve_fit
 import numpy as np
-import cvxpy as cvx
 """ Angle of incidence Module
 This module contains the function for the calculation of the system's latitude, tilt and azimuth when some of them are
 given as precalculates and others are left as unknowns. Unknowns are calculated via fit to the angle of incidence 
@@ -25,29 +24,7 @@ def run_curve_fit(func, delta, omega, costheta, boolean_daytime_range, init_valu
                            bounds=fit_bounds)
     estimates = np.degrees(popt)
     return estimates
-"""
-Calculates the angle incidence for a system based on its power matrix using signal decomposition.
-"""
-def find_fit_costheta(data_matrix, clear_index):
-    """
-    :param data_matrix: power matrix.
-    :param clear_index: boolean array specifying clear days.
-    :return: angle of incidence array.
-    """
-    data = np.max(data_matrix, axis=0)
-    s1 = cvx.Variable(len(data))
-    s2 = cvx.Variable(len(data))
-    cost = 1e1 * cvx.norm(cvx.diff(s1, k=2), p=2) + cvx.norm(s2[clear_index])
-    objective = cvx.Minimize(cost)
-    constraints = [
-        data == s1 + s2,
-        s1[365:] == s1[:-365]
-    ]
-    problem = cvx.Problem(objective, constraints)
-    problem.solve(solver='MOSEK')
-    scale_factor_costheta = s1.value
-    costheta_fit = data_matrix / np.max(s1.value)
-    return scale_factor_costheta, costheta_fit
+
 """
 Calculates the angle incidence using the cos(theta) equation (1.6.2) in:
 Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
