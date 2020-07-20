@@ -11,7 +11,7 @@ def calc_lat(hours_daylight, delta):
     processes. New York: Wiley, 1991.
 
     :param hours_daylight: daylight hours as calculated by calculate_hours_daylight or calculate_hours_daylight_raw
-    :param delta: declination as calculated from declination_equations.
+    :param delta: declination as calculated from declination_equations in Degrees.
     :return: the latitude for the given values
     """
 

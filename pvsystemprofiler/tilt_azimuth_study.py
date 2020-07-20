@@ -34,13 +34,13 @@ class TiltAzimuthStudy():
                                 Default values are [10, 10]. (Degrees).
                                 are used otherwise
         :param daytime_threshold: (optional) daytime threshold
-        :param lon_precalculate: longitude estimate as obtained from the Longitude Study module. (Degrees).
-        :param lat_precalculate: precalculated latitude value. (Degrees).
-        :param tilt_precalculate: precalculated tilt value. (Degrees).
-        :param azimuth_precalculate: precalculated azimuth value. (Degrees).
-        :param lat_true_value: (optional) ground truth value for the system's Latitude. (Degrees).
-        :param tilt_true_value: (optional) ground truth value for the system's Tilt. (Degrees).
-        :param azimuth_true_value: (optional) ground truth value for the system's Azimuth. (Degrees).
+        :param lon_precalculate: longitude estimate as obtained from the Longitude Study module in Degrees.
+        :param lat_precalculate: precalculated latitude value in Degrees.
+        :param tilt_precalculate: precalculated tilt value in Degrees.
+        :param azimuth_precalculate: precalculated azimuth value in Degrees.
+        :param lat_true_value: (optional) ground truth value for the system's Latitude in Degrees.
+        :param tilt_true_value: (optional) ground truth value for the system's Tilt in Degrees.
+        :param azimuth_true_value: (optional) ground truth value for the system's Azimuth in Degrees Degrees.
         :param gmt_offset: The offset in hours between the local timezone and GMT/UTC
         """
 

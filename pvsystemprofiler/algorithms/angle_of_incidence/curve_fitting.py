@@ -10,8 +10,8 @@ Duffie, John A., and William A. Beckman. Solar engineering of thermal processes.
 def run_curve_fit(func, delta, omega, costheta, boolean_daytime_range, init_values, fit_bounds):
     """
     :param func: Angle of incidence model function.
-    :param delta: System's declination (array).
-    :param omega: System's hour angle (array).
+    :param delta: System's declination in Degrees (array).
+    :param omega: System's hour angle in Degrees(array).
     :param costheta: The dependent data. Angle of incidence array used to fit parameters.
     :param boolean_daytime_range: boolean array specifying days to be used in fitting.
     :param init_values: Initial guess for the parameters.

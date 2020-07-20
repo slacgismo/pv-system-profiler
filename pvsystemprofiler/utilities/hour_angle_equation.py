@@ -10,7 +10,7 @@ def calculate_omega(data_sampling, num_days, lon, doy, gmt_offset):
     """
         :param data_sampling: daily data sampling.
         :param num_days: number of sampling days.
-        :param lon: longitude in degrees (float)
+        :param lon: longitude in Degrees (float)
         :param doy: day of year (float or array)
         :param gmt_offset: local timezone offset in hours from UTC/GMT (float or int)
         :return: hour angle omega (float or array)
