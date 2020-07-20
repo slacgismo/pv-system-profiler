@@ -15,7 +15,7 @@ from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.hour_angle_equation import find_omega
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
-from pvsystemprofiler.algorithms.angle_of_incidence.calculation import run_curve_fit
+from pvsystemprofiler.algorithms.angle_of_incidence.curve_fitting import run_curve_fit
 from pvsystemprofiler.algorithms.angle_of_incidence.calculation import calculate_costheta
 from pvsystemprofiler.algorithms.performance_model_estimation import find_fit_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.lambda_functions import select_function
