@@ -6,7 +6,7 @@ import numpy as np
 from pvsystemprofiler.utilities.time_convert import clock_to_solar
 
 
-def find_omega(data_sampling, num_days, lon, doy, gmt_offset):
+def calculate_omega(data_sampling, num_days, lon, doy, gmt_offset):
     """
         :param data_sampling: daily data sampling.
         :param num_days: number of sampling days.
