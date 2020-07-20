@@ -86,7 +86,8 @@ class TiltAzimuthStudy():
 
         delta_method = np.atleast_1d(delta_method)
         self.find_boolean_daytime()
-        self.omega = calculate_omega(self.data_sampling, self.num_days, self.lon_precalc, self.day_of_year, self.gmt_offset)
+        self.omega = calculate_omega(self.data_sampling, self.num_days, self.lon_precalc, self.day_of_year,
+                                     self.gmt_offset)
         self.scale_factor_costheta, self.costheta_fit = find_fit_costheta(self.data_matrix, self.clear_index)
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
@@ -118,10 +119,13 @@ class TiltAzimuthStudy():
 
                 estimates_dict = dict(zip(dict_keys, estimates))
 
+                lat = estimates_dict['latitude_estimate'] if 'latitude_estimate' in estimates_dict else self.lat_precalc
+                tilt = estimates_dict['tilt_estimate'] if 'tilt_estimate' in estimates_dict else self.tilt_precalc
+                azim = estimates_dict[
+                    'azimuth_estimate'] if 'azimuth_estimate' in estimates_dict else self.azimuth_precalc
+
                 self.costheta_estimated = calculate_costheta(func=func_costheta, delta=delta, omega=self.omega,
-                                                             lat=self.lat_precalc,
-                                                             tilt=self.tilt_precalc,
-                                                             azim=self.azimuth_precalc, est_dict=estimates_dict)
+                                                             lat=lat, tilt=tilt, azim=azim)
 
                 if None not in (self.lat_true_value, self.tilt_true_value, self.azimuth_true_value):
                     self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta=delta, omega=self.omega,

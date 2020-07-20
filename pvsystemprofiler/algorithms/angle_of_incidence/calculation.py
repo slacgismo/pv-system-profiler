@@ -6,34 +6,19 @@ Duffie, John A., and William A. Beckman. Solar engineering of thermal processes.
 """
 
 
-def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None, est_dict=None):
+def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None):
     """
     :param func: angle of incidence model function.
     :param delta: System's declination (array).
     :param omega: System's hour angle (array).
-    :param lat: (optional) System's latitude.
-    :param tilt: (optional) System's tilt.
-    :param azim: (optional)System's azimuth.
-    :param est_dict: directory containing estimated parameters
+    :param lat: System's latitude.
+    :param tilt: System's tilt.
+    :param azim: System's azimuth.
     :return: angle of incidence array
     """
-
-    if lat is None:
-        latitude_sys = est_dict['latitude_estimate']
-    else:
-        latitude_sys = lat
-    if tilt is None:
-        tilt_sys = est_dict['tilt_estimate']
-    else:
-        tilt_sys = tilt
-    if azim is None:
-        azimuth_sys = est_dict['azimuth_estimate']
-    else:
-        azimuth_sys = azim
-
     x = np.array([np.deg2rad(delta), np.deg2rad(omega)])
-    phi = np.deg2rad(latitude_sys)
-    beta = np.deg2rad(tilt_sys)
-    gamma = np.deg2rad(azimuth_sys)
+    phi = np.deg2rad(lat)
+    beta = np.deg2rad(tilt)
+    gamma = np.deg2rad(azim)
     costheta = func(x, phi, beta, gamma)
     return costheta
