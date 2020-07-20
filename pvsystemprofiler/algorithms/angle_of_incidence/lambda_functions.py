@@ -4,7 +4,12 @@ declination (delta), the hour angle (omega) , latitude (phi), tilt (beta) and az
 hour angle are treated as input parameters for all cases. Latitude, tilt and azimuth can be given as input parameters
 (precalculates) or left as unknowns. In total, seven different combinations arise from having these three parameters
 as an inputs or as a unknowns. The seven conditionals below correspond to those combinations. The output function "func"
-is used as one of the inputs to run_curve_fit which in turn is used to fit the unknowns.
+is used as one of the inputs to run_curve_fit which in turn is used to fit the unknowns. The function other outputs are
+the 'init_values' array containing the initial values for the fit and the 'bounds' tuple containing the bounds for the
+variables. Bounds for latitude are -90 to 90. Bounds for tilt are 0 to 90. Bounds for azimuth  are -180 to 180. It is
+noted that theoretically, Bounds for tilt are 0 to 180 (Duffie, John A., and William A. Beckman. Solar engineering of
+thermal processes. New York: Wiley, 1991.). However a value of tilt >90  would mean that that the surface has a
+downward-facing component, which is not the case of the current application.
 """
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 import numpy as np
@@ -46,11 +51,8 @@ def select_function(lat_precalc=None, tilt_precalc=None, azim_precalc=None):
         func = lambda x, gamma: func_costheta(x, np.deg2rad(lat_precalc), np.deg2rad(tilt_precalc), gamma)
         dict_keys = ['azimuth_estimate']
 
-    #latitude -90 to 90
-    #tilt 0 to 180
-    #azimuth -180 to 180
+    bounds_dict = {'latitude': [-np.pi/2, np.pi/2], 'tilt': [0, np.pi/2], 'azimuth': [-np.pi, np.pi]}
 
-    bounds_dict = {'latitude': [-1.57, 1.57], 'tilt': [0, 1.57], 'azimuth': [-3.14, 3.14]}
     bounds = []
     for el in dict_keys:
         g_param = el.split('_')[0]
