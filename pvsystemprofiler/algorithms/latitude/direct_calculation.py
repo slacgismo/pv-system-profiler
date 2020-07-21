@@ -15,6 +15,6 @@ def calc_lat(hours_daylight, delta):
     :return: the latitude for the given values
     """
 
-    lat = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * hours_daylight)) / (np.tan(delta[0]))))
+    lat = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * hours_daylight)) / (np.tan(np.deg2rad(delta[0])))))
 
     return lat
