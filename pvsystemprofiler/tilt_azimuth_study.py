@@ -110,12 +110,15 @@ class TiltAzimuthStudy():
 
                 func_customized, bounds, init_values, dict_keys = select_function(self.lat_precalc, self.tilt_precalc,
                                                                                   self.azimuth_precalc)
-                if self.init_values is not None:
-                    init_values = self.init_values
-
-                estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
-                                          costheta=self.costheta_fit, boolean_daytime_range=self.boolean_daytime_range,
-                                          init_values=init_values, fit_bounds=bounds)
+              
+                try:
+                    estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
+                                              costheta=self.costheta_fit,
+                                              boolean_daytime_range=self.boolean_daytime_range, init_values=init_values,
+                                              fit_bounds=bounds)
+                except RuntimeError:
+                    precalc_array = np.array([self.lat_precalc, self.tilt_precalc, self.azimuth_precalc])
+                    estimates = np.full(np.sum(precalc_array == None), np.nan)
 
                 estimates_dict = dict(zip(dict_keys, estimates))
 
