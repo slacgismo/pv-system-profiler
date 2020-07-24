@@ -108,9 +108,12 @@ class TiltAzimuthStudy():
                 if ~np.any(self.boolean_daytime_range):
                     print('No data made it through filters')
 
-                func_customized, bounds, init_values, dict_keys = select_function(self.lat_precalc, self.tilt_precalc,
-                                                                                  self.azimuth_precalc)
-              
+                func_customized, bounds, init_values = select_function(self.lat_precalc, self.tilt_precalc,
+                                                                       self.azimuth_precalc)
+
+                dict_keys = self.determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
+                                                    azimuth=self.azimuth_precalc)
+
                 try:
                     estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
                                               costheta=self.costheta_fit,
@@ -190,3 +193,13 @@ class TiltAzimuthStudy():
             cols.append('azimuth')
 
         self.results = pd.DataFrame(columns=cols)
+
+    def determine_unknowns(self, latitude, tilt, azimuth):
+        key = []
+        if latitude is None:
+            key.append('latitude_estimate')
+        if tilt is None:
+            key.append('tilt_estimate')
+        if azimuth is None:
+            key.append('azimuth_estimate')
+        return key
