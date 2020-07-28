@@ -23,9 +23,9 @@ from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 
 
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, day_range=None, init_values=None, daytime_threshold=None, lon_precalculate=None,
-                 lat_precalculate=None, tilt_precalculate=None, azimuth_precalculate=None, lat_true_value=None,
-                 tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
+    def __init__(self, data_handler, day_range=None, init_values=None, nrandom_initial=None, daytime_threshold=None,
+                 lon_precalculate=None, lat_precalculate=None, tilt_precalculate=None, azimuth_precalculate=None,
+                 lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
         """
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param day_range: (optional) the desired day range to run the study. An array of the form
@@ -54,6 +54,7 @@ class TiltAzimuthStudy():
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.init_values = init_values
+        self.nrandom = nrandom_initial
         self.daytime_threshold = daytime_threshold
         self.lon_precalc = lon_precalculate
         self.lat_precalc = lat_precalculate
@@ -90,7 +91,11 @@ class TiltAzimuthStudy():
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        init_values_dict = {'latitude': 10, 'tilt': 10, 'azimuth': 10}
+        self.nrandom = 1
+        lat_initial, tilt_initial, azim_initial = self.random_initial_values()
+
+        # init_values_dict = {'latitude': 10, 'tilt': 10, 'azimuth': 10}
+        init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
         counter = 0
         self.create_results_table()
 
@@ -108,7 +113,7 @@ class TiltAzimuthStudy():
                     print('No data made it through filters')
 
                 func_customized, bounds = select_function(self.lat_precalc, self.tilt_precalc,
-                                                                       self.azimuth_precalc)
+                                                          self.azimuth_precalc)
 
                 dict_keys = self.determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                     azimuth=self.azimuth_precalc)
@@ -214,3 +219,9 @@ class TiltAzimuthStudy():
         if 'azimuth_estimate' in dict_keys:
             init_vals.append(bounds_dict['azimuth'])
         return init_vals
+
+    def random_initial_values(self):
+        lat_initial_value = np.random.uniform(low=-90, high=90, size=self.nrandom)
+        tilt_initial_value = np.random.uniform(low=0, high=90, size=self.nrandom)
+        azim_initial_value = np.random.uniform(low=-180, high=180, size=self.nrandom)
+        return lat_initial_value, tilt_initial_value, azim_initial_value
