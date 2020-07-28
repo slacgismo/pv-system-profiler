@@ -55,7 +55,6 @@ def select_function(lat_precalc=None, tilt_precalc=None, azim_precalc=None):
         bounds.append(bounds_dict['azimuth'])
 
     bounds = tuple(np.transpose(bounds).tolist())
-    init_values = 10 * np.ones(len(bounds[0]))
 
-    return func, bounds, init_values
+    return func, bounds
 

@@ -30,9 +30,7 @@ class TiltAzimuthStudy():
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param day_range: (optional) the desired day range to run the study. An array of the form
                               [first day, last day]
-        :param init_values: (optional) Tilt and Azimuth guess values for numerical fit.
-                                Default values are [10, 10]. (Degrees).
-                                are used otherwise
+        :param init_values: (optional) Tilt and Azimuth guess values for numerical fit. Default value is 10. (Degrees).
         :param daytime_threshold: (optional) daytime threshold
         :param lon_precalculate: longitude estimate as obtained from the Longitude Study module in Degrees.
         :param lat_precalculate: precalculated latitude value in Degrees.
@@ -92,6 +90,7 @@ class TiltAzimuthStudy():
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
+        init_values_dict = {'latitude': 10, 'tilt': 10, 'azimuth': 10}
         counter = 0
         self.create_results_table()
 
@@ -108,11 +107,13 @@ class TiltAzimuthStudy():
                 if ~np.any(self.boolean_daytime_range):
                     print('No data made it through filters')
 
-                func_customized, bounds, init_values = select_function(self.lat_precalc, self.tilt_precalc,
+                func_customized, bounds = select_function(self.lat_precalc, self.tilt_precalc,
                                                                        self.azimuth_precalc)
 
                 dict_keys = self.determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                     azimuth=self.azimuth_precalc)
+
+                init_values = self.select_init_values(init_values_dict, dict_keys)
 
                 try:
                     estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
@@ -203,3 +204,13 @@ class TiltAzimuthStudy():
         if azimuth is None:
             key.append('azimuth_estimate')
         return key
+
+    def select_init_values(self, bounds_dict, dict_keys):
+        init_vals = []
+        if 'latitude_estimate' in dict_keys:
+            init_vals.append(bounds_dict['latitude'])
+        if 'tilt_estimate' in dict_keys:
+            init_vals.append(bounds_dict['tilt'])
+        if 'azimuth_estimate' in dict_keys:
+            init_vals.append(bounds_dict['azimuth'])
+        return init_vals
