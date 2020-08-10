@@ -91,13 +91,22 @@ class TiltAzimuthStudy():
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        self.nrandom = 1
-        lat_initial, tilt_initial, azim_initial = self.random_initial_values()
-
-        # init_values_dict = {'latitude': 10, 'tilt': 10, 'azimuth': 10}
-        init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
+        #self.nrandom = 1
+        if self.nrandom is None:
+            init_values_counter = 1
+            lat_initial = [10]
+            tilt_initial = [10]
+            azim_initial = [10]
+        else:
+            lat_initial, tilt_initial, azim_initial = self.random_initial_values()
+            init_values_counter = self.nrandom
         counter = 0
         self.create_results_table()
+
+
+        #loop here
+        init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
+
 
         for delta_id in delta_method:
             if delta_id in ('Cooper', 'cooper'):
