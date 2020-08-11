@@ -91,22 +91,14 @@ class TiltAzimuthStudy():
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        #self.nrandom = 1
         if self.nrandom is None:
-            init_values_counter = 1
             lat_initial = [10]
             tilt_initial = [10]
             azim_initial = [10]
         else:
             lat_initial, tilt_initial, azim_initial = self.random_initial_values()
-            init_values_counter = self.nrandom
         counter = 0
         self.create_results_table()
-
-
-        #loop here
-        init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
-
 
         for delta_id in delta_method:
             if delta_id in ('Cooper', 'cooper'):
@@ -126,35 +118,43 @@ class TiltAzimuthStudy():
 
                 dict_keys = self.determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                     azimuth=self.azimuth_precalc)
+                nvalues = 1 if self.nrandom is None else self.nrandom
 
-                init_values = self.select_init_values(init_values_dict, dict_keys)
+                for init_val_ix in np.arange(nvalues):
+                    init_values_dict = {'latitude': lat_initial[init_val_ix], 'tilt': tilt_initial[init_val_ix],
+                                        'azimuth': azim_initial[init_val_ix]}
+                    init_values = self.select_init_values(init_values_dict, dict_keys)
+                    try:
+                        estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
+                                                  costheta=self.costheta_fit,
+                                                  boolean_daytime_range=self.boolean_daytime_range,
+                                                  init_values=init_values,
+                                                  fit_bounds=bounds)
+                    except RuntimeError:
+                        precalc_array = np.array([self.lat_precalc, self.tilt_precalc, self.azimuth_precalc])
+                        estimates = np.full(np.sum(precalc_array == None), np.nan)
 
-                try:
-                    estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
-                                              costheta=self.costheta_fit,
-                                              boolean_daytime_range=self.boolean_daytime_range, init_values=init_values,
-                                              fit_bounds=bounds)
-                except RuntimeError:
-                    precalc_array = np.array([self.lat_precalc, self.tilt_precalc, self.azimuth_precalc])
-                    estimates = np.full(np.sum(precalc_array == None), np.nan)
+                    estimates_dict = dict(zip(dict_keys, estimates))
 
-                estimates_dict = dict(zip(dict_keys, estimates))
+                    lat = estimates_dict[
+                        'latitude_estimate'] if 'latitude_estimate' in estimates_dict else self.lat_precalc
+                    tilt = estimates_dict['tilt_estimate'] if 'tilt_estimate' in estimates_dict else self.tilt_precalc
+                    azim = estimates_dict[
+                        'azimuth_estimate'] if 'azimuth_estimate' in estimates_dict else self.azimuth_precalc
 
-                lat = estimates_dict['latitude_estimate'] if 'latitude_estimate' in estimates_dict else self.lat_precalc
-                tilt = estimates_dict['tilt_estimate'] if 'tilt_estimate' in estimates_dict else self.tilt_precalc
-                azim = estimates_dict[
-                    'azimuth_estimate'] if 'azimuth_estimate' in estimates_dict else self.azimuth_precalc
+                    self.costheta_estimated = calculate_costheta(func=func_costheta, delta=delta, omega=self.omega,
+                                                                 lat=lat, tilt=tilt, azim=azim)
 
-                self.costheta_estimated = calculate_costheta(func=func_costheta, delta=delta, omega=self.omega,
-                                                             lat=lat, tilt=tilt, azim=azim)
+                    if None not in (self.lat_true_value, self.tilt_true_value, self.azimuth_true_value):
+                        self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta=delta,
+                                                                        omega=self.omega,
+                                                                        lat=self.lat_true_value,
+                                                                        tilt=self.tilt_true_value,
+                                                                        azim=self.azimuth_true_value)
 
-                if None not in (self.lat_true_value, self.tilt_true_value, self.azimuth_true_value):
-                    self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta=delta, omega=self.omega,
-                                                                    lat=self.lat_true_value, tilt=self.tilt_true_value,
-                                                                    azim=self.azimuth_true_value)
+                    self.results.loc[counter] = [day_range_id, delta_id] + list(estimates)
+                    counter += 1
 
-                self.results.loc[counter] = [day_range_id, delta_id] + list(estimates)
-                counter += 1
         if self.lat_true_value is not None and self.lat_precalc is None:
             self.results['latitude residual'] = self.lat_true_value - self.results['latitude']
         if self.tilt_true_value is not None and self.tilt_precalc is None:
