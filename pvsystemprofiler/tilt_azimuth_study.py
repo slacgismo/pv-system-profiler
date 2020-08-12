@@ -91,12 +91,18 @@ class TiltAzimuthStudy():
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        if self.nrandom is None:
-            lat_initial = [10]
-            tilt_initial = [10]
-            azim_initial = [10]
+        if self.init_values is not None:
+            lat_initial = self.init_values[0]
+            tilt_initial = self.init_values[1]
+            azim_initial = self.init_values[2]
         else:
-            lat_initial, tilt_initial, azim_initial = self.random_initial_values()
+            if self.nrandom is None:
+                lat_initial = [10]
+                tilt_initial = [10]
+                azim_initial = [10]
+            else:
+                lat_initial, tilt_initial, azim_initial = self.random_initial_values()
+
         counter = 0
         self.create_results_table()
 
@@ -118,8 +124,8 @@ class TiltAzimuthStudy():
 
                 dict_keys = self.determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                     azimuth=self.azimuth_precalc)
-                nvalues = 1 if self.nrandom is None else self.nrandom
-
+                #nvalues = 1 if self.nrandom is None else self.nrandom
+                nvalues = len(lat_initial)
                 for init_val_ix in np.arange(nvalues):
                     init_values_dict = {'latitude': lat_initial[init_val_ix], 'tilt': tilt_initial[init_val_ix],
                                         'azimuth': azim_initial[init_val_ix]}
