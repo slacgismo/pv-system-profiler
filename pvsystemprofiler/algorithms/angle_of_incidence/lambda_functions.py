@@ -6,7 +6,7 @@ hour angle are treated as input parameters for all cases. Latitude, tilt and azi
 as an inputs or as a unknowns. The seven conditionals below correspond to those combinations. The output function "func"
 is used as one of the inputs to run_curve_fit which in turn is used to fit the unknowns. The function other outputs is
 the 'bounds' tuple containing the bounds for the variables. Bounds for latitude are -90 to 90. Bounds for tilt are 0 to
-90. Bounds for azimuth  are -180 to 180. It is noted that theoretically, Bounds for tilt are 0 to 180 (Duffie, John A.,
+90. Bounds for azimuth  are -180 to 180. It is noted that, theoretically, bounds for tilt are 0 to 180 (Duffie, John A.,
  and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.). However a value of tilt >90
  would mean that that the surface has a downward-facing component, which is not the case of the current application.
 """
