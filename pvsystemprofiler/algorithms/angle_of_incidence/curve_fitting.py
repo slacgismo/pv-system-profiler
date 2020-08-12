@@ -16,7 +16,7 @@ def run_curve_fit(func, delta, omega, costheta, boolean_daytime_range, init_valu
     :param omega: System's hour angle in Degrees(array).
     :param costheta: The dependent data. Angle of incidence array used to fit parameters.
     :param boolean_daytime_range: boolean array specifying days to be used in fitting.
-    :param init_values: Initial guess for the parameters.
+    :param init_values: Initial guess for the parameters. (Degrees).
     :param fit_bounds: Lower and upper bounds on parameters.
     :return: Optimal values for the parameters.
     """
