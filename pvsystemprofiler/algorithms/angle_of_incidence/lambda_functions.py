@@ -4,12 +4,11 @@ declination (delta), the hour angle (omega) , latitude (phi), tilt (beta) and az
 hour angle are treated as input parameters for all cases. Latitude, tilt and azimuth can be given as input parameters
 (precalculates) or left as unknowns. In total, seven different combinations arise from having these three parameters
 as an inputs or as a unknowns. The seven conditionals below correspond to those combinations. The output function "func"
-is used as one of the inputs to run_curve_fit which in turn is used to fit the unknowns. The function other outputs are
-the 'init_values' array containing the initial values for the fit and the 'bounds' tuple containing the bounds for the
-variables. Bounds for latitude are -90 to 90. Bounds for tilt are 0 to 90. Bounds for azimuth  are -180 to 180. It is
-noted that theoretically, Bounds for tilt are 0 to 180 (Duffie, John A., and William A. Beckman. Solar engineering of
-thermal processes. New York: Wiley, 1991.). However a value of tilt >90  would mean that that the surface has a
-downward-facing component, which is not the case of the current application.
+is used as one of the inputs to run_curve_fit which in turn is used to fit the unknowns. The function other outputs is
+the 'bounds' tuple containing the bounds for the variables. Bounds for latitude are -90 to 90. Bounds for tilt are 0 to
+90. Bounds for azimuth  are -180 to 180. It is noted that theoretically, Bounds for tilt are 0 to 180 (Duffie, John A.,
+ and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.). However a value of tilt >90
+ would mean that that the surface has a downward-facing component, which is not the case of the current application.
 """
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 import numpy as np
@@ -19,8 +18,7 @@ def select_function(lat_precalc=None, tilt_precalc=None, azim_precalc=None):
     :param lat_precalc: (optional) Latitude precalculate in Degrees.
     :param tilt_precalc: (optional) Tilt precalculate in Degrees.
     :param azim_precalc: (optional) Azimuth precalculate in Degrees.
-    :return: Customized function 'func', 'bounds' tuple and 'init_values' array used by run_curve_fit as
-             input. Array dict_keys containing the parameters left as variables.
+    :return: Customized function 'func' and 'bounds' tuple.
     '''
 
     if lat_precalc is None and tilt_precalc is None and azim_precalc is None:
