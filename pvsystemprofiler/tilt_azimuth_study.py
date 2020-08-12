@@ -201,7 +201,8 @@ class TiltAzimuthStudy():
         return x2.value
 
     def create_results_table(self):
-        cols = ['day range', 'declination method', 'lat init val', 'tilt init val', 'azim init val']
+        cols = ['day range', 'declination method', 'latitude initial value', 'tilt initial value',
+                'azimuth initial value']
         if self.lat_precalc is None:
             cols.append('latitude')
         if self.tilt_precalc is None:
