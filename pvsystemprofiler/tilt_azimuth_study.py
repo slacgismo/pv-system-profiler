@@ -152,7 +152,9 @@ class TiltAzimuthStudy():
                                                                         tilt=self.tilt_true_value,
                                                                         azim=self.azimuth_true_value)
 
-                    self.results.loc[counter] = [day_range_id, delta_id] + list(estimates)
+                    ivr = self.init_values_results(init_values_dict, dict_keys)
+
+                    self.results.loc[counter] = [day_range_id, delta_id] + ivr + list(estimates)
                     counter += 1
 
         if self.lat_true_value is not None and self.lat_precalc is None:
@@ -199,7 +201,7 @@ class TiltAzimuthStudy():
         return x2.value
 
     def create_results_table(self):
-        cols = ['day range', 'declination method']
+        cols = ['day range', 'declination method', 'lat init val', 'tilt init val', 'azim init val']
         if self.lat_precalc is None:
             cols.append('latitude')
         if self.tilt_precalc is None:
@@ -227,6 +229,22 @@ class TiltAzimuthStudy():
             init_vals.append(bounds_dict['tilt'])
         if 'azimuth_estimate' in dict_keys:
             init_vals.append(bounds_dict['azimuth'])
+        return init_vals
+
+    def init_values_results(self, bounds_dict, dict_keys):
+        init_vals = []
+        if 'latitude_estimate' in dict_keys:
+            init_vals.append(bounds_dict['latitude'])
+        else:
+            init_vals.append(np.nan)
+        if 'tilt_estimate' in dict_keys:
+            init_vals.append(bounds_dict['tilt'])
+        else:
+            init_vals.append(np.nan)
+        if 'azimuth_estimate' in dict_keys:
+            init_vals.append(bounds_dict['azimuth'])
+        else:
+            init_vals.append(np.nan)
         return init_vals
 
     def random_initial_values(self):
