@@ -7,6 +7,8 @@ given as precalculates and others are left as unknowns. Unknowns are calculated 
 cos(theta) equation (1.6.2) in:
 Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
 """
+
+
 def run_curve_fit(func, delta, omega, costheta, boolean_daytime_range, init_values, fit_bounds):
     """
     :param func: Angle of incidence model function.
