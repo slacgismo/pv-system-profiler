@@ -23,7 +23,7 @@ from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 
 
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, day_range=None, init_values=None, nrandom_initial=None, daytime_threshold=None,
+    def __init__(self, data_handler, day_range=None, init_values=None, nrandom_init_values=None, daytime_threshold=None,
                  lon_precalculate=None, lat_precalculate=None, tilt_precalculate=None, azimuth_precalculate=None,
                  lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
         """
@@ -33,7 +33,7 @@ class TiltAzimuthStudy():
         :param init_values: (optional) Latitude, Tilt and Azimuth guess values list for numerical fit. A list of the
                 form [[latitude_1,.., latitude_n], [tilt_1,.., tilt_n], [azimuth_1,.., azimuth_n]]. Default value is 10.
                 (Degrees).
-        :param nrandom_initial: (optional) number of random initial values to be generated.
+        :param nrandom_init_values: (optional) number of random initial values to be generated.
         :param daytime_threshold: (optional) daytime threshold
         :param lon_precalculate: longitude estimate as obtained from the Longitude Study module in Degrees.
         :param lat_precalculate: precalculated latitude value in Degrees.
@@ -57,7 +57,7 @@ class TiltAzimuthStudy():
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.init_values = init_values
-        self.nrandom = nrandom_initial
+        self.nrandom = nrandom_init_values
         self.daytime_threshold = daytime_threshold
         self.lon_precalc = lon_precalculate
         self.lat_precalc = lat_precalculate
