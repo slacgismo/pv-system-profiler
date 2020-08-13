@@ -27,10 +27,13 @@ class TiltAzimuthStudy():
                  lon_precalculate=None, lat_precalculate=None, tilt_precalculate=None, azimuth_precalculate=None,
                  lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
         """
-        :param data_handler: `DataHandler` class instance loaded with a solar power data set
-        :param day_range: (optional) the desired day range to run the study. An array of the form
-                              [first day, last day]
-        :param init_values: (optional) Tilt and Azimuth guess values for numerical fit. Default value is 10. (Degrees).
+        :param data_handler: `DataHandler` class instance loaded with a solar power data set.
+        :param day_range: (optional) the desired day range to run the study. A list of the form
+                              [first day, last day].
+        :param init_values: (optional) Latitude, Tilt and Azimuth guess values list for numerical fit. A list of the
+                form [[latitude_1,.., latitude_n], [tilt_1,.., tilt_n], [azimuth_1,.., azimuth_n]]. Default value is 10.
+                (Degrees).
+        :param nrandom_initial: (optional) number of random initial values to be generated.
         :param daytime_threshold: (optional) daytime threshold
         :param lon_precalculate: longitude estimate as obtained from the Longitude Study module in Degrees.
         :param lat_precalculate: precalculated latitude value in Degrees.
@@ -39,7 +42,7 @@ class TiltAzimuthStudy():
         :param lat_true_value: (optional) ground truth value for the system's Latitude in Degrees.
         :param tilt_true_value: (optional) ground truth value for the system's Tilt in Degrees.
         :param azimuth_true_value: (optional) ground truth value for the system's Azimuth in Degrees Degrees.
-        :param gmt_offset: The offset in hours between the local timezone and GMT/UTC
+        :param gmt_offset: The offset in hours between the local timezone and GMT/UTC.
         """
 
         self.data_handler = data_handler
