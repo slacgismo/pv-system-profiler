@@ -132,7 +132,7 @@ class TiltAzimuthStudy():
                 for init_val_ix in np.arange(nvalues):
                     init_values_dict = {'latitude': lat_initial[init_val_ix], 'tilt': tilt_initial[init_val_ix],
                                         'azimuth': azim_initial[init_val_ix]}
-                    init_values = self.select_init_values(init_values_dict, dict_keys)
+                    init_values, ivr = self.select_init_values(init_values_dict, dict_keys)
                     try:
                         estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
                                                   costheta=self.costheta_fit,
@@ -160,8 +160,6 @@ class TiltAzimuthStudy():
                                                                         lat=self.lat_true_value,
                                                                         tilt=self.tilt_true_value,
                                                                         azim=self.azimuth_true_value)
-
-                    ivr = self.init_values_results(init_values_dict, dict_keys)
 
                     self.results.loc[counter] = [day_range_id, delta_id] + ivr + list(estimates)
                     counter += 1
@@ -233,29 +231,23 @@ class TiltAzimuthStudy():
 
     def select_init_values(self, bounds_dict, dict_keys):
         init_vals = []
+        ivr = []
         if 'latitude_estimate' in dict_keys:
             init_vals.append(bounds_dict['latitude'])
+            ivr.append(bounds_dict['latitude'])
+        else:
+            ivr.append(np.nan)
         if 'tilt_estimate' in dict_keys:
             init_vals.append(bounds_dict['tilt'])
+            ivr.append(bounds_dict['tilt'])
+        else:
+            ivr.append(np.nan)
         if 'azimuth_estimate' in dict_keys:
             init_vals.append(bounds_dict['azimuth'])
-        return init_vals
-
-    def init_values_results(self, bounds_dict, dict_keys):
-        init_vals = []
-        if 'latitude_estimate' in dict_keys:
-            init_vals.append(bounds_dict['latitude'])
+            ivr.append(bounds_dict['azimuth'])
         else:
-            init_vals.append(np.nan)
-        if 'tilt_estimate' in dict_keys:
-            init_vals.append(bounds_dict['tilt'])
-        else:
-            init_vals.append(np.nan)
-        if 'azimuth_estimate' in dict_keys:
-            init_vals.append(bounds_dict['azimuth'])
-        else:
-            init_vals.append(np.nan)
-        return init_vals
+            ivr.append(np.nan)
+        return init_vals, ivr
 
     def random_initial_values(self):
         """ Bounds for latitude are -90 to 90. Bounds for tilt are 0 to 90. Bounds for azimuth  are -180 to 180. It is
