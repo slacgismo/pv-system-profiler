@@ -258,10 +258,10 @@ class TiltAzimuthStudy():
         return init_vals
 
     def random_initial_values(self):
-        ''' Bounds for latitude are -90 to 90. Bounds for tilt are 0 to 90. Bounds for azimuth  are -180 to 180. It is
+        """ Bounds for latitude are -90 to 90. Bounds for tilt are 0 to 90. Bounds for azimuth  are -180 to 180. It is
         noted that, theoretically, bounds for tilt are 0 to 180 (Duffie, John A., and William A. Beckman. Solar
         engineering of thermal processes. New York: Wiley, 1991.). However a value of tilt >90 would mean that that the
-        surface has a downward-facing component, which is not the case of the current application.'''
+        surface has a downward-facing component, which is not the case of the current application."""
 
         lat_initial_value = np.random.uniform(low=-90, high=90, size=self.nrandom)
         tilt_initial_value = np.random.uniform(low=0, high=90, size=self.nrandom)
