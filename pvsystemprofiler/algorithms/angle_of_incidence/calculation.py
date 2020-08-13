@@ -9,8 +9,8 @@ Duffie, John A., and William A. Beckman. Solar engineering of thermal processes.
 def calculate_costheta(func, delta, omega, lat=None, tilt=None, azim=None):
     """
     :param func: angle of incidence model function.
-    :param delta: System's declination in Degrees(array).
-    :param omega: System's hour angle in Degrees(array).
+    :param delta: System's declination in Degrees (array).
+    :param omega: System's hour angle in Degrees (array).
     :param lat: System's latitude in Degrees.
     :param tilt: System's tilt in Degrees.
     :param azim: System's azimuth in Degrees.
