@@ -42,7 +42,7 @@ def select_function(lat_precalc=None, tilt_precalc=None, azim_precalc=None):
     if lat_precalc is not None and tilt_precalc is not None and azim_precalc is None:
         func = lambda x, gamma: func_costheta(x, np.deg2rad(lat_precalc), np.deg2rad(tilt_precalc), gamma)
 
-    bounds_dict = {'latitude': [-np.pi/2, np.pi/2], 'tilt': [0, np.pi/2], 'azimuth': [-np.pi, np.pi]}
+    bounds_dict = {'latitude': [-np.pi/2, np.pi/2], 'tilt': [0, np.pi/2], 'azimuth': [-np.inf, np.inf]}
     bounds = []
 
     if lat_precalc is None:
