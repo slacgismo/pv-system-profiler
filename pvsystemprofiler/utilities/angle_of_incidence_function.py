@@ -7,6 +7,8 @@ def func_costheta(x, phi, beta, gamma):
     delta = x[0]
     omega = x[1]
 
+    gamma -= np.rint(gamma / 2 / np.pi) * 2 * np.pi
+
     a = np.sin(delta) * np.sin(phi) * np.cos(beta)
     b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
     c = np.cos(delta) * np.cos(phi) * np.cos(beta) * np.cos(omega)
