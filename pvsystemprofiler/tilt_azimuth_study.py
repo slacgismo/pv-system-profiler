@@ -20,7 +20,7 @@ from pvsystemprofiler.algorithms.angle_of_incidence.calculation import calculate
 from pvsystemprofiler.algorithms.performance_model_estimation import find_fit_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.lambda_functions import select_function
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
-from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_unknowns
+from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_keys
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 
 class TiltAzimuthStudy():
@@ -126,7 +126,7 @@ class TiltAzimuthStudy():
                 func_customized, bounds = select_function(self.lat_precalc, self.tilt_precalc,
                                                           self.azimuth_precalc)
 
-                dict_keys = determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
+                dict_keys = determine_keys(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                     azimuth=self.azimuth_precalc)
 
                 nvalues = len(lat_initial)

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def determine_unknowns(latitude, tilt, azimuth):
+def determine_keys(latitude, tilt, azimuth):
     key = []
     if latitude is None:
         key.append('latitude_estimate')
