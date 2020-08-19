@@ -135,7 +135,7 @@ class TiltAzimuthStudy():
                                         'azimuth': azim_initial[init_val_ix]}
                     init_values, ivr = select_init_values(init_values_dict, dict_keys)
                     try:
-                        estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
+                        estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f, omega=omega_f,
                                                   costheta=self.costheta_fit,
                                                   boolean_daytime_range=self.boolean_daytime_range,
                                                   init_values=init_values,
