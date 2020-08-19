@@ -20,7 +20,8 @@ from pvsystemprofiler.algorithms.angle_of_incidence.calculation import calculate
 from pvsystemprofiler.algorithms.performance_model_estimation import find_fit_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.lambda_functions import select_function
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
-
+from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_unknowns
+from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range=None, init_values=None, nrandom_init_values=None, daytime_threshold=None,
@@ -125,14 +126,14 @@ class TiltAzimuthStudy():
                 func_customized, bounds = select_function(self.lat_precalc, self.tilt_precalc,
                                                           self.azimuth_precalc)
 
-                dict_keys = self.determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
+                dict_keys = determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                     azimuth=self.azimuth_precalc)
-                
+
                 nvalues = len(lat_initial)
                 for init_val_ix in np.arange(nvalues):
                     init_values_dict = {'latitude': lat_initial[init_val_ix], 'tilt': tilt_initial[init_val_ix],
                                         'azimuth': azim_initial[init_val_ix]}
-                    init_values, ivr = self.select_init_values(init_values_dict, dict_keys)
+                    init_values, ivr = select_init_values(init_values_dict, dict_keys)
                     try:
                         estimates = run_curve_fit(func=func_customized, delta=delta_f, omega=omega_f,
                                                   costheta=self.costheta_fit,
@@ -218,36 +219,6 @@ class TiltAzimuthStudy():
             cols.append('azimuth')
 
         self.results = pd.DataFrame(columns=cols)
-
-    def determine_unknowns(self, latitude, tilt, azimuth):
-        key = []
-        if latitude is None:
-            key.append('latitude_estimate')
-        if tilt is None:
-            key.append('tilt_estimate')
-        if azimuth is None:
-            key.append('azimuth_estimate')
-        return key
-
-    def select_init_values(self, bounds_dict, dict_keys):
-        init_vals = []
-        ivr = []
-        if 'latitude_estimate' in dict_keys:
-            init_vals.append(bounds_dict['latitude'])
-            ivr.append(bounds_dict['latitude'])
-        else:
-            ivr.append(np.nan)
-        if 'tilt_estimate' in dict_keys:
-            init_vals.append(bounds_dict['tilt'])
-            ivr.append(bounds_dict['tilt'])
-        else:
-            ivr.append(np.nan)
-        if 'azimuth_estimate' in dict_keys:
-            init_vals.append(bounds_dict['azimuth'])
-            ivr.append(bounds_dict['azimuth'])
-        else:
-            ivr.append(np.nan)
-        return init_vals, ivr
 
     def random_initial_values(self):
         """ Bounds for latitude are -90 to 90. Bounds for tilt are 0 to 90. Bounds for azimuth  are -180 to 180. It is
