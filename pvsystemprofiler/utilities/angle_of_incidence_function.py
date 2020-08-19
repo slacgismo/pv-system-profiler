@@ -7,11 +7,7 @@ def func_costheta(x, phi, beta, gamma):
     delta = x[0]
     omega = x[1]
 
-    while gamma < -np.pi or gamma > np.pi:
-        if gamma < -np.pi:
-            gamma += 2*np.pi
-        if gamma > np.pi:
-            gamma -= 2*np.pi
+    gamma -= np.rint(gamma / 2 / np.pi) * 2 * np.pi
 
     a = np.sin(delta) * np.sin(phi) * np.cos(beta)
     b = np.sin(delta) * np.cos(phi) * np.sin(beta) * np.cos(gamma)
