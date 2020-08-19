@@ -127,7 +127,7 @@ class TiltAzimuthStudy():
 
                 dict_keys = self.determine_unknowns(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                     azimuth=self.azimuth_precalc)
-                #nvalues = 1 if self.nrandom is None else self.nrandom
+                
                 nvalues = len(lat_initial)
                 for init_val_ix in np.arange(nvalues):
                     init_values_dict = {'latitude': lat_initial[init_val_ix], 'tilt': tilt_initial[init_val_ix],
