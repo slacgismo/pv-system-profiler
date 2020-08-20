@@ -41,6 +41,7 @@ class LongitudeStudy():
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.data_matrix = self.data_handler.filled_data_matrix
+        self.raw_data_matrix = self.data_handler.raw_data_matrix
         self.true_value = true_value
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
@@ -103,7 +104,9 @@ class LongitudeStudy():
             elif sn == 'energy_com':
                 self.solarnoon = energy_com(self.data_matrix)
             elif sn == 'optimized':
-                pass
+                ss = SunriseSunset()
+                ss.run_optimizer(data=self.raw_data_matrix)
+                self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
             for ds in day_selection_method:
                 if ds == 'all':
                     self.days = np.ones(self.data_matrix.shape[1],
