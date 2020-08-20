@@ -24,6 +24,7 @@ from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
+from solardatatools.algorithms import SunriseSunset
 
 class LongitudeStudy():
     def __init__(self, data_handler, gmt_offset=-8, true_value=None):
@@ -55,7 +56,7 @@ class LongitudeStudy():
 
     def run(self, estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
-            solar_noon_method=('rise_set_average', 'energy_com'),
+            solar_noon_method=('rise_set_average', 'energy_com', 'optimized'),
             day_selection_method=('all', 'clear', 'cloudy'),
             verbose=True):
         """
@@ -80,7 +81,7 @@ class LongitudeStudy():
 
         :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'
         :param eot_calculation: 'duffie', 'haghdadi'
-        :param solar_noon_method: 'rise_set_average', 'energy_com'
+        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized'
         :param day_selection_method: 'all', 'clear', 'cloudy'
         :param verbose: show progress bar if True
         :return: None
@@ -101,6 +102,8 @@ class LongitudeStudy():
                 self.solarnoon = avg_sunrise_sunset(self.data_matrix)
             elif sn == 'energy_com':
                 self.solarnoon = energy_com(self.data_matrix)
+            elif sn == 'optimized':
+                pass
             for ds in day_selection_method:
                 if ds == 'all':
                     self.days = np.ones(self.data_matrix.shape[1],
