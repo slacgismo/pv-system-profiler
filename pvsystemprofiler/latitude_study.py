@@ -41,13 +41,13 @@ class LatitudeStudy():
         self.results = None
 
     def run(self, threshold_method=('raw data matrix', 'filled data matrix'),
-            daylight_method=('raw daylight', 'sunrise-sunset'),
+            daylight_method=('raw daylight', 'sunrise-sunset', 'optimized'),
             delta_method=('cooper', 'spencer'),
             threshold=None):
         '''
         :param threshold_method: 'raw data matrix', 'filled data matrix'
-        :param daylight_method: 'raw daylight', 'sunrise-sunset'
-        :param threshold: (optional) daylight threshold values, tuple of length one to eight
+        :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized'
+        :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'
         :return:
         '''
@@ -101,6 +101,9 @@ class LatitudeStudy():
             self.hours_daylight = self.calculate_hours_daylight(data_in, daytime_threshold)
         if daylight_method in ('raw_daylight', 'raw daylight'):
             self.hours_daylight = self.calculate_hours_daylight_raw(data_in, daytime_threshold)
+        if daylight_method in ('optimized', 'Optimized'):
+            pass
+
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         if delta_method in ('Spencer', 'spencer'):
