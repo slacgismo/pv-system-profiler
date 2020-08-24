@@ -99,7 +99,7 @@ class LatitudeStudy():
             data_in = self.raw_data_matrix
         elif matrix_id in ('filled data matrix', 'filled_data_matrix', 'filled'):
             data_in = self.data_matrix
-        elif daylight_method in ('sunrise-sunset', 'sunrise sunset'):
+        if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
             self.hours_daylight = self.calculate_hours_daylight(data_in, daytime_threshold)
         elif daylight_method in ('raw_daylight', 'raw daylight'):
             self.hours_daylight = self.calculate_hours_daylight_raw(data_in, daytime_threshold)
