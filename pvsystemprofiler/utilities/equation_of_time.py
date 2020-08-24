@@ -21,7 +21,10 @@ def eot_haghdadi(day_of_year):
     """
     b = np.deg2rad((360 / 365) * (day_of_year - 81))
     eot = 9.87 * np.sin(2 * b) - 7.53 * np.cos(b) - 1.5 * np.sin(b)
-    return eot.values
+    try:
+        return eot.values
+    except AttributeError:
+        return eot
 
 def eot_duffie(day_of_year):
     """
@@ -38,4 +41,7 @@ def eot_duffie(day_of_year):
     A = 1440 / (2 * np.pi)                  # book uses approximation of 229.2
     eot = A * (0.000075 + 0.001868 * np.cos(b) - 0.032077 * np.sin(b)
                - 0.014615 * np.cos(2 * b) - 0.04089 * np.sin(2 * b))
-    return eot.values
+    try:
+        return eot.values
+    except AttributeError:
+        return eot
