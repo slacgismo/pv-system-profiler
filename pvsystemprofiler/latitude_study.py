@@ -11,6 +11,8 @@ from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.daytime import find_daytime
+from solardatatools.algorithms import SunriseSunset
+
 
 class LatitudeStudy():
     def __init__(self, data_handler, lat_true_value=None):
@@ -56,7 +58,7 @@ class LatitudeStudy():
         delta_method = np.atleast_1d(delta_method)
 
         if threshold is None:
-            self.daytime_threshold = 0.001*np.ones(len(threshold_method)*len(daylight_method)*len(delta_method))
+            self.daytime_threshold = 0.001 * np.ones(len(threshold_method) * len(daylight_method) * len(delta_method))
         else:
             self.daytime_threshold = threshold
 
@@ -69,7 +71,7 @@ class LatitudeStudy():
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(threshold_method):
                 for daylight_method_id in daylight_method:
-                    dtt = self.daytime_threshold[counter]
+                    dtt = self.daytime_threshold[counter] if daylight_method_id != 'optimized' else np.nan
                     dlm = daylight_method_id
                     tm = threshold_method[matrix_ix]
                     dcc = daylight_method_id
@@ -102,7 +104,9 @@ class LatitudeStudy():
         if daylight_method in ('raw_daylight', 'raw daylight'):
             self.hours_daylight = self.calculate_hours_daylight_raw(data_in, daytime_threshold)
         if daylight_method in ('optimized', 'Optimized'):
-            pass
+            ss = SunriseSunset()
+            ss.run_optimizer(data=data_in)
+            self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
 
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
