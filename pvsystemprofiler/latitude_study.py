@@ -97,20 +97,20 @@ class LatitudeStudy():
 
         if matrix_id in ('raw data matrix', 'raw_data_matrix', 'raw'):
             data_in = self.raw_data_matrix
-        if matrix_id in ('filled data matrix', 'filled_data_matrix', 'filled'):
+        elif matrix_id in ('filled data matrix', 'filled_data_matrix', 'filled'):
             data_in = self.data_matrix
-        if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
+        elif daylight_method in ('sunrise-sunset', 'sunrise sunset'):
             self.hours_daylight = self.calculate_hours_daylight(data_in, daytime_threshold)
-        if daylight_method in ('raw_daylight', 'raw daylight'):
+        elif daylight_method in ('raw_daylight', 'raw daylight'):
             self.hours_daylight = self.calculate_hours_daylight_raw(data_in, daytime_threshold)
-        if daylight_method in ('optimized', 'Optimized'):
+        elif daylight_method in ('optimized', 'Optimized'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
             self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
 
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
-        if delta_method in ('Spencer', 'spencer'):
+        elif delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
