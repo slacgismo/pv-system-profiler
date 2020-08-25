@@ -117,7 +117,7 @@ class LatitudeStudy():
             ss.run_optimizer(data=data_in)
             self.hours_daylight = ss.sunset_measurements - ss.sunrise_measurements
             self.opt_threshold = ss.threshold
-            
+
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
