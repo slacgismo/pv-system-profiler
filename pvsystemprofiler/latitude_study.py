@@ -39,6 +39,7 @@ class LatitudeStudy():
         self.delta_spencer = None
         self.residual = None
         self.daytime_threshold = None
+        self.opt_threshold = None
         # Results
         self.results = None
 
@@ -71,13 +72,16 @@ class LatitudeStudy():
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(threshold_method):
                 for daylight_method_id in daylight_method:
-                    dtt = self.daytime_threshold[counter] if daylight_method_id != 'optimized' else np.nan
+                    if daylight_method_id != 'optimized':
+                        dtt = self.daytime_threshold[counter]
                     dlm = daylight_method_id
                     tm = threshold_method[matrix_ix]
                     dcc = daylight_method_id
                     dm = delta_id
                     lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                      delta_method=delta_id)
+                    if daylight_method_id == 'optimized':
+                        dtt = self.opt_threshold
 
                     results.loc[counter] = [dm, dcc, tm, dtt, lat_est]
                     counter += 1
@@ -107,7 +111,7 @@ class LatitudeStudy():
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
             self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
-
+            self.opt_threshold = ss.threshold
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
