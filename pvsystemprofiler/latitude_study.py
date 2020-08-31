@@ -115,13 +115,17 @@ class LatitudeStudy():
         elif daylight_method in ('measurements', 'Measurements'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
-            self.hours_daylight = ss.sunset_measurements - ss.sunrise_measurements
+            hours_daylight_meas = ss.sunset_measurements - ss.sunrise_measurements
+            hours_mask = np.isnan(hours_daylight_meas)
+            self.hours_daylight = hours_daylight_meas[~hours_mask]
             self.opt_threshold = ss.threshold
 
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
+        if daylight_method in ('measurements', 'Measurements'):
+            delta = delta[:, ~hours_mask]
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
         return np.median(latitude_estimate)
