@@ -18,6 +18,7 @@
 *.png
 *.jpg
 *.ipynb
+*.pkl
 
 ### Database ###
 *.accdb
