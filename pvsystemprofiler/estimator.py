@@ -15,7 +15,7 @@ from pvsystemprofiler.utilities.progress import progress
 
 
 class ConfigurationEstimator():
-    def __init__(self, data_handler):
+    def __init__(self, data_handler, gmt_offset):
         if not data_handler._ran_pipeline:
             data_handler.run_pipeline()
         self.data_handler = data_handler
@@ -51,8 +51,7 @@ class ConfigurationEstimator():
             self.solarnoon = np.nanmean(
                 [ss.sunrise_estimates, ss.sunset_estimates], axis=0)
         if day_selection_method == 'all':
-            self.days = np.ones(self.data_matrix.shape[1],
-                                dtype=np.bool)
+            self.days = self.data_handler.daily_flags.no_errors
         elif day_selection_method == 'clear':
             self.days = self.data_handler.daily_flags.clear
         elif day_selection_method == 'cloudy':
