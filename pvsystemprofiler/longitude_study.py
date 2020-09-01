@@ -55,7 +55,8 @@ class LongitudeStudy():
         self.results = None
         self.best_result = None
 
-    def run(self, estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
+    def run(self, data_matrix=('raw data matrix', 'filled data matrix'),
+            estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
             solar_noon_method=('rise_set_average', 'energy_com', 'optimized_raw', 'optimized_filled'),
             day_selection_method=('all', 'clear', 'cloudy'),
@@ -79,7 +80,7 @@ class LongitudeStudy():
         containing the results of the study. If a ground truth value was
         provided to the class constructor, the best result will be assigned
         to the `best_result` attribute.
-
+        :param data_matrix: 'raw data matrix', 'filled data matrix'
         :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'
         :param eot_calculation: 'duffie', 'haghdadi'
         :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized_raw', 'optimized_filled'
