@@ -114,8 +114,7 @@ class LongitudeStudy():
 
             for ds in day_selection_method:
                 if ds == 'all':
-                    self.days = np.ones(self.data_matrix.shape[1],
-                                        dtype=np.bool)
+                    self.days = self.data_handler.daily_flags.no_errors
                 elif ds == 'clear':
                     self.days = self.data_handler.daily_flags.clear
                 elif ds == 'cloudy':
