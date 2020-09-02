@@ -90,7 +90,7 @@ class LongitudeStudy():
         """
         results = pd.DataFrame(columns=[
             'longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
-            'day_selection_method'
+            'day_selection_method', 'data matrix'
         ])
         estimator = np.atleast_1d(estimator)
         eot_calculation = np.atleast_1d(eot_calculation)
@@ -128,7 +128,7 @@ class LongitudeStudy():
                                 progress(counter, total)
                             lon = self.estimate_longitude(est, eot)
                             results.loc[counter] = [
-                                lon, est, eot, sn, ds
+                                lon, est, eot, sn, ds, dm
                             ]
                             counter += 1
         if verbose:
