@@ -80,13 +80,13 @@ class LongitudeStudy():
         containing the results of the study. If a ground truth value was
         provided to the class constructor, the best result will be assigned
         to the `best_result` attribute.
-        :param data_matrix: 'raw', 'filled'
-        :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'
-        :param eot_calculation: 'duffie', 'haghdadi'
-        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized', 'measurements'
-        :param day_selection_method: 'all', 'clear', 'cloudy'
-        :param verbose: show progress bar if True
-        :return: None
+        :param data_matrix: 'raw', 'filled'.
+        :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'.
+        :param eot_calculation: 'duffie', 'haghdadi'.
+        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized', 'measurements'.
+        :param day_selection_method: 'all', 'clear', 'cloudy'.
+        :param verbose: show progress bar if True.
+        :return: None.
         """
         results = pd.DataFrame(columns=[
             'longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
