@@ -48,10 +48,10 @@ class LatitudeStudy():
             delta_method=('cooper', 'spencer'),
             threshold=None):
         '''
-        :param data_matrix: 'raw', 'filled'
+        :param data_matrix: 'raw', 'filled'.
         :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized', 'measurements'.
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
-        :param delta_method: (optional) 'cooper', 'spencer'
+        :param delta_method: (optional) 'cooper', 'spencer'.
         :return:
         '''
         data_matrix = np.atleast_1d(data_matrix)
