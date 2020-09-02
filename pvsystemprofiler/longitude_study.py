@@ -96,35 +96,41 @@ class LongitudeStudy():
         eot_calculation = np.atleast_1d(eot_calculation)
         solar_noon_method = np.atleast_1d(solar_noon_method)
         day_selection_method = np.atleast_1d(day_selection_method)
+        data_matrix = np.atleast_1d(data_matrix)
         total = (len(estimator) * len(eot_calculation) * len(solar_noon_method)
-                 * len(day_selection_method))
+                 * len(day_selection_method) * len(data_matrix))
         counter = 0
-        for sn in solar_noon_method:
-            if sn == 'rise_set_average':
-               self.solarnoon = avg_sunrise_sunset(self.data_matrix)
-            elif sn == 'energy_com':
-                self.solarnoon = energy_com(self.data_matrix)
-            elif sn == 'optimized':
-                ss = SunriseSunset()
-                ss.run_optimizer(data=self.raw_data_matrix)
-                self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
+        for dm in data_matrix:
+            if dm in ('raw data matrix', 'raw_data_matrix', 'raw'):
+                data_in = self.raw_data_matrix
+            elif dm in ('filled data matrix', 'filled_data_matrix', 'filled'):
+                data_in = self.data_matrix
+            for sn in solar_noon_method:
+                if sn == 'rise_set_average':
+                    self.solarnoon = avg_sunrise_sunset(self.data_matrix)
+                elif sn == 'energy_com':
+                    self.solarnoon = energy_com(self.data_matrix)
+                elif sn == 'optimized':
+                    ss = SunriseSunset()
+                    ss.run_optimizer(data=self.raw_data_matrix)
+                    self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
 
-            for ds in day_selection_method:
-                if ds == 'all':
-                    self.days = self.data_handler.daily_flags.no_errors
-                elif ds == 'clear':
-                    self.days = self.data_handler.daily_flags.clear
-                elif ds == 'cloudy':
-                    self.days = self.data_handler.daily_flags.cloudy
-                for est in estimator:
-                    for eot in eot_calculation:
-                        if verbose:
-                            progress(counter, total)
-                        lon = self.estimate_longitude(est, eot)
-                        results.loc[counter] = [
-                            lon, est, eot, sn, ds
-                        ]
-                        counter += 1
+                for ds in day_selection_method:
+                    if ds == 'all':
+                        self.days = self.data_handler.daily_flags.no_errors
+                    elif ds == 'clear':
+                        self.days = self.data_handler.daily_flags.clear
+                    elif ds == 'cloudy':
+                        self.days = self.data_handler.daily_flags.cloudy
+                    for est in estimator:
+                        for eot in eot_calculation:
+                            if verbose:
+                                progress(counter, total)
+                            lon = self.estimate_longitude(est, eot)
+                            results.loc[counter] = [
+                                lon, est, eot, sn, ds
+                            ]
+                            counter += 1
         if verbose:
             progress(counter, total)
         if self.true_value is not None:
