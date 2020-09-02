@@ -131,7 +131,7 @@ class LongitudeStudy():
                                 lon = self.estimate_longitude(est, eot)
                             except ValueError:
                                 lon = np.nan
-                                
+
                             results.loc[counter] = [
                                 lon, est, eot, sn, ds, dm
                             ]
