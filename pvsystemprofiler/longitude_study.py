@@ -55,7 +55,7 @@ class LongitudeStudy():
         self.results = None
         self.best_result = None
 
-    def run(self, data_matrix=('raw data matrix', 'filled data matrix'),
+    def run(self, data_matrix=('raw', 'filled'),
             estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
             solar_noon_method=('rise_set_average', 'energy_com', 'optimized', 'measurements'),
@@ -80,7 +80,7 @@ class LongitudeStudy():
         containing the results of the study. If a ground truth value was
         provided to the class constructor, the best result will be assigned
         to the `best_result` attribute.
-        :param data_matrix: 'raw data matrix', 'filled data matrix'
+        :param data_matrix: 'raw', 'filled'
         :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'
         :param eot_calculation: 'duffie', 'haghdadi'
         :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized', 'measurements'
@@ -101,9 +101,9 @@ class LongitudeStudy():
                  * len(day_selection_method) * len(data_matrix))
         counter = 0
         for dm in data_matrix:
-            if dm in ('raw data matrix', 'raw_data_matrix', 'raw'):
+            if dm == 'raw':
                 data_in = self.raw_data_matrix
-            elif dm in ('filled data matrix', 'filled_data_matrix', 'filled'):
+            elif dm == 'filled':
                 data_in = self.data_matrix
             for sn in solar_noon_method:
                 if sn == 'rise_set_average':
