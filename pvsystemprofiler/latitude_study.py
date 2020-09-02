@@ -43,39 +43,39 @@ class LatitudeStudy():
         # Results
         self.results = None
 
-    def run(self, threshold_method=('raw data matrix', 'filled data matrix'),
+    def run(self, data_matrix=('raw data matrix', 'filled data matrix'),
             daylight_method=('raw daylight', 'sunrise-sunset', 'optimized', 'measurements'),
             delta_method=('cooper', 'spencer'),
             threshold=None):
         '''
-        :param threshold_method: 'raw data matrix', 'filled data matrix'
+        :param data_matrix: 'raw data matrix', 'filled data matrix'
         :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized', 'measurements'.
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'
         :return:
         '''
-        threshold_method = np.atleast_1d(threshold_method)
+        data_matrix = np.atleast_1d(data_matrix)
         daylight_method = np.atleast_1d(daylight_method)
         delta_method = np.atleast_1d(delta_method)
 
         if threshold is None:
-            self.daytime_threshold = 0.001 * np.ones(len(threshold_method) * len(daylight_method) * len(delta_method))
+            self.daytime_threshold = 0.001 * np.ones(len(data_matrix) * len(daylight_method) * len(delta_method))
         else:
             self.daytime_threshold = threshold
 
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        results = pd.DataFrame(columns=['declination method', 'daylight calculation', 'threshold matrix', 'threshold',
+        results = pd.DataFrame(columns=['declination method', 'daylight calculation', 'data matrix', 'threshold',
                                         'latitude'])
         counter = 0
         for delta_id in delta_method:
-            for matrix_ix, matrix_id in enumerate(threshold_method):
+            for matrix_ix, matrix_id in enumerate(data_matrix):
                 for daylight_method_id in daylight_method:
                     if daylight_method_id != 'optimized':
                         dtt = self.daytime_threshold[counter]
                     dlm = daylight_method_id
-                    tm = threshold_method[matrix_ix]
+                    tm = data_matrix[matrix_ix]
                     dcc = daylight_method_id
                     dm = delta_id
                     lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
