@@ -107,12 +107,12 @@ class LongitudeStudy():
                 data_in = self.data_matrix
             for sn in solar_noon_method:
                 if sn == 'rise_set_average':
-                    self.solarnoon = avg_sunrise_sunset(self.data_matrix)
+                    self.solarnoon = avg_sunrise_sunset(data_in)
                 elif sn == 'energy_com':
-                    self.solarnoon = energy_com(self.data_matrix)
+                    self.solarnoon = energy_com(data_in)
                 elif sn == 'optimized':
                     ss = SunriseSunset()
-                    ss.run_optimizer(data=self.raw_data_matrix)
+                    ss.run_optimizer(data=data_in)
                     self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
 
                 for ds in day_selection_method:
@@ -126,7 +126,12 @@ class LongitudeStudy():
                         for eot in eot_calculation:
                             if verbose:
                                 progress(counter, total)
-                            lon = self.estimate_longitude(est, eot)
+
+                            try:
+                                lon = self.estimate_longitude(est, eot)
+                            except ValueError:
+                                lon = np.nan
+                                
                             results.loc[counter] = [
                                 lon, est, eot, sn, ds, dm
                             ]
