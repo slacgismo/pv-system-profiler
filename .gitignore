@@ -17,7 +17,7 @@
 *.xml
 *.png
 *.jpg
-*.ipynb
+*.pkl
 
 ### Database ###
 *.accdb
@@ -27,12 +27,12 @@
 *.pdb
 *.sqlite3
 **/Results
-**/notbooks
+
 
 ### JupyterNotebook ###
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
-*.ipynb
+# *.ipynb
 
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/

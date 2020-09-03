@@ -11,6 +11,8 @@ from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.daytime import find_daytime
+from solardatatools.algorithms import SunriseSunset
+
 
 class LatitudeStudy():
     def __init__(self, data_handler, lat_true_value=None):
@@ -37,45 +39,49 @@ class LatitudeStudy():
         self.delta_spencer = None
         self.residual = None
         self.daytime_threshold = None
+        self.opt_threshold = None
         # Results
         self.results = None
 
-    def run(self, threshold_method=('raw data matrix', 'filled data matrix'),
-            daylight_method=('raw daylight', 'sunrise-sunset'),
+    def run(self, data_matrix=('raw', 'filled'),
+            daylight_method=('raw daylight', 'sunrise-sunset', 'optimized', 'measurements'),
             delta_method=('cooper', 'spencer'),
             threshold=None):
         '''
-        :param threshold_method: 'raw data matrix', 'filled data matrix'
-        :param daylight_method: 'raw daylight', 'sunrise-sunset'
-        :param threshold: (optional) daylight threshold values, tuple of length one to eight
-        :param delta_method: (optional) 'cooper', 'spencer'
+        :param data_matrix: 'raw', 'filled'.
+        :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized', 'measurements'.
+        :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
+        :param delta_method: (optional) 'cooper', 'spencer'.
         :return:
         '''
-        threshold_method = np.atleast_1d(threshold_method)
+        data_matrix = np.atleast_1d(data_matrix)
         daylight_method = np.atleast_1d(daylight_method)
         delta_method = np.atleast_1d(delta_method)
 
         if threshold is None:
-            self.daytime_threshold = 0.001*np.ones(len(threshold_method)*len(daylight_method)*len(delta_method))
+            self.daytime_threshold = 0.001 * np.ones(len(data_matrix) * len(daylight_method) * len(delta_method))
         else:
             self.daytime_threshold = threshold
 
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        results = pd.DataFrame(columns=['declination method', 'daylight calculation', 'threshold matrix', 'threshold',
+        results = pd.DataFrame(columns=['declination method', 'daylight calculation', 'data matrix', 'threshold',
                                         'latitude'])
         counter = 0
         for delta_id in delta_method:
-            for matrix_ix, matrix_id in enumerate(threshold_method):
+            for matrix_ix, matrix_id in enumerate(data_matrix):
                 for daylight_method_id in daylight_method:
-                    dtt = self.daytime_threshold[counter]
+                    if daylight_method_id != 'optimized':
+                        dtt = self.daytime_threshold[counter]
                     dlm = daylight_method_id
-                    tm = threshold_method[matrix_ix]
+                    tm = data_matrix[matrix_ix]
                     dcc = daylight_method_id
                     dm = delta_id
                     lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                      delta_method=delta_id)
+                    if daylight_method_id in ['optimized', 'measurements']:
+                        dtt = self.opt_threshold
 
                     results.loc[counter] = [dm, dcc, tm, dtt, lat_est]
                     counter += 1
@@ -93,18 +99,33 @@ class LatitudeStudy():
         processes. New York: Wiley, 1991.
         """
 
-        if matrix_id in ('raw data matrix', 'raw_data_matrix', 'raw'):
+        if matrix_id == 'raw':
             data_in = self.raw_data_matrix
-        if matrix_id in ('filled data matrix', 'filled_data_matrix', 'filled'):
+        elif matrix_id == 'filled':
             data_in = self.data_matrix
         if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
             self.hours_daylight = self.calculate_hours_daylight(data_in, daytime_threshold)
-        if daylight_method in ('raw_daylight', 'raw daylight'):
+        elif daylight_method in ('raw_daylight', 'raw daylight'):
             self.hours_daylight = self.calculate_hours_daylight_raw(data_in, daytime_threshold)
+        elif daylight_method in ('optimized', 'Optimized'):
+            ss = SunriseSunset()
+            ss.run_optimizer(data=data_in)
+            self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
+            self.opt_threshold = ss.threshold
+        elif daylight_method in ('measurements', 'Measurements'):
+            ss = SunriseSunset()
+            ss.run_optimizer(data=data_in)
+            hours_daylight_meas = ss.sunset_measurements - ss.sunrise_measurements
+            hours_mask = np.isnan(hours_daylight_meas)
+            self.hours_daylight = hours_daylight_meas[~hours_mask]
+            self.opt_threshold = ss.threshold
+
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
-        if delta_method in ('Spencer', 'spencer'):
+        elif delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
+        if daylight_method in ('measurements', 'Measurements'):
+            delta = delta[:, ~hours_mask]
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
         return np.median(latitude_estimate)

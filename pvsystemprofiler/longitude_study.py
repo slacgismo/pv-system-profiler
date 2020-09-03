@@ -24,6 +24,7 @@ from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
+from solardatatools.algorithms import SunriseSunset
 
 class LongitudeStudy():
     def __init__(self, data_handler, gmt_offset=-8, true_value=None):
@@ -40,6 +41,7 @@ class LongitudeStudy():
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
         self.data_matrix = self.data_handler.filled_data_matrix
+        self.raw_data_matrix = self.data_handler.raw_data_matrix
         self.true_value = true_value
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
@@ -53,9 +55,10 @@ class LongitudeStudy():
         self.results = None
         self.best_result = None
 
-    def run(self, estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
+    def run(self, data_matrix=('raw', 'filled'),
+            estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'haghdadi'),
-            solar_noon_method=('rise_set_average', 'energy_com'),
+            solar_noon_method=('rise_set_average', 'energy_com', 'optimized', 'measurements'),
             day_selection_method=('all', 'clear', 'cloudy'),
             verbose=True):
         """
@@ -77,47 +80,69 @@ class LongitudeStudy():
         containing the results of the study. If a ground truth value was
         provided to the class constructor, the best result will be assigned
         to the `best_result` attribute.
-
-        :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'
-        :param eot_calculation: 'duffie', 'haghdadi'
-        :param solar_noon_method: 'rise_set_average', 'energy_com'
-        :param day_selection_method: 'all', 'clear', 'cloudy'
-        :param verbose: show progress bar if True
-        :return: None
+        :param data_matrix: 'raw', 'filled'.
+        :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'.
+        :param eot_calculation: 'duffie', 'haghdadi'.
+        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized', 'measurements'.
+        :param day_selection_method: 'all', 'clear', 'cloudy'.
+        :param verbose: show progress bar if True.
+        :return: None.
         """
         results = pd.DataFrame(columns=[
             'longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
-            'day_selection_method'
+            'day_selection_method', 'data matrix'
         ])
         estimator = np.atleast_1d(estimator)
         eot_calculation = np.atleast_1d(eot_calculation)
         solar_noon_method = np.atleast_1d(solar_noon_method)
         day_selection_method = np.atleast_1d(day_selection_method)
+        data_matrix = np.atleast_1d(data_matrix)
         total = (len(estimator) * len(eot_calculation) * len(solar_noon_method)
-                 * len(day_selection_method))
+                 * len(day_selection_method) * len(data_matrix))
         counter = 0
-        for sn in solar_noon_method:
-            if sn == 'rise_set_average':
-                self.solarnoon = avg_sunrise_sunset(self.data_matrix)
-            elif sn == 'energy_com':
-                self.solarnoon = energy_com(self.data_matrix)
-            for ds in day_selection_method:
-                if ds == 'all':
-                    self.days = np.ones(self.data_matrix.shape[1],
-                                        dtype=np.bool)
-                elif ds == 'clear':
-                    self.days = self.data_handler.daily_flags.clear
-                elif ds == 'cloudy':
-                    self.days = self.data_handler.daily_flags.cloudy
-                for est in estimator:
-                    for eot in eot_calculation:
-                        if verbose:
-                            progress(counter, total)
-                        lon = self.estimate_longitude(est, eot)
-                        results.loc[counter] = [
-                            lon, est, eot, sn, ds
-                        ]
-                        counter += 1
+        for dm in data_matrix:
+            if dm == 'raw':
+                data_in = self.raw_data_matrix
+            elif dm == 'filled':
+                data_in = self.data_matrix
+            for sn in solar_noon_method:
+                if sn == 'rise_set_average':
+                    self.solarnoon = avg_sunrise_sunset(data_in)
+                elif sn == 'energy_com':
+                    self.solarnoon = energy_com(data_in)
+                elif sn == 'optimized':
+                    ss = SunriseSunset()
+                    ss.run_optimizer(data=data_in)
+                    self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
+                elif sn == 'measurements':
+                    ss = SunriseSunset()
+                    ss.run_optimizer(data=data_in)
+                    sunrise = np.copy(ss.sunrise_measurements)
+                    sunset = np.copy(ss.sunset_measurements)
+                    sunrise[np.isnan(sunrise)] = 0
+                    sunset[np.isnan(sunset)] = 0
+                    self.solarnoon = np.nanmean([sunrise - sunset], axis=0)
+                for ds in day_selection_method:
+                    if ds == 'all':
+                        self.days = self.data_handler.daily_flags.no_errors
+                    elif ds == 'clear':
+                        self.days = self.data_handler.daily_flags.clear
+                    elif ds == 'cloudy':
+                        self.days = self.data_handler.daily_flags.cloudy
+                    for est in estimator:
+                        for eot in eot_calculation:
+                            if verbose:
+                                progress(counter, total)
+
+                            try:
+                                lon = self.estimate_longitude(est, eot)
+                            except ValueError:
+                                lon = np.nan
+
+                            results.loc[counter] = [
+                                lon, est, eot, sn, ds, dm
+                            ]
+                            counter += 1
         if verbose:
             progress(counter, total)
         if self.true_value is not None:
