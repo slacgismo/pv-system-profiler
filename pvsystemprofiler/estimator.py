@@ -45,9 +45,9 @@ class ConfigurationEstimator():
         dh = self.data_handler
 
         if data_matrix == 'raw':
-            data_in = self.data_handler.raw_data_matrix
+            data_in = dh.raw_data_matrix
         elif data_matrix == 'filled':
-            data_in = self.data_handler.filled_data_matrix
+            data_in = dh.filled_data_matrix
         if solar_noon_method == 'rise_set_average':
             self.solarnoon = avg_sunrise_sunset(data_in)
         elif solar_noon_method == 'energy_com':
@@ -58,11 +58,11 @@ class ConfigurationEstimator():
             self.solarnoon = np.nanmean(
                 [ss.sunrise_estimates, ss.sunset_estimates], axis=0)
         if day_selection_method == 'all':
-            self.days = self.data_handler.daily_flags.no_errors
+            self.days = dh.daily_flags.no_errors
         elif day_selection_method == 'clear':
-            self.days = self.data_handler.daily_flags.clear
+            self.days = dh.daily_flags.clear
         elif day_selection_method == 'cloudy':
-            self.days = self.data_handler.daily_flags.cloudy
+            self.days = dh.daily_flags.cloudy
         if estimator == 'calculated':
             self.longitude = self._cal_lon_helper(eot_ref=eot_calculation)
         else:
