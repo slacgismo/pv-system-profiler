@@ -39,9 +39,9 @@ class ConfigurationEstimator():
         dh = self.data_handler
 
         if data_matrix == 'raw':
-            data_in = dh.raw_data_matrix
+            data_in = self.data_handler.raw_data_matrix
         elif data_matrix == 'filled':
-            data_in = dh.filled_data_matrix
+            data_in = self.data_handler.filled_data_matrix
         if solar_noon_method == 'rise_set_average':
             self.solarnoon = avg_sunrise_sunset(data_in)
         elif solar_noon_method == 'energy_com':
