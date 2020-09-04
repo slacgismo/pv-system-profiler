@@ -33,21 +33,22 @@ class ConfigurationEstimator():
 
     def estimate_longitude(self, estimator='calculated',
                              eot_calculation='duffie',
-                             solar_noon_method='optimized_filled',
+                             solar_noon_method='optimized',
+                             data_matrix ='filled',
                              day_selection_method='all'):
         dh = self.data_handler
+
+        if data_matrix == 'raw':
+            data_in = dh.raw_data_matrix
+        elif data_matrix == 'filled':
+            data_in = dh.filled_data_matrix
         if solar_noon_method == 'rise_set_average':
-            self.solarnoon = avg_sunrise_sunset(dh.filled_data_matrix)
+            self.solarnoon = avg_sunrise_sunset(data_in)
         elif solar_noon_method == 'energy_com':
-            self.solarnoon = energy_com(dh.filled_data_matrix)
-        elif solar_noon_method == 'optimized_raw':
+            self.solarnoon = energy_com(data_in)
+        elif solar_noon_method == 'optimized':
             ss = SunriseSunset()
-            ss.run_optimizer(data=dh.raw_data_matrix)
-            self.solarnoon = np.nanmean(
-                [ss.sunrise_estimates, ss.sunset_estimates], axis=0)
-        elif solar_noon_method == 'optimized_filled':
-            ss = SunriseSunset()
-            ss.run_optimizer(data=dh.filled_data_matrix)
+            ss.run_optimizer(data=data_in)
             self.solarnoon = np.nanmean(
                 [ss.sunrise_estimates, ss.sunset_estimates], axis=0)
         if day_selection_method == 'all':
