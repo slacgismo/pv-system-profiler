@@ -11,6 +11,9 @@ from solardatatools.algorithms import SunriseSunset
 # Module Imports
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
+from pvsystemprofiler.utilities.declination_equation import delta_cooper
+from solardatatools.algorithms import SunriseSunset
+from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from pvsystemprofiler.utilities.progress import progress
 
 
@@ -28,8 +31,11 @@ class ConfigurationEstimator():
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
+        self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.eot_duffie = eot_duffie(self.day_of_year)
         self.eot_hag = eot_haghdadi(self.day_of_year)
+        self.delta = delta_cooper(self.day_of_year, self.daily_meas)
+        self.hours_daylight = None
 
     def estimate_longitude(self, estimator='calculated',
                              eot_calculation='duffie',
@@ -95,8 +101,38 @@ class ConfigurationEstimator():
         problem.solve()
         return lon.value.item()
 
-    def latitude_estimation(self):
-        pass
+    def estimate_latitude(self, daytime_threshold=0.001,  data_matrix='filled', daylight_method='optimized'):
+        dh = self.data_handler
+        if data_matrix == 'raw':
+            data_in = self.data_handler.raw_data_matrix
+        elif data_matrix == 'filled':
+            data_in = self.data_handler.filled_data_matrix
+        if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
+            self.hours_daylight = self.calculate_hours_daylight(data_in, daytime_threshold)
+        elif daylight_method in ('optimized', 'Optimized'):
+            ss = SunriseSunset()
+            ss.run_optimizer(data=data_in)
+            self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
+        self.latitude = self._cal_lat_helper()
+
+    def _cal_lat_helper(self):
+        latitude_estimate = calc_lat(self.hours_daylight, self.delta)
+        return np.median(latitude_estimate)
+
+    def calculate_hours_daylight(self, data_in, threshold=0.001):
+        data = np.copy(data_in).astype(np.float)
+        num_meas_per_hour = data.shape[0] / 24
+        x = np.arange(0, 24, 1. / num_meas_per_hour)
+        night_msk = ~find_daytime(data_in, threshold=threshold)
+        data[night_msk] = np.nan
+        good_vals = (~np.isnan(data)).astype(int)
+        sunrise_idxs = np.argmax(good_vals, axis=0)
+        sunset_idxs = data.shape[0] - np.argmax(np.flip(good_vals, 0), axis=0)
+        sunset_idxs[sunset_idxs == data.shape[0]] = data.shape[0] - 1
+        hour_of_day = x
+        sunset_times = hour_of_day[sunset_idxs]
+        sunrise_times = hour_of_day[sunrise_idxs]
+        return sunset_times - sunrise_times
 
     def orientation_estimation(self):
         pass
