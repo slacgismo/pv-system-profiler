@@ -121,7 +121,7 @@ class LongitudeStudy():
                     sunset = np.copy(ss.sunset_measurements)
                     sunrise[np.isnan(sunrise)] = 0
                     sunset[np.isnan(sunset)] = 0
-                    self.solarnoon = np.nanmean([sunrise - sunset], axis=0)
+                    self.solarnoon = np.nanmean([sunrise, sunset], axis=0)
                 for ds in day_selection_method:
                     if ds == 'all':
                         self.days = self.data_handler.daily_flags.no_errors
