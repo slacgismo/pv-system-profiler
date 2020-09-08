@@ -12,8 +12,9 @@ from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
-from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
+from solardatatools.algorithms import SunriseSunset
+from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.progress import progress
 
 
