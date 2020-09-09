@@ -10,7 +10,8 @@ import pandas as pd
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
-from solardatatools.daytime import find_daytime
+from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
+from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight_raw
 from solardatatools.algorithms import SunriseSunset
 
 
@@ -104,9 +105,9 @@ class LatitudeStudy():
         elif matrix_id == 'filled':
             data_in = self.data_matrix
         if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
-            self.hours_daylight = self.calculate_hours_daylight(data_in, daytime_threshold)
+            self.hours_daylight = calculate_hours_daylight(data_in, daytime_threshold)
         elif daylight_method in ('raw_daylight', 'raw daylight'):
-            self.hours_daylight = self.calculate_hours_daylight_raw(data_in, daytime_threshold)
+            self.hours_daylight = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
         elif daylight_method in ('optimized', 'Optimized'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
@@ -128,24 +129,5 @@ class LatitudeStudy():
             delta = delta[:, ~hours_mask]
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
-        return np.median(latitude_estimate)
+        return np.nanmedian(latitude_estimate)
 
-    def calculate_hours_daylight_raw(self, data_in, threshold=0.001):
-        self.boolean_daytime = find_daytime(data_in, threshold)
-        return (np.sum(self.boolean_daytime, axis=0)) * self.data_sampling / 60
-
-    def calculate_hours_daylight(self, data_in, threshold=0.001):
-
-        data = np.copy(data_in).astype(np.float)
-        num_meas_per_hour = data.shape[0] / 24
-        x = np.arange(0, 24, 1. / num_meas_per_hour)
-        night_msk = ~find_daytime(data_in, threshold=threshold)
-        data[night_msk] = np.nan
-        good_vals = (~np.isnan(data)).astype(int)
-        sunrise_idxs = np.argmax(good_vals, axis=0)
-        sunset_idxs = data.shape[0] - np.argmax(np.flip(good_vals, 0), axis=0)
-        sunset_idxs[sunset_idxs == data.shape[0]] = data.shape[0] - 1
-        hour_of_day = x
-        sunset_times = hour_of_day[sunset_idxs]
-        sunrise_times = hour_of_day[sunrise_idxs]
-        return sunset_times - sunrise_times
