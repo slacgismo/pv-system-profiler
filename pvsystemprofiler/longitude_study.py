@@ -90,7 +90,7 @@ class LongitudeStudy():
         """
         results = pd.DataFrame(columns=[
             'longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
-            'day_selection_method', 'data matrix'
+            'day_selection_method', 'data_matrix'
         ])
         estimator = np.atleast_1d(estimator)
         eot_calculation = np.atleast_1d(eot_calculation)
