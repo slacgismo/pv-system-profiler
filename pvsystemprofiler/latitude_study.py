@@ -105,28 +105,31 @@ class LatitudeStudy():
         elif matrix_id == 'filled':
             data_in = self.data_matrix
         if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
-            self.hours_daylight = calculate_hours_daylight(data_in, daytime_threshold)
+            hours_daylight_all = calculate_hours_daylight(data_in, daytime_threshold)
         elif daylight_method in ('raw_daylight', 'raw daylight'):
-            self.hours_daylight = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
+            hours_daylight_all = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
         elif daylight_method in ('optimized', 'Optimized'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
-            self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
+            hours_daylight_all = ss.sunset_estimates - ss.sunrise_estimates
             self.opt_threshold = ss.threshold
         elif daylight_method in ('measurements', 'Measurements'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
-            hours_daylight_meas = ss.sunset_measurements - ss.sunrise_measurements
-            hours_mask = np.isnan(hours_daylight_meas)
-            self.hours_daylight = hours_daylight_meas[~hours_mask]
+            hours_daylight_all = ss.sunset_measurements - ss.sunrise_measurements
             self.opt_threshold = ss.threshold
 
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
-        if daylight_method in ('measurements', 'Measurements'):
+
+        if np.any(np.isnan(hours_daylight_all)):
+            hours_mask = np.isnan(hours_daylight_all)
+            self.hours_daylight = hours_daylight_all[~hours_mask]
             delta = delta[:, ~hours_mask]
+        else:
+            self.hours_daylight = hours_daylight_all
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
         return np.nanmedian(latitude_estimate)
