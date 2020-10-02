@@ -41,18 +41,20 @@ class LatitudeStudy():
         self.residual = None
         self.daytime_threshold = None
         self.opt_threshold = None
+        self.days = None
         # Results
         self.results = None
 
     def run(self, data_matrix=('raw', 'filled'),
             daylight_method=('raw daylight', 'sunrise-sunset', 'optimized', 'measurements'),
-            delta_method=('cooper', 'spencer'),
+            delta_method=('cooper', 'spencer'), day_selection_method=('all', 'clear', 'cloudy'),
             threshold=None):
         '''
         :param data_matrix: 'raw', 'filled'.
         :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized', 'measurements'.
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'.
+        :param day_selection_method: 'all', 'clear', 'cloudy'.
         :return:
         '''
         data_matrix = np.atleast_1d(data_matrix)
@@ -123,13 +125,17 @@ class LatitudeStudy():
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
+        self.days = self.data_handler.daily_flags.no_errors
+        self.days = self.data_handler.daily_flags.cloudy
 
         if np.any(np.isnan(hours_daylight_all)):
             hours_mask = np.isnan(hours_daylight_all)
-            self.hours_daylight = hours_daylight_all[~hours_mask]
-            delta = delta[:, ~hours_mask]
+            full_mask = ~hours_mask & self.days
+            self.hours_daylight = hours_daylight_all[full_mask]
+            delta = delta[:, full_mask]
         else:
-            self.hours_daylight = hours_daylight_all
+            self.hours_daylight = hours_daylight_all[self.days]
+            delta = delta[:, self.days]
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
         return np.nanmedian(latitude_estimate)
