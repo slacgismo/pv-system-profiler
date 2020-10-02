@@ -33,7 +33,7 @@ class LongitudeStudy():
         Standard Time, or systems located in California.
 
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
-        :param GMT_offset: The offset in hours between the local timezone and GMT/UTC
+        :param gmt_offset: The offset in hours between the local timezone and GMT/UTC
         :param true_value: (optional) the ground truth value for the system's longitude
         """
         self.data_handler = data_handler
