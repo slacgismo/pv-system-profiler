@@ -62,32 +62,41 @@ class LatitudeStudy():
         delta_method = np.atleast_1d(delta_method)
 
         if threshold is None:
-            self.daytime_threshold = 0.001 * np.ones(len(data_matrix) * len(daylight_method) * len(delta_method))
+            self.daytime_threshold = 0.001 * np.ones(len(data_matrix) * len(daylight_method) * len(delta_method) *
+                                                     len(day_selection_method))
         else:
             self.daytime_threshold = threshold
 
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
 
-        results = pd.DataFrame(columns=['declination method', 'daylight calculation', 'data matrix', 'threshold',
-                                        'latitude'])
+        results = pd.DataFrame(columns=['declination_method', 'daylight_calculation', 'data_matrix', 'threshold',
+                                        'day_selection_method', 'latitude'])
         counter = 0
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(data_matrix):
                 for daylight_method_id in daylight_method:
                     if daylight_method_id != 'optimized':
                         dtt = self.daytime_threshold[counter]
-                    dlm = daylight_method_id
-                    tm = data_matrix[matrix_ix]
-                    dcc = daylight_method_id
-                    dm = delta_id
-                    lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
-                                                     delta_method=delta_id)
-                    if daylight_method_id in ['optimized', 'measurements']:
-                        dtt = self.opt_threshold
+                    for ds in day_selection_method:
+                        if ds == 'all':
+                            self.days = self.data_handler.daily_flags.no_errors
+                        elif ds == 'clear':
+                            self.days = self.data_handler.daily_flags.clear
+                        elif ds == 'cloudy':
+                            self.days = self.data_handler.daily_flags.cloudy
+                        dlm = daylight_method_id
+                        tm = data_matrix[matrix_ix]
+                        dcc = daylight_method_id
+                        dm = delta_id
 
-                    results.loc[counter] = [dm, dcc, tm, dtt, lat_est]
-                    counter += 1
+                        lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
+                                                         delta_method=delta_id)
+                        if daylight_method_id in ['optimized', 'measurements']:
+                            dtt = self.opt_threshold
+
+                        results.loc[counter] = [dm, dcc, tm, dtt, ds, lat_est]
+                        counter += 1
         if self.latitude_true_value is not None:
             results['residual'] = self.latitude_true_value - results['latitude']
 
@@ -125,8 +134,6 @@ class LatitudeStudy():
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
             delta = self.delta_spencer
-        self.days = self.data_handler.daily_flags.no_errors
-        self.days = self.data_handler.daily_flags.cloudy
 
         if np.any(np.isnan(hours_daylight_all)):
             hours_mask = np.isnan(hours_daylight_all)
@@ -139,4 +146,3 @@ class LatitudeStudy():
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
         return np.nanmedian(latitude_estimate)
-
