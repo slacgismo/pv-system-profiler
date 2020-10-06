@@ -35,8 +35,9 @@ class ConfigurationEstimator():
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.eot_duffie = eot_duffie(self.day_of_year)
         self.eot_hag = eot_haghdadi(self.day_of_year)
-        self.delta = delta_cooper(self.day_of_year, self.daily_meas)
+        self.delta = None
         self.hours_daylight = None
+        self.days = None
 
     def estimate_longitude(self, estimator='calculated',
                              eot_calculation='duffie',
@@ -102,18 +103,36 @@ class ConfigurationEstimator():
         problem.solve()
         return lon.value.item()
 
-    def estimate_latitude(self, daytime_threshold=0.001,  data_matrix='filled', daylight_method='optimized'):
+    def estimate_latitude(self, daytime_threshold=0.001,  data_matrix='filled', daylight_method='optimized',
+                          day_selection_method='all'):
         dh = self.data_handler
+        self.delta = delta_cooper(self.day_of_year, self.daily_meas)
         if data_matrix == 'raw':
             data_in = self.data_handler.raw_data_matrix
         elif data_matrix == 'filled':
             data_in = self.data_handler.filled_data_matrix
         if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
-            self.hours_daylight = calculate_hours_daylight(data_in, daytime_threshold)
+            hours_daylight_all = calculate_hours_daylight(data_in, daytime_threshold)
         elif daylight_method in ('optimized', 'Optimized'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
-            self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
+            hours_daylight_all = ss.sunset_estimates - ss.sunrise_estimates
+        if day_selection_method == 'all':
+            self.days = self.data_handler.daily_flags.no_errors
+        elif day_selection_method == 'clear':
+            self.days = self.data_handler.daily_flags.clear
+        elif day_selection_method == 'cloudy':
+            self.days = self.data_handler.daily_flags.cloudy
+
+        if np.any(np.isnan(hours_daylight_all)):
+            hours_mask = np.isnan(hours_daylight_all)
+            full_mask = ~hours_mask & self.days
+            self.hours_daylight = hours_daylight_all[full_mask]
+            self.delta = self.delta[:, full_mask]
+        else:
+            self.hours_daylight = hours_daylight_all[self.days]
+            self.delta = self.delta[:, self.days]
+
         self.latitude = self._cal_lat_helper()
 
     def _cal_lat_helper(self):
