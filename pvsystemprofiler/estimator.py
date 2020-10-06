@@ -10,7 +10,7 @@ from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 
 # Module Imports
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
-from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
+from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.algorithms import SunriseSunset
@@ -34,7 +34,7 @@ class ConfigurationEstimator():
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.eot_duffie = eot_duffie(self.day_of_year)
-        self.eot_hag = eot_haghdadi(self.day_of_year)
+        self.eot_da_rosa = eot_da_rosa(self.day_of_year)
         self.delta = None
         self.hours_daylight = None
         self.days = None
@@ -75,8 +75,8 @@ class ConfigurationEstimator():
         sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
         if eot_ref in ('duffie', 'd', 'duf'):
             eot = self.eot_duffie[self.days]
-        elif eot_ref in ('haghdadi', 'h', 'hag'):
-            eot = self.eot_hag[self.days]
+        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
+            eot = self.eot_da_rosa[self.days]
         gmt = self.gmt_offset
         estimates = calc_lon(sn, eot, gmt)
         return np.nanmedian(estimates)
@@ -91,8 +91,8 @@ class ConfigurationEstimator():
             cost_func = lambda x: cvx.sum(cvx.huber(x))
         if eot_ref in ('duffie', 'd', 'duf'):
             eot = self.eot_duffie
-        elif eot_ref in ('haghdadi', 'h', 'hag'):
-            eot = self.eot_hag
+        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
+            eot = self.eot_da_rosa
         sn_m = 720 - eot + 4 * (15 * self.gmt_offset - lon)
         sn_h = sn_m / 60
         nan_mask = np.isnan(self.solarnoon)

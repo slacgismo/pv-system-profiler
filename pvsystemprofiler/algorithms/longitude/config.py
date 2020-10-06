@@ -10,6 +10,7 @@ solarnoon : Solarnoon as measured from power signal data. Solarnoon should be gi
 
 Returns
 ----------
+----------
 """
 import cvxpy as cvx
 from sys import path

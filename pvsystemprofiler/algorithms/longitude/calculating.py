@@ -38,7 +38,7 @@ class CalEstimator():
 
     EOT : Equation of Time as list of numberic values with length same as power signals day length.
           Difference in time between solar time and mean solar time in minutes.
-          The EOT is calculated either based on Haghdadi et al. or on Duffie & Beckman, modules imported
+          The EOT is calculated either based on Da Rosa or on Duffie & Beckman, modules imported
           by tools.
 
     solarnoon : Solarnoon as measured from power signal data. Solarnoon should be given in hour values.
@@ -62,12 +62,12 @@ class CalEstimator():
         self.GMT_offset = GMT_offset
         self.config = Config(power_signals, index, days_approach, solarnoon_approach, scsf_flag, GMT_offset)
 
-    def cal_haghdadi(self):
+    def cal_da_rosa(self):
         solarnoon = Config.config_solarnoon(self)
         day_of_year = day_of_year_finder(self.index)[1:-1]
         days = Config.config_days(self)
-        B_h = calculate_simple_day_angle_Haghdadi(day_of_year[days], offset=81)
-        E_h = equation_of_time_Haghdadi(B_h)
+        B_h = calculate_simple_day_angle_da_rosa(day_of_year[days], offset=81)
+        E_h = equation_of_time_da_rosa(B_h)
         lon_value = np.nanmedian((720-solarnoon[days]*60)/4-(E_h/4)) - 15*self.GMT_offset
         return lon_value
 
