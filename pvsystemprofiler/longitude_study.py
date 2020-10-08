@@ -58,7 +58,7 @@ class LongitudeStudy():
     def run(self, data_matrix=('raw', 'filled'),
             estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
             eot_calculation=('duffie', 'da_rosa'),
-            solar_noon_method=('rise_set_average', 'energy_com', 'optimized', 'measurements'),
+            solar_noon_method=('rise_set_average', 'energy_com', 'optimized_estimates', 'optimized_measurements'),
             day_selection_method=('all', 'clear', 'cloudy'),
             verbose=True):
         """
@@ -83,7 +83,7 @@ class LongitudeStudy():
         :param data_matrix: 'raw', 'filled'.
         :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'.
         :param eot_calculation: 'duffie', 'da_rosa'.
-        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized', 'measurements'.
+        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized_estimates', 'optimized_measurements'.
         :param day_selection_method: 'all', 'clear', 'cloudy'.
         :param verbose: show progress bar if True.
         :return: None.
@@ -110,11 +110,11 @@ class LongitudeStudy():
                     self.solarnoon = avg_sunrise_sunset(data_in)
                 elif sn == 'energy_com':
                     self.solarnoon = energy_com(data_in)
-                elif sn == 'optimized':
+                elif sn == 'optimized_estimates':
                     ss = SunriseSunset()
                     ss.run_optimizer(data=data_in)
                     self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
-                elif sn == 'measurements':
+                elif sn == 'optimized_measurements':
                     ss = SunriseSunset()
                     ss.run_optimizer(data=data_in)
                     sunrise = np.copy(ss.sunrise_measurements)

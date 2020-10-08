@@ -46,12 +46,12 @@ class LatitudeStudy():
         self.results = None
 
     def run(self, data_matrix=('raw', 'filled'),
-            daylight_method=('raw daylight', 'sunrise-sunset', 'optimized', 'measurements'),
+            daylight_method=('raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'),
             delta_method=('cooper', 'spencer'), day_selection_method=('all', 'clear', 'cloudy'),
             threshold=None):
         '''
         :param data_matrix: 'raw', 'filled'.
-        :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized', 'measurements'.
+        :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'.
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'.
         :param day_selection_method: 'all', 'clear', 'cloudy'.
@@ -76,7 +76,7 @@ class LatitudeStudy():
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(data_matrix):
                 for daylight_method_id in daylight_method:
-                    if daylight_method_id != 'optimized':
+                    if daylight_method_id != 'optimized_estimates':
                         dtt = self.daytime_threshold[counter]
                     for ds in day_selection_method:
                         if ds == 'all':
@@ -92,7 +92,7 @@ class LatitudeStudy():
 
                         lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                          delta_method=delta_id)
-                        if daylight_method_id in ['optimized', 'measurements']:
+                        if daylight_method_id in ['optimized_estimates', 'optimized_measurements']:
                             dtt = self.opt_threshold
 
                         results.loc[counter] = [dm, dcc, tm, dtt, ds, lat_est]
@@ -119,12 +119,12 @@ class LatitudeStudy():
             hours_daylight_all = calculate_hours_daylight(data_in, daytime_threshold)
         elif daylight_method in ('raw_daylight', 'raw daylight'):
             hours_daylight_all = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
-        elif daylight_method in ('optimized', 'Optimized'):
+        elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
             hours_daylight_all = ss.sunset_estimates - ss.sunrise_estimates
             self.opt_threshold = ss.threshold
-        elif daylight_method in ('measurements', 'Measurements'):
+        elif daylight_method in ('optimized_measurements', 'Optimized_Measurements'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
             hours_daylight_all = ss.sunset_measurements - ss.sunrise_measurements

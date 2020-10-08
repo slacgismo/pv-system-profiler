@@ -41,7 +41,7 @@ class ConfigurationEstimator():
 
     def estimate_longitude(self, estimator='calculated',
                              eot_calculation='duffie',
-                             solar_noon_method='optimized',
+                             solar_noon_method='optimized_estimates',
                              data_matrix ='filled',
                              day_selection_method='all'):
         dh = self.data_handler
@@ -54,7 +54,7 @@ class ConfigurationEstimator():
             self.solarnoon = avg_sunrise_sunset(data_in)
         elif solar_noon_method == 'energy_com':
             self.solarnoon = energy_com(data_in)
-        elif solar_noon_method == 'optimized':
+        elif solar_noon_method == 'optimized_estimates':
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
             self.solarnoon = np.nanmean(
@@ -103,7 +103,7 @@ class ConfigurationEstimator():
         problem.solve()
         return lon.value.item()
 
-    def estimate_latitude(self, daytime_threshold=0.001,  data_matrix='filled', daylight_method='optimized',
+    def estimate_latitude(self, daytime_threshold=0.001,  data_matrix='filled', daylight_method='optimized_estimates',
                           day_selection_method='all'):
         dh = self.data_handler
         self.delta = delta_cooper(self.day_of_year, self.daily_meas)
@@ -113,7 +113,7 @@ class ConfigurationEstimator():
             data_in = self.data_handler.filled_data_matrix
         if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
             hours_daylight_all = calculate_hours_daylight(data_in, daytime_threshold)
-        elif daylight_method in ('optimized', 'Optimized'):
+        elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
             hours_daylight_all = ss.sunset_estimates - ss.sunrise_estimates
