@@ -87,7 +87,6 @@ class LatitudeStudy():
                             self.days = self.data_handler.daily_flags.cloudy
                         dlm = daylight_method_id
                         tm = data_matrix[matrix_ix]
-                        dcc = daylight_method_id
                         dm = delta_id
 
                         lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
@@ -95,7 +94,7 @@ class LatitudeStudy():
                         if daylight_method_id in ['optimized_estimates', 'optimized_measurements']:
                             dtt = self.opt_threshold
 
-                        results.loc[counter] = [dm, dcc, tm, dtt, ds, lat_est]
+                        results.loc[counter] = [dm, dlm, tm, dtt, ds, lat_est]
                         counter += 1
         if self.latitude_true_value is not None:
             results['residual'] = self.latitude_true_value - results['latitude']
