@@ -9,7 +9,7 @@ each day based on the measured data, and then use the relationship between
 standard time, solar time, and the equation of time to estimate the longitude.
 The following configurations can be run:
 
- - Equation of time (EoT) estimator: Duffie or Haghdadi
+ - Equation of time (EoT) estimator: Duffie or Da Rosa
  - Estimation algorithm: calculation from EoT definition, curve fitting with
    L2 loss, curve fitting with L1 loss, or curve fitting with Huber loss
  - Method for solar noon estimation: average of sunrise and sunset or the
@@ -22,7 +22,7 @@ import pandas as pd
 import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
-from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
+from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
 from solardatatools.algorithms import SunriseSunset
 
@@ -33,7 +33,7 @@ class LongitudeStudy():
         Standard Time, or systems located in California.
 
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
-        :param GMT_offset: The offset in hours between the local timezone and GMT/UTC
+        :param gmt_offset: The offset in hours between the local timezone and GMT/UTC
         :param true_value: (optional) the ground truth value for the system's longitude
         """
         self.data_handler = data_handler
@@ -47,7 +47,7 @@ class LongitudeStudy():
         self.gmt_offset = gmt_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.eot_duffie = eot_duffie(self.day_of_year)
-        self.eot_hag = eot_haghdadi(self.day_of_year)
+        self.eot_da_rosa = eot_da_rosa(self.day_of_year)
         # Attributes that change depending on the configuration
         self.solarnoon = None
         self.days = None
@@ -57,8 +57,8 @@ class LongitudeStudy():
 
     def run(self, data_matrix=('raw', 'filled'),
             estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
-            eot_calculation=('duffie', 'haghdadi'),
-            solar_noon_method=('rise_set_average', 'energy_com', 'optimized', 'measurements'),
+            eot_calculation=('duffie', 'da_rosa'),
+            solar_noon_method=('rise_set_average', 'energy_com', 'optimized_estimates', 'optimized_measurements'),
             day_selection_method=('all', 'clear', 'cloudy'),
             verbose=True):
         """
@@ -82,15 +82,15 @@ class LongitudeStudy():
         to the `best_result` attribute.
         :param data_matrix: 'raw', 'filled'.
         :param estimator: 'calculated', 'fit_l1', 'fit_l2', 'fit_huber'.
-        :param eot_calculation: 'duffie', 'haghdadi'.
-        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized', 'measurements'.
+        :param eot_calculation: 'duffie', 'da_rosa'.
+        :param solar_noon_method: 'rise_set_average', 'energy_com', 'optimized_estimates', 'optimized_measurements'.
         :param day_selection_method: 'all', 'clear', 'cloudy'.
         :param verbose: show progress bar if True.
         :return: None.
         """
         results = pd.DataFrame(columns=[
             'longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
-            'day_selection_method', 'data matrix'
+            'day_selection_method', 'data_matrix'
         ])
         estimator = np.atleast_1d(estimator)
         eot_calculation = np.atleast_1d(eot_calculation)
@@ -110,11 +110,11 @@ class LongitudeStudy():
                     self.solarnoon = avg_sunrise_sunset(data_in)
                 elif sn == 'energy_com':
                     self.solarnoon = energy_com(data_in)
-                elif sn == 'optimized':
+                elif sn == 'optimized_estimates':
                     ss = SunriseSunset()
                     ss.run_optimizer(data=data_in)
                     self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
-                elif sn == 'measurements':
+                elif sn == 'optimized_measurements':
                     ss = SunriseSunset()
                     ss.run_optimizer(data=data_in)
                     sunrise = np.copy(ss.sunrise_measurements)
@@ -165,8 +165,8 @@ class LongitudeStudy():
         sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
         if eot_ref in ('duffie', 'd', 'duf'):
             eot = self.eot_duffie[self.days]
-        elif eot_ref in ('haghdadi', 'h', 'hag'):
-            eot = self.eot_hag[self.days]
+        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
+            eot = self.eot_da_rosa[self.days]
         gmt = self.gmt_offset
         estimates = calc_lon(sn, eot, gmt)
         return np.nanmedian(estimates)
@@ -182,8 +182,8 @@ class LongitudeStudy():
             cost_func = lambda x: cvx.sum(cvx.huber(x))
         if eot_ref in ('duffie', 'd', 'duf'):
             eot = self.eot_duffie
-        elif eot_ref in ('haghdadi', 'h', 'hag'):
-            eot = self.eot_hag
+        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
+            eot = self.eot_da_rosa
         sn_m = 720 - eot + 4 * (15 * self.gmt_offset - lon)
         sn_h = sn_m / 60
         nan_mask = np.isnan(self.solarnoon)

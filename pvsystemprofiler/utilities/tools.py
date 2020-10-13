@@ -5,14 +5,14 @@ def day_of_year_finder(index):
     doy = pd.DatetimeIndex(np.unique(index.date)).dayofyear.values
     return(doy)
 
-def equation_of_time_Haghdadi(beta):
+def equation_of_time_da_rosa(beta):
     """
     Equation of time from Haghdadi et al. (2017).The coefficients correspond to
     the journal publication (reference below).
 
     Paremeters
     -------
-    beta: day angle for the Earth's orbit around the Sun, calculated by calculate_simple_day_angle_Haghdadi.
+    beta: day angle for the Earth's orbit around the Sun, calculated by calculate_simple_day_angle_da_rosa.
 
     Returns
     -------
@@ -29,7 +29,7 @@ def equation_of_time_Haghdadi(beta):
     eot = (9.87 * np.sin(2.0 * beta * np.pi / 180)) - (7.53 * np.cos(beta * np.pi / 180)) - (1.5 * np.sin(beta * np.pi / 180))
     return eot
 
-def calculate_simple_day_angle_Haghdadi(dayofyear, offset=81):
+def calculate_simple_day_angle_da_rosa(dayofyear, offset=81):
     """
     Calculates the day angle for the Earth's orbit around the Sun.
 

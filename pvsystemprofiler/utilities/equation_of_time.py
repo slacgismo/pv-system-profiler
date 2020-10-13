@@ -2,12 +2,12 @@
 The Equation of Time (EoT) describes the discrepancy between clock time and
 solar time: https://en.wikipedia.org/wiki/Equation_of_time
 
-This module contains two approaches to calculating the EoT: Haghdadi and Duffie
+This module contains two approaches to calculating the EoT: da_rosa and Duffie
 '''
 import numpy as np
 
 
-def eot_haghdadi(day_of_year):
+def eot_da_rosa(day_of_year):
     """
     The equation of time as defined in:
         Haghdadi, Navid, et al. "A method to estimate the location and

@@ -404,5 +404,3 @@ venv.bak/
 # mypy
 .mypy_cache/
 # old files for testing
-pvsystemprofiler/latitude_study2.py
-pvsystemprofiler/tilt_azimuth_study2.py

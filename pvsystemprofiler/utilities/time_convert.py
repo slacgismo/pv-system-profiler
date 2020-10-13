@@ -6,7 +6,7 @@ definition of solar time and standard time, given in equation (1.5.2) in [1].
         processes. New York: Wiley, 1991.
 '''
 
-from pvsystemprofiler.utilities.equation_of_time import eot_haghdadi, eot_duffie
+from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 
 def solar_to_clock(solar_time, lon, doy, gmt_offset, eot='duffie'):
     """
@@ -20,10 +20,10 @@ def solar_to_clock(solar_time, lon, doy, gmt_offset, eot='duffie'):
     """
     if eot.lower() in ('duffie', 'd'):
         eot = eot_duffie(doy)
-    elif eot.lower() in ('haghdadi', 'h'):
-        eot = eot_haghdadi(doy)
+    elif eot.lower() in ('da_rosa', 'dr'):
+        eot = eot_da_rosa(doy)
     else:
-        print('Please select either Duffie or Haghdadi for the equation of time')
+        print('Please select either Duffie or Da Rosa for the equation of time')
         return
     st = solar_time
     ct = st - eot - 4 * (lon - 15 * gmt_offset)
@@ -32,10 +32,10 @@ def solar_to_clock(solar_time, lon, doy, gmt_offset, eot='duffie'):
 def clock_to_solar(clock_time, lon, doy, gmt_offset, eot='duffie'):
     if eot.lower() in ('duffie', 'd'):
         eot = eot_duffie(doy)
-    elif eot.lower() in ('haghdadi', 'h'):
-        eot = eot_haghdadi(doy)
+    elif eot.lower() in ('da_rosa', 'dr'):
+        eot = eot_da_rosa(doy)
     else:
-        print('Please select either Duffie or Haghdadi for the equation of time')
+        print('Please select either Duffie or Da Rosa for the equation of time')
         return
     ct = clock_time
     st  = ct + eot + 4 * (lon - 15 * gmt_offset)
