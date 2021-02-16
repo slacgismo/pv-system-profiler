@@ -18,11 +18,8 @@ def run_config(partition, i,  instance):
     report_file = partition.site_report_file
     scp_command = 'scp -i ' + ssh_key_file + ' local_script.py ubuntu@' + instance + ':/home/ubuntu'
     os.system(scp_command)  
-#    commands = [python + ' ' + 'local_script.py' + ' ' +  location + ' ' + 
-#            str(ii) + ' ' + str(jj) + ' ' +str(i) + str(' ') + str(n_chunks)]
     commands = [python + ' ' + 'local_script.py' + ' ' +  location + ' ' + 
-            str(ii) + ' ' + str(jj) + ' ' +str(i) + str(' ') + str(n_chunks),
-            'setsid nohup' + ' ' + python + '  ' + '/home/ubuntu/github/pv-system-profiler/scripts/longitude_script.py>out &']
+            str(ii) + ' ' + str(jj) + ' ' +str(i) + str(' ') + str(n_chunks)]
    
     k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
     c = paramiko.SSHClient()
@@ -31,7 +28,8 @@ def run_config(partition, i,  instance):
     for command in commands:
             print("running command: {}".format(command))
             stdin , stdout, stderr = c.exec_command(command)
-            print(stdout)
+            print(stdout.read())
+            print(stderr.read())
     c.close()
 
 def get_address(ssh_username, ssh_key_file, name, region, client):

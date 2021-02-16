@@ -30,9 +30,6 @@ input_file = {"results_file": results_file, "site_list_file": local_site_list_fi
 with open(local_location +  'param_lon.txt', 'w') as fp:
     json.dump(input_file, fp)
 
-#os.chdir(local_location)
-#os.system('setsid nohup' + ' ' + python '/home/ubuntu/github/pv-system-profiler/scripts/longitude_script.py>out&')
-#os.system('setsid nohup' + ' ' + python + ' ' + '/home/ubuntu/github/pv-system-profiler/scripts/longitude_script.py>out&')
-#os.system('setsid nohup python /home/ubuntu/github/pv-system-profiler/scripts/longitude_script.py>out&')
-#os.system('setsid nohup python' + ' ' + '/home/ubuntu/github/pv-system-profiler/scripts/longitude_script.py>out &')
+os.chdir(local_location)
+os.system('setsid nohup' + ' ' + python + ' ' + '/home/ubuntu/github/pv-system-profiler/scripts/longitude_script.py>out &')
 
