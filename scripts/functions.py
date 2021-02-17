@@ -119,3 +119,12 @@ def load_data(data_source, site_id):
 
 def get_inspected_time_shift(df, sys_id):
     return int(df.loc[df['system'] == sys_id, 'manual_time_shift'].values[0])
+
+
+def run_failsafe_pipeline(dh_in, df_in, sys_tag):
+    try:
+        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=False, verbose=False)
+    except ValueError:
+        max_val = np.nanquantile(df_in[sys_tag], 0.95)
+        dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=True, verbose=False,
+                        max_val=max_val * 3)
