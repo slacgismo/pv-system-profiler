@@ -1,6 +1,7 @@
-import pandas as pd
 import os
 import json
+import numpy as np
+import pandas as pd
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
@@ -11,7 +12,7 @@ def get_io_file_locations(text_file):
             file_locations = f.read()
             file_dict = json.loads(file_locations)
     except FileNotFoundError:
-        ('Error reading input file')
+        print('Error reading input file')
     return file_dict['results_file'], file_dict['site_list_file']
 
 
@@ -127,6 +128,5 @@ def run_failsafe_pipeline(dh_in, df_in, sys_tag):
         dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=False, verbose=False)
     except ValueError:
         max_val = np.nanquantile(df_in[sys_tag], 0.95)
-        dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=True, verbose=False,
-                        max_val=max_val * 3)
+        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=True, verbose=False, max_val=max_val * 3)
     return
