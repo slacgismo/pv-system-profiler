@@ -6,11 +6,10 @@ from solardatatools.utilities import progress
 from functions import *
 
 if __name__ == '__main__':
-    input_text_file = sys.argv[1]
-    power_column_id = str(sys.argv[2])
-    data_source = str(sys.argv[3])
-    results_file = str(sys.argv[4])
-    site_list_file = str(sys.argv[5])
+    power_column_id = str(sys.argv[1])
+    data_source = str(sys.argv[2])
+    results_file = str(sys.argv[3])
+    site_list_file = str(sys.argv[4])
 
     full_df, checked_systems, start_at = resume_run(results_file)
 
@@ -30,7 +29,7 @@ if __name__ == '__main__':
 
         progress(site_ix, len(sites), msg, bar_length=20)
 
-        df = load_data(data_source)
+        df = load_data(data_source, site_id)
 
         dh = DataHandler(df)
 

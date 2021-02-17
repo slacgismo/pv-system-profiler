@@ -13,30 +13,29 @@ def get_io_file_locations(text_file):
         ('Error reading input file')
     return file_dict['results_file'], file_dict['site_list_file']
 
-def get_sys_location(df, i):
-    longitude = float(df.loc[df_site['system'] == i, 'longitude'])
-    latitude = float(df.loc[df_site['system'] == i, 'latitude'])
+def get_sys_location(df, sys_id):
+    longitude = float(df.loc[df['system'] == sys_id, 'longitude'])
+    latitude = float(df.loc[df['system'] == sys_id, 'latitude'])
     return longitude, latitude
 
-
-def get_sys_orientation(df, i):
-    tilt = float(df_site.loc[df_site['system'] == i, 'tilt'])
-    azimuth = float(df_site.loc[df_site['system'] == i, 'azimuth'])
+def get_sys_orientation(df, sys_id):
+    tilt = float(df.loc[df['system'] == sys_id, 'tilt'])
+    azimuth = float(df.loc[df['system'] == sys_id, 'azimuth'])
     return tilt, azimuth
 
-def get_sys_gmt_offset(df, i):
-    return float(df_site.loc[df_site['system'] == sys_id, 'gmt_offset'])
+def get_sys_gmt_offset(df, sys_id):
+    return float(df.loc[df['system'] == sys_id, 'gmt_offset'])
 
-def get_tag(dh_tag, ds, pc_id, i):
+def get_tag(dh, ds, pc_id, sys_id):
     if ds == 'constellation':
-        pc = pc_id + str(i)
+        pc = pc_id + str(sys_id)
     if ds == 'source_2':
-        pc = dh_tag.data_frame.columns[i]
+        pc = dh.data_frame.columns[sys_id]
     return pc
 
 
 def resume_run(output_file):
-    if os.path.isfile(results_file):
+    if os.path.isfile(output_file):
         df = pd.read_csv(output_file, index_col=0)
         df['site'] = df['site'].apply(str)
         df['system'] = df['system'].apply(str)
@@ -56,18 +55,18 @@ def load_input_dataframe(list_file):
     return df
 
 
-def filter_sites(unfiltered_df):
-    mask1 = unfiltered_df['data_available_csv'] == True
-    mask2 = unfiltered_df['data_available_json'] == True
+def filter_sites(df):
+    mask1 = df['data_available_csv'] == True
+    mask2 = df['data_available_json'] == True
     mask3 = mask1 & mask2
-    return unfiltered_df[mask3]
+    return df[mask3]
 
 
-def create_site_system_dict(index_df):
-    site_list = index_df['site'].unique().tolist()
+def create_site_system_dict(df):
+    site_list = df['site'].unique().tolist()
     ss_dict = {}
     for site in site_list:
-        systems_in_site = index_df[index_df['site'] == site]['system'].values.tolist()
+        systems_in_site = df[df['site'] == site]['system'].values.tolist()
         ss_dict[site] = systems_in_site
     return site_list, ss_dict
 
@@ -80,9 +79,9 @@ def initialize_results_df():
     return p_df
 
 
-def load_data(source):
-    if source == 'constellation':
-        output_df = load_constellation_data(file_id=site_id)
-    if source == 'source_2':
-        output_df = load_cassandra_data(file_id=site_id)
-    return output_df
+def load_data(data_source, site_id):
+    if data_source == 'constellation':
+        df = load_constellation_data(file_id=site_id)
+    if data_source == 'source_2':
+        df = load_cassandra_data(file_id=site_id)
+    return df
