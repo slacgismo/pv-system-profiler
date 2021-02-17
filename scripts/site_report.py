@@ -3,38 +3,44 @@ import sys
 from time import time
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
-from functions import *
+from functions import run_failsafe_pipeline
+from functions import resume_run
+from functions import get_tag
+from functions import load_data
+from functions import get_lon_from_list
+from functions import get_lat_from_list
+from functions import get_orientation_from_list
+from functions import get_gmt_offset_from_list
+from functions import load_input_dataframe
+from functions import filter_sites
+from functions import create_site_system_dict
+from functions import initialize_results_df
 
 if __name__ == '__main__':
-    power_column_id = str(sys.argv[1])
-    data_source = str(sys.argv[2])
-    results_file = str(sys.argv[3])
-    site_list_file = str(sys.argv[4])
+    data_source = str(sys.argv[1])
+    power_column_id = str(sys.argv[2])
+    input_file = str(sys.argv[3])
+    output_file = str(sys.argv[4])
 
-    full_df, checked_systems, start_at = resume_run(results_file)
-
-    input_df = load_input_dataframe(site_list_file)
-
+    full_df, checked_systems, start_at = resume_run(output_file)
+    input_df = load_input_dataframe(input_file)
     df_site = filter_sites(input_df)
-
     sites, site_system_dict = create_site_system_dict(df_site)
 
     site_run_time = 0
     total_time = 0
     partial_df = initialize_results_df()
-
     for site_ix, site_id in enumerate(sites[start_at:]):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
 
         progress(site_ix, len(sites), msg, bar_length=20)
-
         df = load_data(data_source, site_id)
-
         dh = DataHandler(df)
 
         for sys_ix, sys_id in enumerate(site_system_dict[site_id]):
             if sys_id not in checked_systems:
+                print(site_id, sys_id)
                 # print(site_id, sys_id)
                 sys_tag = get_tag(dh, data_source, power_column_id, sys_id)
 
@@ -46,12 +52,7 @@ if __name__ == '__main__':
                 passes_pipeline = True
 
                 try:
-                    try:
-                        dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=False, verbose=False)
-                    except ValueError:
-                        max_val = np.nanquantile(df[sys_tag], 0.95)
-                        dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=True, verbose=False,
-                                        max_val=max_val * 3)
+                    run_failsafe_pipeline(dh, df, sys_tag)
                 except ValueError:
                     passes_pipeline = False
 
@@ -77,7 +78,7 @@ if __name__ == '__main__':
                 partial_df.loc[0] = v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19
                 full_df = full_df.append(partial_df)
                 full_df.index = np.arange(len(full_df))
-                full_df.to_csv(results_file)
+                full_df.to_csv(output_file)
 
         t1 = time()
         site_run_time = t1 - t0

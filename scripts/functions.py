@@ -79,6 +79,7 @@ def resume_run(output_file):
 
 
 def load_input_dataframe(list_file):
+    print(list_file)
     df = pd.read_csv(list_file, index_col=0)
     df['site'] = df['site'].apply(str)
     df['system'] = df['system'].apply(str)
@@ -128,3 +129,4 @@ def run_failsafe_pipeline(dh_in, df_in, sys_tag):
         max_val = np.nanquantile(df_in[sys_tag], 0.95)
         dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=True, verbose=False,
                         max_val=max_val * 3)
+    return
