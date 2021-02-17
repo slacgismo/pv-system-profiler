@@ -20,6 +20,19 @@ def get_io_file_locations(text_file):
         ('Error reading input file')
     return file_dict['results_file'], file_dict['site_list_file']
 
+def get_sys_location(df, i):
+    longitude = float(df.loc[df_site['system'] == i, 'longitude'])
+    latitude = float(df.loc[df_site['system'] == i, 'latitude'])
+    return longitude, latitude
+
+
+def get_sys_orientation(df, i):
+    tilt = float(df_site.loc[df_site['system'] == i, 'tilt'])
+    azimuth = float(df_site.loc[df_site['system'] == i, 'azimuth'])
+    return tilt, azimuth
+
+def get_sys_gmt_offset(df, i):
+    return float(df_site.loc[df_site['system'] == sys_id, 'gmt_offset'])
 
 def get_tag(dh_tag, ds, pc_id, i):
     if ds == 'constellation':
@@ -117,11 +130,9 @@ if __name__ == '__main__':
                 sys_tag = get_tag(dh, data_source, power_column_id, sys_id)
 
                 manual_time_shift = df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0]
-                lon = float(df_site.loc[df_site['system'] == sys_id, 'longitude'])
-                lat = float(df_site.loc[df_site['system'] == sys_id, 'latitude'])
-                tilt = float(df_site.loc[df_site['system'] == sys_id, 'tilt'])
-                azim = float(df_site.loc[df_site['system'] == sys_id, 'azimuth'])
-                gmt_offset = float(df_site.loc[df_site['system'] == sys_id, 'gmt_offset'])
+                lon, lat = get_sys_location(df_site, sys_id)
+                tilt, azim = get_sys_orientation(df_site, sys_id)
+                gmt_offset = get_sys_gmt_offset(df_site, sys_id)
                 passes_pipeline = True
 
                 if manual_time_shift == 1:
