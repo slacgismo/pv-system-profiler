@@ -53,7 +53,8 @@ def get_gmt_offset_from_report(df, site_id, sys_id):
     mask1 = df['site'] == site_id
     mask2 = df['system'] == sys_id
     mask3 = mask1 & mask2
-    return float(df_site.loc[mask3, 'gmt_offset'])
+    return float(df.loc[mask3, 'gmt_offset'])
+
 
 def get_tag(dh, ds, pc_id, sys_id):
     if ds == 'constellation':
@@ -115,5 +116,6 @@ def load_data(data_source, site_id):
         df = load_cassandra_data(file_id=site_id)
     return df
 
-def get_inspected_time_shift(dh):
-    return int(df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0])
+
+def get_inspected_time_shift(df, sys_id):
+    return int(df.loc[df['system'] == sys_id, 'manual_time_shift'].values[0])
