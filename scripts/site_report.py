@@ -39,13 +39,12 @@ if __name__ == '__main__':
                 sys_tag = get_tag(dh, data_source, power_column_id, sys_id)
 
                 manual_time_shift = df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0]
-                lon, lat = get_sys_location(df_site, sys_id)
-                tilt, azim = get_sys_orientation(df_site, sys_id)
-                gmt_offset = get_sys_gmt_offset(df_site, sys_id)
+                lon = get_lon_from_list(df_site, sys_id)
+                lat = get_lat_from_list(df_site, sys_id)
+                tilt, azim = get_orientation_from_list(df_site, sys_id)
+                gmt_offset = get_gmt_offset_from_list(df_site, sys_id)
                 passes_pipeline = True
 
-                if manual_time_shift == 1:
-                    dh.fix_dst()
                 try:
                     try:
                         dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=False, verbose=False)

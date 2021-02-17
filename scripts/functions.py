@@ -4,6 +4,7 @@ import json
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
+
 def get_io_file_locations(text_file):
     try:
         with open(text_file) as f:
@@ -13,18 +14,46 @@ def get_io_file_locations(text_file):
         ('Error reading input file')
     return file_dict['results_file'], file_dict['site_list_file']
 
-def get_sys_location(df, sys_id):
-    longitude = float(df.loc[df['system'] == sys_id, 'longitude'])
-    latitude = float(df.loc[df['system'] == sys_id, 'latitude'])
-    return longitude, latitude
 
-def get_sys_orientation(df, sys_id):
+def get_lon_from_list(df, sys_id):
+    longitude = float(df.loc[df['system'] == sys_id, 'longitude'])
+    return longitude
+
+
+def get_lon_from_report(df, site_id, sys_id):
+    mask1 = df['site'] == site_id
+    mask2 = df['system'] == sys_id
+    mask3 = mask1 & mask2
+    return float(df.loc[mask3, 'longitude'])
+
+
+def get_lat_from_list(df, sys_id):
+    latitude = float(df.loc[df['system'] == sys_id, 'latitude'])
+    return latitude
+
+
+def get_lat_from_report(df, site_id, sys_id):
+    mask1 = df['site'] == site_id
+    mask2 = df['system'] == sys_id
+    mask3 = mask1 & mask2
+    return float(df.loc[mask3, 'latitude'])
+
+
+def get_orientation_from_list(df, sys_id):
     tilt = float(df.loc[df['system'] == sys_id, 'tilt'])
     azimuth = float(df.loc[df['system'] == sys_id, 'azimuth'])
     return tilt, azimuth
 
-def get_sys_gmt_offset(df, sys_id):
+
+def get_gmt_offset_from_list(df, sys_id):
     return float(df.loc[df['system'] == sys_id, 'gmt_offset'])
+
+
+def get_gmt_offset_from_report(df, site_id, sys_id):
+    mask1 = df['site'] == site_id
+    mask2 = df['system'] == sys_id
+    mask3 = mask1 & mask2
+    return float(df_site.loc[mask3, 'gmt_offset'])
 
 def get_tag(dh, ds, pc_id, sys_id):
     if ds == 'constellation':
@@ -85,3 +114,6 @@ def load_data(data_source, site_id):
     if data_source == 'source_2':
         df = load_cassandra_data(file_id=site_id)
     return df
+
+def get_inspected_time_shift(dh):
+    return int(df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0])
