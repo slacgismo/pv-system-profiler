@@ -126,7 +126,7 @@ def get_inspected_time_shift(df, sys_id):
 def run_failsafe_pipeline(dh_in, df_in, sys_tag):
     try:
         dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=False, verbose=False)
-    except ValueError:
+    except:
         max_val = np.nanquantile(df_in[sys_tag], 0.95)
         dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=True, verbose=False, max_val=max_val * 3)
     return
