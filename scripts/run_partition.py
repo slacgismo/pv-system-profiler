@@ -32,9 +32,9 @@ def run_config(partition, i,  instance):
             print(stderr.read())
     c.close()
 
-def get_address(ssh_username, ssh_key_file, name, region, client):
+def get_address(ssh_username, ssh_key_file, tag_name, region, client):
     ec2 = boto3.Session(profile_name='default', region_name=region).client(client)
-    target_instances = ec2.describe_instances(Filters=[{'Name':'tag:Name','Values':[name]}])
+    target_instances = ec2.describe_instances(Filters=[{'Name':'tag:Name','Values':[tag_name]}])
 
     ec2_instances = []
     for each_instance in target_instances['Reservations']:
