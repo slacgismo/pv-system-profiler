@@ -6,8 +6,8 @@ import pandas as pd
 python = '/home/ubuntu/miniconda3/envs/pvi-dev/bin/python'
 start_index = int(sys.argv[1])
 end_index = int(sys.argv[2])
-input_file = int(sys.argv[3])
-output_file = int(sys.argv[4])
+input_file = str(sys.argv[3])
+output_file = str(sys.argv[4])
 
 df_full = pd.read_csv(input_file, index_col=0)
 df_part = df_full.copy()

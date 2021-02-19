@@ -21,10 +21,12 @@ def create_partition(partition, i, instance):
     #print(output_folder_location)
     #scp_command = 'scp -i ' + ssh_key_file + ' local_script.py ubuntu@' + instance + ':/home/ubuntu'
     #os.system(scp_command)
-    commands = ['mkdir -p' + ' ' + output_folder_location + output_folder + 'data']
-    #            python + ' ' + 'start_index' + ' ' + 'end_index' + local_script + ' ' + input_file + ' ' + output_file]
+    commands = ['mkdir -p' + ' ' + output_folder_location + output_folder + 'data',
+                python + ' ' + local_script + ' ' + str(start_index) + ' ' + str(end_index) + ' ' + input_file + ' '
+                + output_file]
+    print(commands)
     #commands = [python + ' ' + local_script.py' + ' ' + location + ' ' +
-     #           str(ii) + ' ' + str(jj) + ' ' + str(i) + str(' ') + str(n_chunks)]
+    #           str(ii) + ' ' + str(jj) + ' ' + str(i) + str(' ') + str(n_chunks)]
 
     k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
     c = paramiko.SSHClient()
