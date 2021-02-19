@@ -22,13 +22,14 @@ if __name__ == '__main__':
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
                             tsi=time_shift_inspection)
 
-    ec2_instances = get_address(aws_username, ssh_key_file, aws_instance_name, aws_region, aws_client)
+    ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
 
     df = pd.read_csv(input_file_location, index_col=0)
     n_part = len(ec2_instances)
     ll = len(df) - 1
-    part_size = int(len(df) / n_part)
-
+    part_size = int(ll / n_part) + 1
+    print('n_part', n_part)
+    print('part_size', part_size)
     i = 0
     jj = 0
     partitions = []

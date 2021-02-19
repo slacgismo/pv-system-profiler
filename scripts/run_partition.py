@@ -44,8 +44,7 @@ def create_partition(partition, i, instance):
         print(stderr.read())
     c.close()
 
-
-def get_address(ssh_username, ssh_key_file, tag_name, region, client):
+def get_address(tag_name, region, client):
     ec2 = boto3.Session(profile_name='default', region_name=region).client(client)
     target_instances = ec2.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [tag_name]}])
 
@@ -55,3 +54,4 @@ def get_address(ssh_username, ssh_key_file, tag_name, region, client):
             if found_instance['PublicDnsName'] != '':
                 ec2_instances.append(found_instance['PublicDnsName'])
     return ec2_instances
+
