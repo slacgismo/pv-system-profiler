@@ -8,9 +8,9 @@ def create_partition(partition, i, instance):
     end_index = partition.ix_n
     global_input_file = partition.input_file_location
     local_input_file = partition.local_input_file
-    local_output_file = partition.local_output_file
     local_working_folder = partition.local_working_folder
     local_working_folder_location = partition.local_working_folder_location
+    local_output_file = partition.local_output_file
     script_name = partition.script_name
     scripts_location = partition.scripts_location
     local_script = scripts_location + 'local_script.py'
@@ -20,14 +20,16 @@ def create_partition(partition, i, instance):
     power_column_id = partition.power_column_id
     time_shift_inspection = partition.time_shift_inspection
 
+    print(local_output_file)
+    print(local_input_file)
     commands = ['rm estimation* -rf',
-                'mkdir -p' + ' ' + local_working_folder_location + local_working_folder + 'data',
+                'mkdir -p' + ' ' + local_working_folder + 'data',
                 python + ' ' + local_script + ' '
                 + str(start_index) + ' '
                 + str(end_index) + ' '
                 + script_name + ' '
                 + global_input_file + ' '
-                + local_working_folder + 'data/' + local_input_file + ' '
+                + local_input_file + ' '
                 + local_output_file + ' '
                 + data_source + ' '
                 + power_column_id + ' '

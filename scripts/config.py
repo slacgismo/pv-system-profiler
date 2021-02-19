@@ -9,14 +9,15 @@ class ConfigPartitions:
         self.aws_region = ar
         self.aws_client = ac
         if ix_0 is not None and ix_n is not None:
-            self.local_working_folder_location = ofl
+
             self.part_id = part_id
             self.env_name = 'partition_' + str(part_id)
             self.n_part = n_part
-            self.local_input_file = 'input_part_{}_of_{}.csv'.format(str(part_id + 1), str(n_part))
-            self.local_working_folder = 'estimation_part_{}_of_{}/'.format(str(part_id + 1), str(n_part))
-            self.local_output_file = self.local_working_folder_location + 'data/results_part_{}_of_{}.csv'.\
-                format(str(part_id + 1), str(n_part))
+            self.local_working_folder_location = ofl
+            self.local_working_folder = self.local_working_folder_location + 'estimation_part_{}_of_{}/'.format(
+                str(part_id + 1), str(n_part))
+            self.local_input_file = self.local_working_folder + 'data/input_part_{}_of_{}.csv'.format(str(part_id + 1), str(n_part))
+            self.local_output_file = self.local_working_folder + 'data/results_part_{}_of_{}.csv'.format(str(part_id + 1), str(n_part))
             self.ix_0 = ix_0
             self.ix_n = ix_n
             self.scripts_location = scripts_location

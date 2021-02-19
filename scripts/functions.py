@@ -3,9 +3,8 @@ import sys
 import json
 import numpy as np
 import pandas as pd
-
-from solardatatools.dataio import load_constellation_data
-from solardatatools.dataio import load_cassandra_data
+sys.path.append('/home/ubuntu/github/pv-system-profiler/')
+sys.path.append('/home/ubuntu/github/solar-data-tools/')
 
 def get_io_file_locations(text_file):
     try:
