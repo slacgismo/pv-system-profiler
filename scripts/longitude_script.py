@@ -10,6 +10,7 @@ from functions import get_lon_from_report
 from functions import get_gmt_offset_from_report
 from functions import get_inspected_time_shift
 from functions import run_failsafe_pipeline
+
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from pvsystemprofiler.longitude_study import LongitudeStudy

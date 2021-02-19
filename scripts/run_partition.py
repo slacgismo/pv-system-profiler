@@ -10,20 +10,18 @@ def create_partition(partition, i, instance):
     global_input_file = partition.input_file_location
     local_input_file = partition.local_input_file
     local_output_file = partition.local_output_file
-    local_output_folder = partition.local_output_folder
-    local_folder_location = partition.local_output_folder_location
-    script_location = partition.script_location
-    local_script = script_location + 'local_script.py'
-    run_script = script_location + 'longitude_script.py'
+    local_working_folder = partition.local_working_folder
+    local_working_folder_location = partition.local_working_folder_location
+    script_name = partition.script_name
+    scripts_location = partition.scripts_location
+    local_script = scripts_location + 'local_script.py'
     ssh_username = partition.aws_username
     ssh_key_file = partition.ssh_key_file
 
-    #scp_command = 'scp -i ' + ssh_key_file + ' local_script.py ubuntu@' + instance + ':/home/ubuntu'
-    #os.system(scp_command)
-    commands = ['rm out* -rf',
-                 'mkdir -p' + ' ' + local_folder_location + local_output_folder + 'data',
-                 python + ' ' + local_script + ' ' + str(start_index) + ' ' + str(end_index) + ' ' + global_input_file +
-                 ' ' + local_output_folder + 'data/' + local_input_file + ' ' + local_output_file]
+    commands = ['rm estimation* -rf',
+                 'mkdir -p' + ' ' + local_working_folder_location + local_working_folder + 'data',
+                 python + ' ' + local_script + ' ' + str(start_index) + ' ' + str(end_index) + ' ' + script_name + ' ' +
+                global_input_file + ' ' + local_working_folder + 'data/' + local_input_file + ' ' + local_output_file]
     # print(commands)
 
     k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
