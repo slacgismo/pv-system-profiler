@@ -7,7 +7,6 @@ import pandas as pd
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
-
 def get_io_file_locations(text_file):
     try:
         with open(text_file) as f:

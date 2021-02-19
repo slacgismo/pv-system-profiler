@@ -2,7 +2,6 @@ import os
 import boto3
 import paramiko
 
-
 def create_partition(partition, i, instance):
     python = '/home/ubuntu/miniconda3/envs/pvi-dev/bin/python'
     start_index = partition.ix_0
@@ -17,12 +16,22 @@ def create_partition(partition, i, instance):
     local_script = scripts_location + 'local_script.py'
     ssh_username = partition.aws_username
     ssh_key_file = partition.ssh_key_file
+    data_source = partition.data_source
+    power_column_id = partition.power_column_id
+    time_shift_inspection = partition.time_shift_inspection
 
     commands = ['rm estimation* -rf',
-                 'mkdir -p' + ' ' + local_working_folder_location + local_working_folder + 'data',
-                 python + ' ' + local_script + ' ' + str(start_index) + ' ' + str(end_index) + ' ' + script_name + ' ' +
-                global_input_file + ' ' + local_working_folder + 'data/' + local_input_file + ' ' + local_output_file]
-    # print(commands)
+                'mkdir -p' + ' ' + local_working_folder_location + local_working_folder + 'data',
+                python + ' ' + local_script + ' '
+                + str(start_index) + ' '
+                + str(end_index) + ' '
+                + script_name + ' '
+                + global_input_file + ' '
+                + local_working_folder + 'data/' + local_input_file + ' '
+                + local_output_file + ' '
+                + data_source + ' '
+                + power_column_id + ' '
+                + time_shift_inspection]
 
     k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
     c = paramiko.SSHClient()
