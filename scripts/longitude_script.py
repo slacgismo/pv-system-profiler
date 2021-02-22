@@ -2,14 +2,15 @@ import sys
 import pandas as pd
 import numpy as np
 from time import time
-from functions import resume_run
-from functions import create_site_system_dict
-from functions import load_data
-from functions import get_tag
-from functions import get_lon_from_report
-from functions import get_gmt_offset_from_report
-from functions import get_inspected_time_shift
-from functions import run_failsafe_pipeline
+from modules.functions import resume_run
+from modules.functions import create_site_system_dict
+from modules.functions import load_data
+from modules.functions import get_tag
+from modules.functions import get_lon_from_report
+from modules.functions import get_gmt_offset_from_report
+from modules.functions import get_inspected_time_shift
+from modules.functions import run_failsafe_pipeline
+
 
 from solardatatools import DataHandler
 from solardatatools.utilities import progress

@@ -3,18 +3,18 @@ import sys
 from time import time
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
-from functions import run_failsafe_pipeline
-from functions import resume_run
-from functions import get_tag
-from functions import load_data
-from functions import get_lon_from_list
-from functions import get_lat_from_list
-from functions import get_orientation_from_list
-from functions import get_gmt_offset_from_list
-from functions import load_input_dataframe
-from functions import filter_sites
-from functions import create_site_system_dict
-from functions import initialize_results_df
+from scripts.modules.functions import run_failsafe_pipeline
+from scripts.modules.functions import resume_run
+from scripts.modules.functions import get_tag
+from scripts.modules.functions import load_data
+from scripts.modules.functions import get_lon_from_list
+from scripts.modules.functions import get_lat_from_list
+from scripts.modules.functions import get_orientation_from_list
+from scripts.modules.functions import get_gmt_offset_from_list
+from scripts.modules.functions import load_input_dataframe
+from scripts.modules.functions import filter_sites
+from scripts.modules.functions import create_site_system_dict
+from scripts.modules.functions import initialize_results_df
 
 if __name__ == '__main__':
     data_source = str(sys.argv[1])
