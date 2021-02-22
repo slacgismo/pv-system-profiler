@@ -4,7 +4,8 @@ import json
 import numpy as np
 import pandas as pd
 
-
+sys.path.append('/home/ubuntu/github/pv-system-profiler/')
+sys.path.append('/home/ubuntu/github/solar-data-tools/')
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 

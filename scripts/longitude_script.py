@@ -10,7 +10,8 @@ from modules.functions import get_lon_from_report
 from modules.functions import get_gmt_offset_from_report
 from modules.functions import get_inspected_time_shift
 from modules.functions import run_failsafe_pipeline
-
+sys.path.append('/home/ubuntu/github/pv-system-profiler/')
+sys.path.append('/home/ubuntu/github/solar-data-tools/')
 
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
@@ -96,4 +97,5 @@ if __name__ == '__main__':
 
 msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'. \
     format(site_run_time, total_time / 60.0)
+print('done')
 progress(len(sites), len(sites), msg, bar_length=20)

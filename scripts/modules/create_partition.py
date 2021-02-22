@@ -8,7 +8,6 @@ def create_partition(partition, i, instance):
     global_input_file = partition.input_file_location
     local_input_file = partition.local_input_file
     local_working_folder = partition.local_working_folder
-    local_working_folder_location = partition.local_working_folder_location
     local_output_file = partition.local_output_file
     script_name = partition.script_name
     scripts_location = partition.scripts_location
