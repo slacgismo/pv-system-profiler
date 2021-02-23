@@ -18,7 +18,7 @@ def get_remote_output_files(partitions):
 def combine_results(partitions):
     df = pd.DataFrame()
     for part_id in partitions:
-        partial_df = pd.read_csv(part.local_output_file_name, index_col=0)
+        partial_df = pd.read_csv(part_id.local_output_file_name, index_col=0)
         df = df.append(partial_df, ignore_index=True)
         df.index = np.arange(len(df))
     return df
