@@ -97,5 +97,5 @@ if __name__ == '__main__':
 
 msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'. \
     format(site_run_time, total_time / 60.0)
-print('done')
+print('finished')
 progress(len(sites), len(sites), msg, bar_length=20)

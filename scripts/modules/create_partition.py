@@ -1,7 +1,7 @@
 import paramiko
 
 
-def create_partition(partition, i, instance):
+def create_partition(partition, i):
     python = '/home/ubuntu/miniconda3/envs/pvi-dev/bin/python'
     start_index = partition.ix_0
     end_index = partition.ix_n
@@ -12,6 +12,7 @@ def create_partition(partition, i, instance):
     script_name = partition.script_name
     scripts_location = partition.scripts_location
     local_script = scripts_location + 'modules/local_partition_script.py'
+    instance = partition.public_ip_address
     ssh_username = partition.aws_username
     ssh_key_file = partition.ssh_key_file
     data_source = partition.data_source
@@ -37,6 +38,7 @@ def create_partition(partition, i, instance):
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     c.connect(hostname=instance, username=ssh_username, pkey=k, allow_agent=False, look_for_keys=False)
+
     for command in commands:
         print("running command: {}".format(command))
         stdin, stdout, stderr = c.exec_command(command)

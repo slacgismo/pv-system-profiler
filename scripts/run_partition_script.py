@@ -1,5 +1,7 @@
-import boto3
 import sys
+import boto3
+import time
+import paramiko
 import pandas as pd
 from modules.config_partitions import get_config
 from modules.create_partition import create_partition
@@ -15,6 +17,21 @@ def get_address(tag_name, region, client):
             if found_instance['PublicDnsName'] != '':
                 ec2_instances.append(found_instance['PublicDnsName'])
     return ec2_instances
+
+
+def remote_execute(user, instance_id, key, shell_commands):
+    k = paramiko.RSAKey.from_private_key_file(key)
+    c = paramiko.SSHClient()
+    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    c.connect(hostname=instance_id, username=user, pkey=k, allow_agent=False, look_for_keys=False)
+    command_dict = {}
+    for command in shell_commands:
+        print("running command: {}".format(command))
+        stdin, stdout, stderr = c.exec_command(command)
+        command_dict[command] = [stdout.read(), stderr.read()]
+
+    c.close()
+    return command_dict
 
 
 if __name__ == '__main__':
@@ -41,8 +58,6 @@ if __name__ == '__main__':
     n_part = len(ec2_instances)
     ll = len(df) - 1
     part_size = int(ll / n_part) + 1
-    print('n_part', n_part)
-    print('part_size', part_size)
     i = 0
     jj = 0
     partitions = []
@@ -52,16 +67,39 @@ if __name__ == '__main__':
         jj = part_size * (i + 1)
         if jj >= ll:
             jj = ll
-        part = get_config(part_id=i, ix_0=ii, ix_n=ii+3, n_part=n_part, ifl=input_file_location,
-                          ofl=output_folder_location, skf=ssh_key_file, au=aws_username, ain=aws_instance_name,
-                          ar=aws_region, ac=aws_client, script_name=script_name, scripts_location=script_location,
-                          ds=data_source, pcid=power_column_id, tsi=time_shift_inspection)
-
+        part = get_config(part_id=i, ix_0=ii, ix_n=ii + 3, n_part=n_part, ifl=input_file_location,
+                          ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
+                          ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
+                          scripts_location=script_location, ds=data_source, pcid=power_column_id,
+                          tsi=time_shift_inspection)
 
         # part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=input_file_location,
-        #                   ofl=output_folder_location, skf=ssh_key_file, au=aws_username, ain=aws_instance_name,
+        #                   ofl=output_folder_location,ip_address= skf=ssh_key_file, au=aws_username, ain=aws_instance_name,
         #                   ar=aws_region, ac=aws_client, script_name=script_name, scripts_location=script_location,
         #                   ds=data_source, pcid=power_column_id, tsi=time_shift_inspection)
         partitions.append(part)
-        create_partition(part, i, ec2_instances[i])
+
+        create_partition(part, i)
         i += 1
+
+    commands = ["grep 'finished' ./out"]
+    process_completed = False
+
+    while not process_completed:
+        for part_ix, part_id in enumerate(partitions):
+            if part.process_completed is False:
+                process_completed = True
+                ssh_key_file = part_id.ssh_key_file
+                instance = part_id.public_ip_address
+                ssh_username = part_id.aws_username
+                commands_dict = remote_execute(user=ssh_username, instance_id=instance, key=ssh_key_file,
+                                               shell_commands=commands)
+                if str(commands_dict["grep 'finished' ./out"][0]).find('finished') != -1:
+                    part_id.process_completed = True
+                    process_completed = process_completed & True
+                else:
+                    process_completed = False
+        import time
+
+        time.sleep(60)
+
