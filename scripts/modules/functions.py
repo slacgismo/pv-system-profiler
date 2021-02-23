@@ -84,7 +84,6 @@ def resume_run(output_file):
 
 
 def load_input_dataframe(list_file):
-    print(list_file)
     df = pd.read_csv(list_file, index_col=0)
     df['site'] = df['site'].apply(str)
     df['system'] = df['system'].apply(str)

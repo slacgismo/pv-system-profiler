@@ -1,7 +1,7 @@
 class ConfigPartitions:
     def __init__(self, part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None,
                  au=None, ain=None, ar=None, ac=None, script_name=None, scripts_location=None, ds=None,
-                 pcid=None, gof=None, tsi=None):
+                 pcid=None, gof=None, god=None,  tsi=None):
         self.input_file_location = ifl
         self.ssh_key_file = skf
         self.aws_username = au
@@ -30,15 +30,17 @@ class ConfigPartitions:
             self.public_ip_address = ip_address
             self.process_completed = False
         else:
-            self.global_output_file = gof
+            self.global_output_directory = god
+            self.global_output_file = god + gof
+
 
 
 def get_config(part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None, au=None,
                ain=None, ar=None, ac=None, script_name=None, scripts_location=None, ds=None, pcid=None, gof=None,
-               tsi=None):
+               god=None, tsi=None):
     if ix_0 is not None and ix_n is not None:
         return ConfigPartitions(part_id=part_id, ix_0=ix_0, ix_n=ix_n, n_part=n_part, ifl=ifl, ofl=ofl,
                                 ip_address=ip_address, skf=skf, au=au, ain=ain, ar=ar, ac=ac, script_name=script_name,
-                                scripts_location=scripts_location, ds=ds, pcid=pcid, gof=None, tsi=tsi)
+                                scripts_location=scripts_location, ds=ds, pcid=pcid, tsi=tsi)
     else:
-        return ConfigPartitions(ifl=ifl, skf=skf, au=au, ain=ain, ar=ar, ac=ac, gof=gof)
+        return ConfigPartitions(ifl=ifl, skf=skf, au=au, ain=ain, ar=ar, ac=ac, gof=gof, god=god)
