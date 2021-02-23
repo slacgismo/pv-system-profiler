@@ -77,7 +77,22 @@ if __name__ == '__main__':
     global_output_directory = str(sys.argv[12])
     global_output_file = str(sys.argv[13])
     time_shift_inspection = str(sys.argv[14])
-
+'''
+input file location: a csv file with the system's information.
+ssh_key_file: *.pem aws key file.
+aws_username: aws linux username in instances
+aws_instance_name: aws name key used to identify instances to be used in the partitioning.
+aws_region: region as specified by aws. For example: 'us-west-1'.
+aws_client: in most cases 'ec2'
+script_name: name of the script that will be run in the partitioned data.
+script_location: directory where script_name is located. 
+output_folder location: Folder where local results will be saved. This folder will be created during script execution.
+data_source: source of the data to be analyzed.
+power_column_id: id given to the power column to be analyzed.
+global_output_directory:  directory where consolidated results are saved.
+global_output_file:  name of csv file with the consolidated results.
+time_shift_inspection: indicate if manual time shift inspection should be taken into account for pipeline run.
+'''
     main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
                             gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection)
