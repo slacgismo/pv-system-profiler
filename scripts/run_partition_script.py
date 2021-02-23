@@ -1,10 +1,36 @@
 import sys
+import os
 import boto3
 import time
 import paramiko
+import numpy as np
 import pandas as pd
 from modules.config_partitions import get_config
 from modules.create_partition import create_partition
+
+
+def get_remote_output_files(partitions):
+    for part_id in partitions:
+        get_local_output_file = "scp -i" + " '" + "~/.aws/londonoh.pem" + "' " + "ubuntu@" + \
+                                part_id.public_ip_address + ":" + part_id.local_output_file + " ./"
+        os.system(get_local_output_file)
+
+def combine_results(partitions):
+    df = pd.DataFrame()
+    for part_id in partitions:
+        partial_df = pd.read_csv(part.local_output_file_name, index_col=0)
+        df = df.append(partial_df, ignore_index=True)
+        df.index = np.arange(len(df))
+    return df
+
+
+def check_completion(ssh_username, instance_id, ssh_key_file):
+    commands = ["grep 'finished' ./out"]
+    commands_dict = remote_execute(user=ssh_username, instance_id=instance, key=ssh_key_file, shell_commands=commands)
+    if str(commands_dict["grep 'finished' ./out"][0]).find('finished') != -1:
+        return True
+    else:
+        return False
 
 
 def get_address(tag_name, region, client):
@@ -46,11 +72,12 @@ if __name__ == '__main__':
     output_folder_location = str(sys.argv[9])
     data_source = str(sys.argv[10])
     power_column_id = str(sys.argv[11])
-    time_shift_inspection = str(sys.argv[12])
+    global_output_file = str(sys.argv[12])
+    time_shift_inspection = str(sys.argv[13])
 
     main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
-                            tsi=time_shift_inspection)
+                            gof=global_output_file, tsi=time_shift_inspection)
 
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
     print(ec2_instances)
@@ -73,16 +100,11 @@ if __name__ == '__main__':
                           scripts_location=script_location, ds=data_source, pcid=power_column_id,
                           tsi=time_shift_inspection)
 
-        # part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=input_file_location,
-        #                   ofl=output_folder_location,ip_address= skf=ssh_key_file, au=aws_username, ain=aws_instance_name,
-        #                   ar=aws_region, ac=aws_client, script_name=script_name, scripts_location=script_location,
-        #                   ds=data_source, pcid=power_column_id, tsi=time_shift_inspection)
         partitions.append(part)
 
         create_partition(part, i)
         i += 1
 
-    commands = ["grep 'finished' ./out"]
     process_completed = False
 
     while not process_completed:
@@ -92,14 +114,15 @@ if __name__ == '__main__':
                 ssh_key_file = part_id.ssh_key_file
                 instance = part_id.public_ip_address
                 ssh_username = part_id.aws_username
-                commands_dict = remote_execute(user=ssh_username, instance_id=instance, key=ssh_key_file,
-                                               shell_commands=commands)
-                if str(commands_dict["grep 'finished' ./out"][0]).find('finished') != -1:
-                    part_id.process_completed = True
-                    process_completed = process_completed & True
-                else:
-                    process_completed = False
-        import time
+                part_id.process_completed = check_completion(ssh_username, instance, ssh_key_file)
+                process_completed = process_completed & part_id.process_completed
 
         time.sleep(60)
+
+    if process_completed:
+        get_remote_output_files(partitions)
+        results_df = combine_results(partitions)
+        results_df.to_csv(global_output_file)
+
+
 

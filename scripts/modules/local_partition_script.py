@@ -25,8 +25,5 @@ arguments = data_source + ' ' \
             + local_output_file + ' ' \
             + time_shift_inspection
 
-print(script_name)
-
-
 os.system(command + ' ' + arguments + '>out &')
 

@@ -18,8 +18,8 @@ class ConfigPartitions:
                 str(part_id + 1), str(n_part))
             self.local_input_file = self.local_working_folder + 'data/input_part_{}_of_{}.csv'.format(str(part_id + 1),
                                                                                                       str(n_part))
-            self.local_output_file = self.local_working_folder + 'data/results_part_{}_of_{}.csv'.format(
-                str(part_id + 1), str(n_part))
+            self.local_output_file_name = 'results_part_{}_of_{}.csv'.format(str(part_id + 1), str(n_part))
+            self.local_output_file = self.local_working_folder + 'data/' + self.local_output_file_name
             self.ix_0 = ix_0
             self.ix_n = ix_n
             self.scripts_location = scripts_location

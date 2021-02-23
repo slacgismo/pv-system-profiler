@@ -19,8 +19,7 @@ def create_partition(partition, i):
     power_column_id = partition.power_column_id
     time_shift_inspection = partition.time_shift_inspection
 
-    print(local_output_file)
-    print(local_input_file)
+
     commands = ['rm estimation* -rf',
                 'mkdir -p' + ' ' + local_working_folder + 'data',
                 python + ' ' + local_script + ' '
@@ -39,6 +38,7 @@ def create_partition(partition, i):
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     c.connect(hostname=instance, username=ssh_username, pkey=k, allow_agent=False, look_for_keys=False)
 
+    print(commands)
     for command in commands:
         print("running command: {}".format(command))
         stdin, stdout, stderr = c.exec_command(command)
