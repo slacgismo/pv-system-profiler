@@ -1,7 +1,7 @@
 import paramiko
 
 
-def create_partition(partition, i):
+def create_partition(partition):
     python = '/home/ubuntu/miniconda3/envs/pvi-dev/bin/python'
     start_index = partition.ix_0
     end_index = partition.ix_n
@@ -18,7 +18,6 @@ def create_partition(partition, i):
     data_source = partition.data_source
     power_column_id = partition.power_column_id
     time_shift_inspection = partition.time_shift_inspection
-
 
     commands = ['rm estimation* -rf',
                 'mkdir -p' + ' ' + local_working_folder + 'data',
@@ -43,6 +42,3 @@ def create_partition(partition, i):
         print(stdout.read())
         print(stderr.read())
     c.close()
-
-
-

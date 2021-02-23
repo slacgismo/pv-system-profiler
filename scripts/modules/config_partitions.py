@@ -1,7 +1,7 @@
 class ConfigPartitions:
     def __init__(self, part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None,
                  au=None, ain=None, ar=None, ac=None, script_name=None, scripts_location=None, ds=None,
-                 pcid=None, gof=None, god=None,  tsi=None):
+                 pcid=None, gof=None, god=None, tsi=None):
         self.input_file_location = ifl
         self.ssh_key_file = skf
         self.aws_username = au
@@ -32,7 +32,6 @@ class ConfigPartitions:
         else:
             self.global_output_directory = god
             self.global_output_file = god + gof
-
 
 
 def get_config(part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None, au=None,
