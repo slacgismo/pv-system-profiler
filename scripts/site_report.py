@@ -61,7 +61,8 @@ def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_co
     return full_df
 
 
-def main(df_site, sites, site_system_dict, start_at, full_df, partial_df, output_file):
+def main(data_source, power_column_id, df_site, sites, site_system_dict, start_at, full_df, partial_df,
+         checked_systems, output_file):
     site_run_time = 0
     total_time = 0
     for site_ix, site_id in enumerate(sites[start_at:]):
@@ -72,7 +73,7 @@ def main(df_site, sites, site_system_dict, start_at, full_df, partial_df, output
         df = load_data(data_source, site_id)
         dh = DataHandler(df)
         full_df = evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_column_id, checked_systems,
-                             site_system_dict, site_id, output_file)
+                                   site_system_dict, site_id, output_file)
         full_df.to_csv(output_file)
         t1 = time()
         site_run_time = t1 - t0
@@ -93,8 +94,7 @@ if __name__ == '__main__':
     input_df = load_input_dataframe(input_file)
     df_site = filter_sites(input_df)
     sites, site_system_dict = create_site_system_dict(df_site)
-    sites = ['5003', '5004', '5005', '5006']
-    #sites = ['5003']
     partial_df = initialize_results_df()
 
-    main(df_site, sites, site_system_dict, start_at, full_df, partial_df, output_file)
+    main(data_source, power_column_id, df_site, sites, site_system_dict, start_at, full_df, partial_df,
+         checked_systems, output_file)
