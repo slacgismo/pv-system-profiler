@@ -15,10 +15,12 @@ from modules.functions import load_input_dataframe
 from modules.functions import filter_sites
 from modules.functions import create_site_system_dict
 from modules.functions import initialize_results_df
+from modules.create_constellation_site_list import create_constellation_site_list
+from modules.create_constellation_site_list import check_signal_availability
 
 
 def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_column_id, checked_systems,
-                     site_system_dict, site_id, output_file):
+                     site_system_dict, site_id):
     for sys_ix, sys_id in enumerate(site_system_dict[site_id]):
         if sys_id not in checked_systems:
             print(site_id, sys_id)
@@ -73,7 +75,7 @@ def main(data_source, power_column_id, df_site, sites, site_system_dict, start_a
         df = load_data(data_source, site_id)
         dh = DataHandler(df)
         full_df = evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_column_id, checked_systems,
-                                   site_system_dict, site_id, output_file)
+                                   site_system_dict, site_id)
         full_df.to_csv(output_file)
         t1 = time()
         site_run_time = t1 - t0
@@ -89,9 +91,16 @@ if __name__ == '__main__':
     power_column_id = str(sys.argv[2])
     input_file = str(sys.argv[3])
     output_file = str(sys.argv[4])
-
+    if input_file is None:
+        s3_bucket = str(sys.arg[5])
+        prefix = str(sys.arg[6])
     full_df, checked_systems, start_at = resume_run(output_file)
-    input_df = load_input_dataframe(input_file)
+    if input_file is None:
+        input_df = create_constellation_site_list(s3_bucket, prefix)
+        input_df = check_signal_availability(input_df, power_column_id)
+    else:
+        input_df = load_input_dataframe(input_file)
+
     df_site = filter_sites(input_df)
     sites, site_system_dict = create_site_system_dict(df_site)
     partial_df = initialize_results_df()

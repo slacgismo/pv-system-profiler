@@ -10,6 +10,17 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
 
+def enumerate_files(s3_bucket, prefix):
+    #  "bucket: aws bucket name for 's3://my_bucket/a/b/c' bucket= my_bucket
+    # prefix: path to directory. For my_bucket path to list c contents is 'a/b/c/
+    s3 = boto3.client('s3')
+    output_list = []
+    for obj in s3.list_objects_v2(Bucket=s3_bucket, Prefix=prefix)['Contents']:
+        if (obj['Key']).find('.csv') != -1:
+            output_list.append(obj['Key'])
+    return output_list
+
+
 def get_io_file_locations(text_file):
     try:
         with open(text_file) as f:
@@ -91,8 +102,8 @@ def load_input_dataframe(list_file):
 
 
 def filter_sites(df):
-    mask1 = df['data_available_csv'] == True
-    mask2 = df['data_available_json'] == True
+    mask1 = df['csv_complete'] is True
+    mask2 = df['json complete'] is True
     mask3 = mask1 & mask2
     return df[mask3]
 
