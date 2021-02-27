@@ -3,20 +3,20 @@ import sys
 from time import time
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
-from modules.functions import run_failsafe_pipeline
-from modules.functions import resume_run
-from modules.functions import get_tag
-from modules.functions import load_data
-from modules.functions import get_lon_from_list
-from modules.functions import get_lat_from_list
-from modules.functions import get_orientation_from_list
-from modules.functions import get_gmt_offset_from_list
-from modules.functions import load_input_dataframe
-from modules.functions import filter_sites
-from modules.functions import create_site_system_dict
-from modules.functions import initialize_results_df
+from modules.script_functions import run_failsafe_pipeline
+from modules.script_functions import resume_run
+from modules.script_functions import get_tag
+from modules.script_functions import load_data
+from modules.script_functions import get_lon_from_list
+from modules.script_functions import get_lat_from_list
+from modules.script_functions import get_orientation_from_list
+from modules.script_functions import get_gmt_offset_from_list
+from modules.script_functions import load_input_dataframe
+from modules.script_functions import filter_sites
+from modules.script_functions import create_site_system_dict
+from modules.script_functions import initialize_results_df
 from modules.create_constellation_site_list import create_constellation_site_list
-from modules.create_constellation_site_list import check_signal_availability
+from modules.create_constellation_site_list import check_csv_for_signal
 
 
 def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_column_id, checked_systems,
@@ -25,12 +25,18 @@ def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_co
         if sys_id not in checked_systems:
             print(site_id, sys_id)
             sys_tag = get_tag(dh, data_source, power_column_id, sys_id)
-
-            manual_time_shift = df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0]
+            cols = df_site.columns
+            if 'time_shift_manual' in cols:
+                manual_time_shift = df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0]
+            else:
+                manual_time_shift = None
             lon = get_lon_from_list(df_site, sys_id)
             lat = get_lat_from_list(df_site, sys_id)
             tilt, azim = get_orientation_from_list(df_site, sys_id)
-            gmt_offset = get_gmt_offset_from_list(df_site, sys_id)
+            if 'gmt_offset' in cols:
+                gmt_offset = get_gmt_offset_from_list(df_site, sys_id)
+            else:
+                gmt_offset = None
             passes_pipeline = True
 
             try:
@@ -91,14 +97,23 @@ if __name__ == '__main__':
     power_column_id = str(sys.argv[2])
     input_file = str(sys.argv[3])
     output_file = str(sys.argv[4])
-    if input_file is None:
-        s3_bucket = str(sys.arg[5])
-        prefix = str(sys.arg[6])
+    if input_file == 'generate':
+        s3_location = str(sys.argv[5])
+        s3_bucket = str(sys.argv[6])
+        prefix = str(sys.argv[7])
+        check_csv_files = str(sys.argv[8])
     full_df, checked_systems, start_at = resume_run(output_file)
-    if input_file is None:
-        input_df = create_constellation_site_list(s3_bucket, prefix)
-        input_df = check_signal_availability(input_df, power_column_id)
+
+    if input_file == 'generate':
+        print('Generating site list')
+        input_df = create_constellation_site_list(s3_location, s3_bucket, prefix)
+        if check_csv_files == 'True':
+            print('Checking csv files')
+            input_df = check_csv_for_signal(input_df, power_column_id)
+        input_df.to_csv('./generated_site_list.csv')
+        print('Site list generated and saved as ./generated_site_list')
     else:
+        print('Using input file' + ' ' + input_file)
         input_df = load_input_dataframe(input_file)
 
     df_site = filter_sites(input_df)

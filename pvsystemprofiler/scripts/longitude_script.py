@@ -2,14 +2,14 @@ import sys
 import pandas as pd
 import numpy as np
 from time import time
-from modules.functions import resume_run
-from modules.functions import create_site_system_dict
-from modules.functions import load_data
-from modules.functions import get_tag
-from modules.functions import get_lon_from_report
-from modules.functions import get_gmt_offset_from_report
-from modules.functions import get_inspected_time_shift
-from modules.functions import run_failsafe_pipeline
+from modules.script_functions import resume_run
+from modules.script_functions import create_site_system_dict
+from modules.script_functions import load_data
+from modules.script_functions import get_tag
+from modules.script_functions import get_lon_from_report
+from modules.script_functions import get_gmt_offset_from_report
+from modules.script_functions import get_inspected_time_shift
+from modules.script_functions import run_failsafe_pipeline
 sys.path.append('/home/ubuntu/github/pv-system-profiler/')
 sys.path.append('/home/ubuntu/github/solar-data-tools/')
 

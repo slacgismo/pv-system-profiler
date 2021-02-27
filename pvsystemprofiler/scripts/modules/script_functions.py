@@ -1,11 +1,9 @@
 import os
 import sys
 import json
+import boto3
 import numpy as np
 import pandas as pd
-
-sys.path.append('/home/ubuntu/github/pv-system-profiler/')
-sys.path.append('/home/ubuntu/github/solar-data-tools/')
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
@@ -102,8 +100,15 @@ def load_input_dataframe(list_file):
 
 
 def filter_sites(df):
-    mask1 = df['csv_complete'] is True
-    mask2 = df['json complete'] is True
+    cols = df.columns
+    if 'data_available_csv' in cols:
+        mask1 = df['data_available_csv'] == True
+    else:
+        mask1 = True
+    if 'data_available_json' in cols:
+        mask2 = df['data_available_json'] == True
+    else:
+        mask2 = True
     mask3 = mask1 & mask2
     return df[mask3]
 
