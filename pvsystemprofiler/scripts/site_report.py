@@ -26,7 +26,7 @@ def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_co
             sys_tag = get_tag(dh, data_source, power_column_id, sys_id)
             cols = df_site.columns
             if sys_tag in cols:
-                print(site_id, sys_id)
+                #print(site_id, sys_id)
                 if 'time_shift_manual' in cols:
                     manual_time_shift = df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0]
                 else:
@@ -72,6 +72,20 @@ def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_co
 
 def main(data_source, power_column_id, df_site, sites, site_system_dict, start_at, full_df, partial_df,
          checked_systems, output_file):
+    '''
+
+    :param data_source:
+    :param power_column_id:
+    :param df_site:
+    :param sites:
+    :param site_system_dict:
+    :param start_at:
+    :param full_df:
+    :param partial_df:
+    :param checked_systems:
+    :param output_file:
+    :return:
+    '''
     site_run_time = 0
     total_time = 0
     for site_ix, site_id in enumerate(sites[start_at:]):
@@ -94,6 +108,20 @@ def main(data_source, power_column_id, df_site, sites, site_system_dict, start_a
 
 
 if __name__ == '__main__':
+    '''
+        :param data_source: String. Source of power data. 'constellation'. 
+        :param power_column_id: String. Label of power columns in csv file. 'ac_power_inv_').
+        :param input file: String. Absolute path to csv file containing the site list. Option 'generate' generates the site 
+        list. 
+        :param output_file: String. Absolute path to csv containing report results.
+        :s3_location: String. Read only when 'input_file='generate. Absolute path to s3 folder containing json and csv 
+        files with system information. For 's3://my_bucket/a/b/c' bucket= 'my_bucket'.
+        :prefix: String. Read only when 'input_file='generate. Prefix to s3 folder containing json and csv files with 
+        system information. For my_bucket prefix= 'a/b/c/.
+        :check_csv_files: Boolean. When True, csv files are checked to see if they contain the power column id as 
+        specified in the corresponding json file.   
+        :prefix: Path to directory. For my_bucket path to list c contents is 'a/b/c/
+        '''
     data_source = str(sys.argv[1])
     power_column_id = str(sys.argv[2])
     input_file = str(sys.argv[3])
@@ -109,7 +137,6 @@ if __name__ == '__main__':
         print('Generating site list')
         input_df = create_constellation_site_list(s3_location, s3_bucket, prefix)
         if check_csv_files == 'True':
-            print('Checking csv files')
             input_df = check_csv_for_signal(input_df, power_column_id)
         input_df.to_csv('./generated_site_list.csv')
         print('Site list generated and saved as ./generated_site_list')
@@ -118,10 +145,8 @@ if __name__ == '__main__':
         input_df = load_input_dataframe(input_file)
 
     df_site = filter_sites(input_df)
-    print(df_site.head())
 
     sites, site_system_dict = create_site_system_dict(df_site)
-    print(sites)
     partial_df = initialize_results_df()
 
     main(data_source, power_column_id, df_site, sites, site_system_dict, start_at, full_df, partial_df,

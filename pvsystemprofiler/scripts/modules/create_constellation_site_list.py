@@ -57,9 +57,8 @@ def create_constellation_site_list(location, s3_bucket, prefix):
                                       'data_available_json'])
     i = 0
     for site_ix, site_id in enumerate(sites):
-        progress(site_ix, len(sites), 'Checking json files', bar_length=20)
+        progress(site_ix, len(sites), 'Reading json files', bar_length=20)
         cropped_site = re.split("[/._]", site_id)[2]
-        #print(cropped_site)
         for line in smart_open(location + cropped_site + '_system_details.json', 'rb'):
             file_json = json.loads(line)
             if len(file_json['Inverters']) == 0:
@@ -104,5 +103,5 @@ def create_constellation_site_list(location, s3_bucket, prefix):
 
                     site_list.loc[len(site_list)] = site, system, loc_param[0], loc_param[1], or_param[0], or_param[1], \
                                                     zc, jsonc
-    progress(len(sites), len(sites), 'Checking json files', bar_length=20)
+    progress(len(sites), len(sites), 'Reading json files', bar_length=20)
     return site_list
