@@ -23,49 +23,50 @@ def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_co
                      site_system_dict, site_id):
     for sys_ix, sys_id in enumerate(site_system_dict[site_id]):
         if sys_id not in checked_systems:
-            print(site_id, sys_id)
             sys_tag = get_tag(dh, data_source, power_column_id, sys_id)
             cols = df_site.columns
-            if 'time_shift_manual' in cols:
-                manual_time_shift = df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0]
-            else:
-                manual_time_shift = None
-            lon = get_lon_from_list(df_site, sys_id)
-            lat = get_lat_from_list(df_site, sys_id)
-            tilt, azim = get_orientation_from_list(df_site, sys_id)
-            if 'gmt_offset' in cols:
-                gmt_offset = get_gmt_offset_from_list(df_site, sys_id)
-            else:
-                gmt_offset = None
-            passes_pipeline = True
+            if sys_tag in cols:
+                print(site_id, sys_id)
+                if 'time_shift_manual' in cols:
+                    manual_time_shift = df_site.loc[df_site['system'] == sys_id, 'time_shift_manual'].values[0]
+                else:
+                    manual_time_shift = None
+                lon = get_lon_from_list(df_site, sys_id)
+                lat = get_lat_from_list(df_site, sys_id)
+                tilt, azim = get_orientation_from_list(df_site, sys_id)
+                if 'gmt_offset' in cols:
+                    gmt_offset = get_gmt_offset_from_list(df_site, sys_id)
+                else:
+                    gmt_offset = None
+                passes_pipeline = True
 
-            try:
-                run_failsafe_pipeline(dh, df, sys_tag)
-            except ValueError:
-                passes_pipeline = False
+                try:
+                    run_failsafe_pipeline(dh, df, sys_tag)
+                except ValueError:
+                    passes_pipeline = False
 
-            v1 = site_id
-            v2 = sys_id
-            v3 = lon
-            v4 = lat
-            v5 = tilt
-            v6 = azim
-            v7 = gmt_offset
-            v8 = dh.num_days
-            v9 = dh.capacity_estimate
-            v10 = dh.data_sampling
-            v11 = dh.data_quality_score
-            v12 = dh.data_clearness_score
-            v13 = dh.inverter_clipping
-            v14 = dh.time_shifts
-            v15 = dh.tz_correction
-            v16 = dh.capacity_changes
-            v17 = dh.normal_quality_scores
-            v18 = manual_time_shift
-            v19 = passes_pipeline
-            partial_df.loc[0] = v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19
-            full_df = full_df.append(partial_df)
-            full_df.index = np.arange(len(full_df))
+                v1 = site_id
+                v2 = sys_id
+                v3 = lon
+                v4 = lat
+                v5 = tilt
+                v6 = azim
+                v7 = gmt_offset
+                v8 = dh.num_days
+                v9 = dh.capacity_estimate
+                v10 = dh.data_sampling
+                v11 = dh.data_quality_score
+                v12 = dh.data_clearness_score
+                v13 = dh.inverter_clipping
+                v14 = dh.time_shifts
+                v15 = dh.tz_correction
+                v16 = dh.capacity_changes
+                v17 = dh.normal_quality_scores
+                v18 = manual_time_shift
+                v19 = passes_pipeline
+                partial_df.loc[0] = v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19
+                full_df = full_df.append(partial_df)
+                full_df.index = np.arange(len(full_df))
     return full_df
 
 
@@ -88,7 +89,7 @@ def main(data_source, power_column_id, df_site, sites, site_system_dict, start_a
         total_time += site_run_time
 
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
-    progress(len(sites), len(sites), msg, bar_length=20)
+    progress(len(full_df), len(full_df), msg, bar_length=20)
     return
 
 
@@ -117,7 +118,10 @@ if __name__ == '__main__':
         input_df = load_input_dataframe(input_file)
 
     df_site = filter_sites(input_df)
+    print(df_site.head())
+
     sites, site_system_dict = create_site_system_dict(df_site)
+    print(sites)
     partial_df = initialize_results_df()
 
     main(data_source, power_column_id, df_site, sites, site_system_dict, start_at, full_df, partial_df,

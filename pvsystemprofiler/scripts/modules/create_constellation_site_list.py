@@ -5,6 +5,7 @@ import pandas as pd
 import re
 import json
 from solardatatools.dataio import load_constellation_data
+from solardatatools.utilities import progress
 
 sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
@@ -18,8 +19,9 @@ def extract_parameters_from_json(item, parameter_id):
 
 
 def check_csv_for_signal(df_in, power_identifier):
+
     df_out = df_in.copy()
-    df_out['data_available'] = True
+    df_out['data_available_csv'] = True
     sites = df_out['site'].unique().tolist()
     site_system_dict = {}
     for site_ix, site_id in enumerate(sites):
@@ -27,14 +29,15 @@ def check_csv_for_signal(df_in, power_identifier):
         site_system_dict[site_id] = systems_in_site
 
     for site_ix, site_id in enumerate(sites):
+        progress(site_ix, len(sites), 'Checking csv files', bar_length=20)
         df = load_constellation_data(file_id=site_id)
         cols = df.columns
         for sys_id in site_system_dict[site_id]:
             if sys_id != 'not available':
                 sys_tag = power_identifier + sys_id
                 if sys_tag not in cols:
-                    print(sys_tag)
                     df_in.loc[df_out['system'] == sys_id, 'data_available_csv'] = False
+        progress(len(sites), len(sites), 'Checking csv files', bar_length=20)
     return df_in
 
 
@@ -54,6 +57,7 @@ def create_constellation_site_list(location, s3_bucket, prefix):
                                       'data_available_json'])
     i = 0
     for site_ix, site_id in enumerate(sites):
+        progress(site_ix, len(sites), 'Checking json files', bar_length=20)
         cropped_site = re.split("[/._]", site_id)[2]
         #print(cropped_site)
         for line in smart_open(location + cropped_site + '_system_details.json', 'rb'):
@@ -100,4 +104,5 @@ def create_constellation_site_list(location, s3_bucket, prefix):
 
                     site_list.loc[len(site_list)] = site, system, loc_param[0], loc_param[1], or_param[0], or_param[1], \
                                                     zc, jsonc
+    progress(len(sites), len(sites), 'Checking json files', bar_length=20)
     return site_list
