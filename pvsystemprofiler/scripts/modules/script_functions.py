@@ -7,6 +7,7 @@ import pandas as pd
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
+
 def create_site_list(label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
     ll = len(label)
@@ -23,6 +24,7 @@ def create_site_list(label, location, s3_bucket, prefix):
                 system_id = col_label[ll:]
                 site_list.loc[len(site_list)] = site_id, system_id
     return site_list
+
 
 def enumerate_files(s3_bucket, prefix, extension='.csv'):
     #  "bucket: aws bucket name for 's3://my_bucket/a/b/c' bucket= my_bucket

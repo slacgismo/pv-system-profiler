@@ -12,11 +12,9 @@ from modules.script_functions import get_lat_from_list
 from modules.script_functions import get_orientation_from_list
 from modules.script_functions import get_gmt_offset_from_list
 from modules.script_functions import load_input_dataframe
-from modules.script_functions import filter_sites
 from modules.script_functions import create_site_system_dict
 from modules.script_functions import initialize_results_df
-from modules.create_constellation_site_list import create_constellation_site_list
-from modules.create_constellation_site_list import check_csv_for_signal
+from modules.create_constellation_site_list import create_site_list
 
 
 def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_column_id, checked_systems,
@@ -44,27 +42,11 @@ def evaluate_systems(df_site, df, dh, partial_df, full_df, data_source, power_co
                     run_failsafe_pipeline(dh, df, sys_tag)
                 except ValueError:
                     passes_pipeline = False
-
-                v1 = site_id
-                v2 = sys_id
-                v3 = lon
-                v4 = lat
-                v5 = tilt
-                v6 = azim
-                v7 = gmt_offset
-                v8 = dh.num_days
-                v9 = dh.capacity_estimate
-                v10 = dh.data_sampling
-                v11 = dh.data_quality_score
-                v12 = dh.data_clearness_score
-                v13 = dh.inverter_clipping
-                v14 = dh.time_shifts
-                v15 = dh.tz_correction
-                v16 = dh.capacity_changes
-                v17 = dh.normal_quality_scores
-                v18 = manual_time_shift
-                v19 = passes_pipeline
-                partial_df.loc[0] = v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19
+                results_list = [site_id, sys_id, lon, lat, tilt, azim, gmt_offset, dh.num_days, dh.capacity_estimate,
+                                dh.data_sampling, dh.data_quality_score, dh.data_clearness_score, dh.inverter_clipping,
+                                dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores,
+                                manual_time_shift, passes_pipeline]
+                partial_df.loc[0] = results_list
                 full_df = full_df.append(partial_df)
                 full_df.index = np.arange(len(full_df))
     return full_df
@@ -130,21 +112,18 @@ if __name__ == '__main__':
         s3_location = str(sys.argv[5])
         s3_bucket = str(sys.argv[6])
         prefix = str(sys.argv[7])
-        check_csv_files = str(sys.argv[8])
     full_df, checked_systems, start_at = resume_run(output_file)
 
     if input_file == 'generate':
         print('Generating site list')
-        input_df = create_constellation_site_list(s3_location, s3_bucket, prefix)
-        if check_csv_files == 'True':
-            input_df = check_csv_for_signal(input_df, power_column_id)
+        input_df = create_site_list(s3_location, s3_bucket, prefix)
         input_df.to_csv('./generated_site_list.csv')
         print('Site list generated and saved as ./generated_site_list')
     else:
         print('Using input file' + ' ' + input_file)
         input_df = load_input_dataframe(input_file)
 
-    df_site = filter_sites(input_df)
+    df_site = input_df
 
     sites, site_system_dict = create_site_system_dict(df_site)
     partial_df = initialize_results_df()
