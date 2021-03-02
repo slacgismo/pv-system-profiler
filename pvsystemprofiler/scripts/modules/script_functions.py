@@ -8,19 +8,21 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
 
-def create_site_list(label, location, s3_bucket, prefix):
+def create_site_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
     ll = len(label)
     site_list = pd.DataFrame(columns=['site', 'system'])
 
-    for file_id in file_list:
+    for file_id in file_list[:1]:
         file_name = file_id.split('/')[1]
         loc = location + file_name
         df = pd.read_csv(str(loc), index_col=0)
         cols = df.columns
         for col_label in cols:
             if col_label.find(label) != -1:
-                site_id = file_name.split('.')[0]
+                print(file_name)
+                i = file_name.find(file_label)
+                site_id = file_name[:i]
                 system_id = col_label[ll:]
                 site_list.loc[len(site_list)] = site_id, system_id
     return site_list
