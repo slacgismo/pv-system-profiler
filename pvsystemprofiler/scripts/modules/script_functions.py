@@ -7,14 +7,30 @@ import pandas as pd
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
+def create_site_list(label, location, s3_bucket, prefix):
+    file_list = enumerate_files(s3_bucket, prefix)
+    ll = len(label)
+    site_list = pd.DataFrame(columns=['site', 'system'])
 
-def enumerate_files(s3_bucket, prefix):
+    for file_id in file_list:
+        file_name = file_id.split('/')[1]
+        loc = location + file_name
+        df = pd.read_csv(str(loc), index_col=0)
+        cols = df.columns
+        for col_label in cols:
+            if col_label.find(label) != -1:
+                site_id = file_name.split('.')[0]
+                system_id = col_label[ll:]
+                site_list.loc[len(site_list)] = site_id, system_id
+    return site_list
+
+def enumerate_files(s3_bucket, prefix, extension='.csv'):
     #  "bucket: aws bucket name for 's3://my_bucket/a/b/c' bucket= my_bucket
     # prefix: path to directory. For my_bucket path to list c contents is 'a/b/c/
     s3 = boto3.client('s3')
     output_list = []
     for obj in s3.list_objects_v2(Bucket=s3_bucket, Prefix=prefix)['Contents']:
-        if (obj['Key']).find('.csv') != -1:
+        if (obj['Key']).find(extension) != -1:
             output_list.append(obj['Key'])
     return output_list
 
