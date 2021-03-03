@@ -8,23 +8,27 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
 
+def load_generic_data(location, file_label, file_id):
+    to_read = location + file_id + file_label + '.csv'
+    df = pd.read_csv(to_read, index_col=0)
+    return df
+
+
 def create_site_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
-    ll = len(label)
+    ll = len(power_label)
     site_list = pd.DataFrame(columns=['site', 'system'])
 
     for file_id in file_list[:1]:
         file_name = file_id.split('/')[1]
-        loc = location + file_name
-        df = pd.read_csv(str(loc), index_col=0)
+        i = file_name.find(file_label)
+        file_id = file_name[:i]
+        df = load_generic_data(location, file_label, file_id)
         cols = df.columns
         for col_label in cols:
-            if col_label.find(label) != -1:
-                print(file_name)
-                i = file_name.find(file_label)
-                site_id = file_name[:i]
+            if col_label.find(power_label) != -1:
                 system_id = col_label[ll:]
-                site_list.loc[len(site_list)] = site_id, system_id
+                site_list.loc[len(site_list)] = file_id, system_id
     return site_list
 
 
@@ -143,14 +147,19 @@ def create_site_system_dict(df):
 
 
 def initialize_results_df():
-    p_df = pd.DataFrame(columns=['site', 'system', 'longitude', 'latitude', 'tilt', 'azimuth', 'gmt_offset', 'length',
-                                 'capacity_estimate', 'data_sampling', 'data quality_score', 'data clearness_score',
-                                 'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
-                                 'capacity_changes', 'normal_quality_scores', 'manual_time_shift', 'passes pipeline'])
+    p_df = pd.DataFrame(columns=['site', 'system', 'length', 'capacity_estimate', 'data_sampling', 'data quality_score',
+                                 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
+                                 'time_zone_correction', 'capacity_changes', 'normal_quality_scores',
+                                 'passes pipeline'])
     return p_df
 
 
 def load_data(data_source, site_id):
+    for file_id in file_list:
+        file_name = file_id.split('/')[1]
+        loc = location + file_name
+        df = pd.read_csv(str(loc), index_col=0)
+
     if data_source == 'constellation':
         df = load_constellation_data(file_id=site_id)
     if data_source == 'source_2':

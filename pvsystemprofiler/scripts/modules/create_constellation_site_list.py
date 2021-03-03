@@ -19,7 +19,6 @@ def extract_parameters_from_json(item, parameter_id):
 
 
 def check_csv_for_signal(df_in, power_identifier):
-
     df_out = df_in.copy()
     df_out['data_available_csv'] = True
     sites = df_out['site'].unique().tolist()
