@@ -19,7 +19,7 @@ def create_site_list(file_label, power_label, location, s3_bucket, prefix):
     ll = len(power_label)
     site_list = pd.DataFrame(columns=['site', 'system'])
 
-    for file_id in file_list[:1]:
+    for file_id in file_list:
         file_name = file_id.split('/')[1]
         i = file_name.find(file_label)
         file_id = file_name[:i]
