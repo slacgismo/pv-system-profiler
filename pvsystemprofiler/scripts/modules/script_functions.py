@@ -8,8 +8,8 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 
 
-def load_generic_data(location, file_label, file_id):
-    to_read = location + file_id + file_label + '.csv'
+def load_generic_data(location, file_label, file_id, extension='.csv'):
+    to_read = location + file_id + file_label + extension
     df = pd.read_csv(to_read, index_col=0)
     return df
 
