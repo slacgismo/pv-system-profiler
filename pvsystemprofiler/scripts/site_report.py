@@ -15,55 +15,60 @@ from modules.script_functions import load_input_dataframe
 from modules.script_functions import create_system_dict
 from modules.script_functions import initialize_results_df
 from modules.script_functions import create_system_list
+from modules.script_functions import create_site_label
+from modules.script_functions import enumerate_files
+import pandas as pd
+
+def evaluate_systems(df, power_column_label, site_id):
+    partial_df = pd.DataFrame(columns=['site', 'system', 'passes pipeline'])
+    ll = len(power_column_label)
+    cols = df.columns
+    for col_label in cols:
+        if col_label.find(power_column_label) != -1:
+            system_id = col_label[ll:]
+            sys_tag = power_column_label + system_id
+            dh = DataHandler(df)
+            passes_pipeline = True
+
+            results_list = [site_id, system_id, passes_pipeline]
+            partial_df.loc[0] = results_list
+    return partial_df
 
 
-def evaluate_systems(df, partial_df, full_df, power_column_label, checked_systems, site_system_dict, site_id):
-
-    dh = DataHandler(df)
-    for sys_ix, sys_id in enumerate(site_system_dict[site_id]):
-        if sys_id not in checked_systems:
-            sys_tag = power_column_label + str(sys_id)
-            cols = df.columns
-            if sys_tag in cols:
-                passes_pipeline = True
-                print(site_id, sys_id)
-                try:
-                    run_failsafe_pipeline(dh, df, sys_tag)
-                except ValueError:
-                    passes_pipeline = False
-                results_list = [site_id, sys_id, dh.num_days, dh.capacity_estimate, dh.data_sampling,
-                                dh.data_quality_score, dh.data_clearness_score, dh.inverter_clipping,
-                                dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores,
-                                passes_pipeline]
-                partial_df.loc[0] = results_list
-                full_df = full_df.append(partial_df)
-                full_df.index = np.arange(len(full_df))
-    return full_df
 
 
-def main(s3_location, file_label, power_column_label, site_system_dict, start_at, full_df, partial_df,
+def main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_at, full_df,
          checked_systems, output_file):
+
+
     site_run_time = 0
     total_time = 0
-    sites = list(set(site_system_dict.keys()))
-    for site_ix, site_id in enumerate(sites[start_at:]):
-
+    file_list = enumerate_files(s3_bucket, prefix)
+    file_list = file_list[:5]
+    for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
+        progress(file_ix, len(file_list), msg, bar_length=20)
 
-        progress(site_ix, len(sites), msg, bar_length=20)
+        file_name = file_id.split('/')[1]
+        i = file_name.find(file_label)
+        site_id = file_name[:i]
         df = load_generic_data(s3_location, file_label, site_id)
-        full_df = evaluate_systems(df, partial_df, full_df, power_column_label, checked_systems,
-                                   site_system_dict, site_id)
+        partial_df = evaluate_systems(df, power_column_label, site_id)
 
+        full_df = full_df.append(partial_df)
+        full_df.index = np.arange(len(full_df))
         full_df.to_csv(output_file)
         t1 = time()
         site_run_time = t1 - t0
         total_time += site_run_time
 
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
-    progress(len(full_df), len(full_df), msg, bar_length=20)
+    progress(len(file_list), len(file_list), msg, bar_length=20)
     return
+
+
+
 
 
 if __name__ == '__main__':
@@ -86,18 +91,17 @@ if __name__ == '__main__':
     s3_bucket = str(sys.argv[6])
     prefix = str(sys.argv[7])
     full_df, checked_systems, start_at = resume_run(output_file)
-    if input_file == 'generate':
-        input_df = create_system_list(file_label, power_column_label, s3_location, s3_bucket, prefix)
-        input_df.to_csv('./generated_system_list.csv')
-        print('System list generated and saved as ./generated_system_list')
-    else:
-        print('Using input file' + ' ' + input_file)
-        input_df = load_input_dataframe(input_file)
+    #if input_file == 'generate':
+    #    input_df = create_system_list(file_label, power_column_label, s3_location, s3_bucket, prefix)
+    #    input_df.to_csv('./generated_system_list.csv')
+    #    print('System list generated and saved as ./generated_system_list')
+    #else:
+    #    print('Using input file' + ' ' + input_file)
+    #    input_df = load_input_dataframe(input_file)
 
     # df_site = input_df
     #
     # sites, site_system_dict = create_system_dict(df_site)
-    # partial_df = initialize_results_df()
-    #
-    # main(s3_location, file_label, power_column_label, site_system_dict, start_at, full_df, partial_df,
-    #      checked_systems, output_file)
+
+    main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_at, full_df,
+          checked_systems, output_file)

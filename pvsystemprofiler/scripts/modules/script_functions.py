@@ -14,6 +14,12 @@ def load_generic_data(location, file_label, file_id, extension='.csv'):
     df = pd.read_csv(to_read, index_col=0, nrows=5)
     return df
 
+def create_site_label(file_id):
+    file_name = file_id.split('/')[1]
+    i = file_name.find(file_label)
+    file_id = file_name[:i]
+    return file_id
+
 
 def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
