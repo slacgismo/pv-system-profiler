@@ -12,9 +12,9 @@ from modules.script_functions import get_lat_from_list
 from modules.script_functions import get_orientation_from_list
 from modules.script_functions import get_gmt_offset_from_list
 from modules.script_functions import load_input_dataframe
-from modules.script_functions import create_site_system_dict
+from modules.script_functions import create_system_dict
 from modules.script_functions import initialize_results_df
-from modules.script_functions import create_site_list
+from modules.script_functions import create_system_list
 
 
 def evaluate_systems(df, partial_df, full_df, power_column_label, checked_systems, site_system_dict, site_id):
@@ -87,18 +87,17 @@ if __name__ == '__main__':
     prefix = str(sys.argv[7])
     full_df, checked_systems, start_at = resume_run(output_file)
     if input_file == 'generate':
-        print('Generating site list')
-        input_df = create_site_list(file_label, power_column_label, s3_location, s3_bucket, prefix)
-        input_df.to_csv('./generated_site_list.csv')
-        print('Site list generated and saved as ./generated_site_list')
+        input_df = create_system_list(file_label, power_column_label, s3_location, s3_bucket, prefix)
+        input_df.to_csv('./generated_system_list.csv')
+        print('System list generated and saved as ./generated_system_list')
     else:
         print('Using input file' + ' ' + input_file)
         input_df = load_input_dataframe(input_file)
 
-    df_site = input_df
-
-    sites, site_system_dict = create_site_system_dict(df_site)
-    partial_df = initialize_results_df()
-
-    main(s3_location, file_label, power_column_label, site_system_dict, start_at, full_df, partial_df,
-         checked_systems, output_file)
+    # df_site = input_df
+    #
+    # sites, site_system_dict = create_system_dict(df_site)
+    # partial_df = initialize_results_df()
+    #
+    # main(s3_location, file_label, power_column_label, site_system_dict, start_at, full_df, partial_df,
+    #      checked_systems, output_file)

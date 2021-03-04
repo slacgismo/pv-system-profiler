@@ -6,20 +6,22 @@ import numpy as np
 import pandas as pd
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
+from solardatatools.utilities import progress
 
 
 def load_generic_data(location, file_label, file_id, extension='.csv'):
     to_read = location + file_id + file_label + extension
-    df = pd.read_csv(to_read, index_col=0)
+    df = pd.read_csv(to_read, index_col=0, nrows=5)
     return df
 
 
-def create_site_list(file_label, power_label, location, s3_bucket, prefix):
+def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
     ll = len(power_label)
-    site_list = pd.DataFrame(columns=['site', 'system'])
+    system_list = pd.DataFrame(columns=['site', 'system'])
 
-    for file_id in file_list:
+    for file_ix, file_id in enumerate(file_list):
+        progress(file_ix, len(file_id), 'Generating system list', bar_length=20)
         file_name = file_id.split('/')[1]
         i = file_name.find(file_label)
         file_id = file_name[:i]
@@ -28,8 +30,9 @@ def create_site_list(file_label, power_label, location, s3_bucket, prefix):
         for col_label in cols:
             if col_label.find(power_label) != -1:
                 system_id = col_label[ll:]
-                site_list.loc[len(site_list)] = file_id, system_id
-    return site_list
+                system_list.loc[len(system_list)] = file_id, system_id
+        progress(len(file_id), len(file_id), 'Generating system list', bar_length=20)
+    return system_list
 
 
 def enumerate_files(s3_bucket, prefix, extension='.csv'):
@@ -137,7 +140,7 @@ def filter_sites(df):
     return df[mask3]
 
 
-def create_site_system_dict(df):
+def create_system_dict(df):
     site_list = df['site'].unique().tolist()
     ss_dict = {}
     for site in site_list:
