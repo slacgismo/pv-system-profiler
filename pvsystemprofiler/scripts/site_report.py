@@ -17,6 +17,7 @@ from modules.script_functions import initialize_results_df
 from modules.script_functions import create_system_list
 from modules.script_functions import create_site_label
 from modules.script_functions import enumerate_files
+from modules.script_functions import select_remaining_files
 import pandas as pd
 
 def evaluate_systems(df, power_column_label, site_id):
@@ -40,20 +41,11 @@ def main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_a
     site_run_time = 0
     total_time = 0
     file_list = enumerate_files(s3_bucket, prefix)
-    file_list = file_list[:5]
+    file_list = file_list[:7]
     df, checked_list, start_index = resume_run(output_file)
 
-    print(start_index)
 
-    if start_index != 0:
-        last_read_file = df.loc[len(df) - 1, 'site'] + file_label + ext
-        for site_ix, site_id in enumerate(file_list):
-            file_id = site_id.split('/')[1]
-            if file_id == last_read_file:
-                start_at = site_ix
-            else:
-                start_at = 0
-    file_list = file_list[start_index:]
+    file_list = select_remaining_files(start_at, file_list, df, file_label, ext)
 
     print(file_list)
     #print(df, start_at)

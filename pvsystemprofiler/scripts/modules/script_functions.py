@@ -9,6 +9,20 @@ from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
 
+def select_remaining_files(start_at, file_list, df, file_label, ext):
+    if start_at == 0:
+        return file_list
+    else:
+        last_read_file = df.loc[len(df) - 1, 'site'] + file_label + ext
+        for site_ix, site_id in enumerate(file_list):
+            file_id = site_id.split('/')[1]
+            if file_id == last_read_file:
+                start_at = site_ix
+            else:
+                start_at = 0
+        return file_list[start_at:]
+
+
 def load_generic_data(location, file_label, file_id, extension='.csv'):
     to_read = location + file_id + file_label + extension
     df = pd.read_csv(to_read, index_col=0, nrows=5)
