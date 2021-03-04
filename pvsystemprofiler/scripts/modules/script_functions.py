@@ -21,7 +21,7 @@ def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     system_list = pd.DataFrame(columns=['site', 'system'])
 
     for file_ix, file_id in enumerate(file_list):
-        progress(file_ix, len(file_id), 'Generating system list', bar_length=20)
+        progress(file_ix, len(file_list), 'Generating system list', bar_length=20)
         file_name = file_id.split('/')[1]
         i = file_name.find(file_label)
         file_id = file_name[:i]
@@ -31,7 +31,7 @@ def create_system_list(file_label, power_label, location, s3_bucket, prefix):
             if col_label.find(power_label) != -1:
                 system_id = col_label[ll:]
                 system_list.loc[len(system_list)] = file_id, system_id
-        progress(len(file_id), len(file_id), 'Generating system list', bar_length=20)
+    progress(len(file_list), len(file_list), 'Generating system list', bar_length=20)
     return system_list
 
 
