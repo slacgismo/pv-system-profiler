@@ -34,17 +34,32 @@ def evaluate_systems(df, power_column_label, site_id):
             partial_df.loc[0] = results_list
     return partial_df
 
-
-
-
 def main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_at, full_df,
-         checked_systems, output_file):
-
+         checked_systems, output_file, ext='.csv'):
 
     site_run_time = 0
     total_time = 0
     file_list = enumerate_files(s3_bucket, prefix)
     file_list = file_list[:5]
+    df, checked_list, start_index = resume_run(output_file)
+
+    print(start_index)
+
+    if start_index != 0:
+        last_read_file = df.loc[len(df) - 1, 'site'] + file_label + ext
+        for site_ix, site_id in enumerate(file_list):
+            file_id = site_id.split('/')[1]
+            if file_id == last_read_file:
+                start_at = site_ix
+            else:
+                start_at = 0
+    file_list = file_list[start_index:]
+
+    print(file_list)
+    #print(df, start_at)
+    #print(df.loc[start_at])
+
+
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
