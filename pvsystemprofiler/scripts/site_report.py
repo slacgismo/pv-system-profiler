@@ -54,7 +54,7 @@ def main(s3_location, file_label, power_column_label, full_df,
 
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
     file_list.sort()
-    print(previously_checked_site_list)
+
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)

@@ -13,7 +13,6 @@ from solardatatools.utilities import progress
 def get_s3_bucket_and_prefix(s3_location):
     if s3_location[-1] != '/':
         s3_location += '/'
-        print(s3_location)
     i = s3_location.find('//') + 2
     j = s3_location.find('/', i)
     bucket = s3_location[i:j]
@@ -35,7 +34,7 @@ def get_checked_sites(df, prefix, file_label, ext):
 def siteid_to_filename(sites, prefix, file_label, ext):
     checked_sites = []
     for site_id in sites:
-        file_name = prefix + '/' + site_id + file_label + ext
+        file_name = site_id + file_label + ext
         checked_sites.append(file_name)
     return checked_sites
 
