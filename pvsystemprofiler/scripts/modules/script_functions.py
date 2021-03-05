@@ -9,6 +9,18 @@ from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
 
+
+def get_s3_bucket_and_prefix(s3_location):
+    if s3_location[-1] != '/':
+        s3_location += '/'
+        print(s3_location)
+    i = s3_location.find('//') + 2
+    j = s3_location.find('/', i)
+    bucket = s3_location[i:j]
+    prefix = s3_location[j+1:-1]
+    return bucket, prefix
+
+
 def get_checked_sites(df, prefix, file_label, ext):
     if len(df) != 0:
         checked_sites = df['site'].unique().tolist()
@@ -62,13 +74,14 @@ def create_system_list(file_label, power_label, location, s3_bucket, prefix):
 
 
 def enumerate_files(s3_bucket, prefix, extension='.csv'):
-    #  "bucket: aws bucket name for 's3://my_bucket/a/b/c' bucket= my_bucket
-    # prefix: path to directory. For my_bucket path to list c contents is 'a/b/c/
     s3 = boto3.client('s3')
     output_list = []
     for obj in s3.list_objects_v2(Bucket=s3_bucket, Prefix=prefix)['Contents']:
         if (obj['Key']).find(extension) != -1:
-            output_list.append(obj['Key'])
+            file_name = obj['Key']
+            i = file_name.rfind('/')
+            file_name = file_name[i+1:]
+            output_list.append(file_name)
     return output_list
 
 
