@@ -56,7 +56,6 @@ def main(n_files, s3_location, file_label, power_column_label, full_df,
     file_list.sort()
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
-    print(file_list)
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
