@@ -9,24 +9,30 @@ from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
 
-def select_remaining_files(start_at, file_list, df, file_label, ext):
-    if start_at == 0:
-        return file_list
+def get_checked_sites(df, prefix, file_label, ext):
+    if len(df) != 0:
+        checked_sites = df['site'].unique().tolist()
+        checked_sites.sort()
+        checked_sites = checked_sites[:-1]
+        checked_sites_list = siteid_to_filename(checked_sites, prefix, file_label, ext)
     else:
-        last_read_file = df.loc[len(df) - 1, 'site'] + file_label + ext
-        for site_ix, site_id in enumerate(file_list):
-            file_id = site_id.split('/')[1]
-            if file_id == last_read_file:
-                start_at = site_ix
-            else:
-                start_at = 0
-        return file_list[start_at:]
+        checked_sites_list = []
+    return checked_sites_list
+
+
+def siteid_to_filename(sites, prefix, file_label, ext):
+    checked_sites = []
+    for site_id in sites:
+        file_name = prefix + '/' + site_id + file_label + ext
+        checked_sites.append(file_name)
+    return checked_sites
 
 
 def load_generic_data(location, file_label, file_id, extension='.csv'):
     to_read = location + file_id + file_label + extension
-    df = pd.read_csv(to_read, index_col=0, nrows=5)
+    df = pd.read_csv(to_read, index_col=0)
     return df
+
 
 def create_site_label(file_id):
     file_name = file_id.split('/')[1]
@@ -126,6 +132,20 @@ def get_tag(dh, ds, pc_id, sys_id):
 
 
 def resume_run(output_file):
+    if os.path.isfile(output_file):
+        df = pd.read_csv(output_file, index_col=0)
+        df['site'] = df['site'].apply(str)
+        df['system'] = df['system'].apply(str)
+        start_index = len(df['site'].unique()) - 1
+        checked_list = df['system'].unique().tolist()
+    else:
+        start_index = 0
+        df = pd.DataFrame()
+        checked_list = []
+    return df, checked_list, start_index
+
+
+def resume_run_from_file_list(output_file):
     if os.path.isfile(output_file):
         df = pd.read_csv(output_file, index_col=0)
         df['site'] = df['site'].apply(str)

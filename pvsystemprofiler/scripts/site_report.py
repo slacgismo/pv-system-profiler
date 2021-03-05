@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import sys
 from time import time
@@ -5,52 +6,54 @@ from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline
 from modules.script_functions import resume_run
-from modules.script_functions import get_tag
 from modules.script_functions import load_generic_data
-from modules.script_functions import get_lon_from_list
-from modules.script_functions import get_lat_from_list
-from modules.script_functions import get_orientation_from_list
-from modules.script_functions import get_gmt_offset_from_list
-from modules.script_functions import load_input_dataframe
-from modules.script_functions import create_system_dict
-from modules.script_functions import initialize_results_df
-from modules.script_functions import create_system_list
-from modules.script_functions import create_site_label
 from modules.script_functions import enumerate_files
-from modules.script_functions import select_remaining_files
-import pandas as pd
+from modules.script_functions import get_checked_sites
 
-def evaluate_systems(df, power_column_label, site_id):
-    partial_df = pd.DataFrame(columns=['site', 'system', 'passes pipeline'])
+
+def evaluate_systems(df, power_column_label, site_id, checked_systems):
+    partial_df = pd.DataFrame(columns=['site', 'system', 'passes pipeline', 'length', 'capacity_estimate',
+                                       'data_sampling', 'data quality_score', 'data clearness_score',
+                                       'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
+                                       'capacity_changes', 'normal_quality_scores'])
+
     ll = len(power_column_label)
     cols = df.columns
+    i = 0
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            sys_tag = power_column_label + system_id
-            dh = DataHandler(df)
-            passes_pipeline = True
+            if system_id not in checked_systems:
+                print(site_id, system_id)
+                i += 1
+                sys_tag = power_column_label + system_id
+                dh = DataHandler(df)
+                try:
+                    run_failsafe_pipeline(dh, df, sys_tag)
+                    passes_pipeline = True
+                except KeyError:
+                    passes_pipeline = False
 
-            results_list = [site_id, system_id, passes_pipeline]
-            partial_df.loc[0] = results_list
+                results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
+                                dh.data_sampling,
+                                dh.data_quality_score, dh.data_clearness_score, dh.inverter_clipping,
+                                dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores]
+
+                partial_df.loc[i] = results_list
     return partial_df
 
-def main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_at, full_df,
-         checked_systems, output_file, ext='.csv'):
 
+def main(s3_location, s3_bucket, prefix, file_label, power_column_label, full_df,
+         checked_systems, output_file, ext='.csv'):
     site_run_time = 0
     total_time = 0
-    file_list = enumerate_files(s3_bucket, prefix)
-    file_list = file_list[:7]
-    df, checked_list, start_index = resume_run(output_file)
+    full_site_list = enumerate_files(s3_bucket, prefix)
+    #full_site_list = full_site_list[:2]
 
+    previously_checked_site_list = get_checked_sites(full_df, prefix, file_label, ext)
 
-    file_list = select_remaining_files(start_at, file_list, df, file_label, ext)
-
-    print(file_list)
-    #print(df, start_at)
-    #print(df.loc[start_at])
-
+    file_list = list(set(full_site_list) - set(previously_checked_site_list))
+    file_list.sort()
 
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
@@ -58,10 +61,12 @@ def main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_a
         progress(file_ix, len(file_list), msg, bar_length=20)
 
         file_name = file_id.split('/')[1]
+
         i = file_name.find(file_label)
         site_id = file_name[:i]
         df = load_generic_data(s3_location, file_label, site_id)
-        partial_df = evaluate_systems(df, power_column_label, site_id)
+
+        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems)
 
         full_df = full_df.append(partial_df)
         full_df.index = np.arange(len(full_df))
@@ -73,9 +78,6 @@ def main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_a
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
     progress(len(file_list), len(file_list), msg, bar_length=20)
     return
-
-
-
 
 
 if __name__ == '__main__':
@@ -98,11 +100,11 @@ if __name__ == '__main__':
     s3_bucket = str(sys.argv[6])
     prefix = str(sys.argv[7])
     full_df, checked_systems, start_at = resume_run(output_file)
-    #if input_file == 'generate':
+    # if input_file == 'generate':
     #    input_df = create_system_list(file_label, power_column_label, s3_location, s3_bucket, prefix)
     #    input_df.to_csv('./generated_system_list.csv')
     #    print('System list generated and saved as ./generated_system_list')
-    #else:
+    # else:
     #    print('Using input file' + ' ' + input_file)
     #    input_df = load_input_dataframe(input_file)
 
@@ -110,5 +112,4 @@ if __name__ == '__main__':
     #
     # sites, site_system_dict = create_system_dict(df_site)
 
-    main(s3_location, s3_bucket, prefix, file_label, power_column_label, start_at, full_df,
-          checked_systems, output_file)
+    main(s3_location, s3_bucket, prefix, file_label, power_column_label, full_df, checked_systems, output_file)
