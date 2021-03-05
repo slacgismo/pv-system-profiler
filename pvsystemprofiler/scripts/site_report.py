@@ -43,7 +43,7 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems):
     return partial_df
 
 
-def main(s3_location, file_label, power_column_label, full_df,
+def main(n_files, s3_location, file_label, power_column_label, full_df,
          checked_systems, output_file, ext='.csv'):
     site_run_time = 0
     total_time = 0
@@ -54,7 +54,9 @@ def main(s3_location, file_label, power_column_label, full_df,
 
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
     file_list.sort()
-
+    if n_files != 'all':
+        file_list = file_list[:int(n_files)]
+    print(file_list)
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
@@ -79,17 +81,18 @@ def main(s3_location, file_label, power_column_label, full_df,
 
 if __name__ == '__main__':
     '''
+        :param n_files: number of files to read. If 'all' all files in folder are read.
         :param file_label:  Repeating portion of data files label. 
         :param power_column_label: Repeating portion of the power column label. 
         :param output_file: Absolute path to csv file containing report results.
         :s3_location: Absolute path to s3 location of files. 
         '''
-    s3_location = str(sys.argv[1])
-    file_label = str(sys.argv[2])
-    power_column_label = str(sys.argv[3])
-    output_file = str(sys.argv[4])
-
+    n_files = str(sys.argv[1])
+    s3_location = str(sys.argv[2])
+    file_label = str(sys.argv[3])
+    power_column_label = str(sys.argv[4])
+    output_file = str(sys.argv[5])
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
-    main(s3_location, file_label, power_column_label, full_df, checked_systems, output_file)
+    main(n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file)
