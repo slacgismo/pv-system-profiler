@@ -84,10 +84,11 @@ if __name__ == '__main__':
         :param output_file: Absolute path to csv containing report results.
         :s3_location: Absolute path to s3 location of files. 
         '''
-    file_label = str(sys.argv[1])
-    power_column_label = str(sys.argv[2])
-    output_file = str(sys.argv[3])
-    s3_location = str(sys.argv[4])
+    s3_location = str(sys.argv[1])
+    file_label = str(sys.argv[2])
+    power_column_label = str(sys.argv[3])
+    output_file = str(sys.argv[4])
+
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
