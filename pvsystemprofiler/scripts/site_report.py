@@ -24,7 +24,7 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems):
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
             if system_id not in checked_systems:
-                print(site_id, system_id)
+                #print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
                 dh = DataHandler(df)

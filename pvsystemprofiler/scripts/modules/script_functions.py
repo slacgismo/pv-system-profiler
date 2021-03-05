@@ -36,7 +36,7 @@ def siteid_to_filename(sites, prefix, file_label, ext):
     for site_id in sites:
         file_name = site_id + file_label + ext
         checked_sites.append(file_name)
-    return checked_sites
+    return checked_sites 
 
 
 def load_generic_data(location, file_label, file_id, extension='.csv'):
