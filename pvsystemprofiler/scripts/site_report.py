@@ -59,9 +59,7 @@ def main(s3_location, s3_bucket, prefix, file_label, power_column_label, full_df
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
         progress(file_ix, len(file_list), msg, bar_length=20)
-
         file_name = file_id.split('/')[1]
-
         i = file_name.find(file_label)
         site_id = file_name[:i]
         df = load_generic_data(s3_location, file_label, site_id)
@@ -83,8 +81,6 @@ def main(s3_location, s3_bucket, prefix, file_label, power_column_label, full_df
 if __name__ == '__main__':
     '''
         :param power_column_label: String. Label of power columns in csv file. 'ac_power_inv_').
-        :param input file: String. Absolute path to csv file containing the site list. Option 'generate' generates the site 
-        list. 
         :param output_file: String. Absolute path to csv containing report results.
         :s3_location: String. Read only when 'input_file='generate. Absolute path to s3 folder containing json and csv 
         files with system information. For 's3://my_bucket/a/b/c' bucket= 'my_bucket'.
@@ -94,22 +90,10 @@ if __name__ == '__main__':
         '''
     file_label = str(sys.argv[1])
     power_column_label = str(sys.argv[2])
-    input_file = str(sys.argv[3])
-    output_file = str(sys.argv[4])
-    s3_location = str(sys.argv[5])
-    s3_bucket = str(sys.argv[6])
-    prefix = str(sys.argv[7])
+    output_file = str(sys.argv[3])
+    s3_location = str(sys.argv[4])
+    s3_bucket = str(sys.argv[5])
+    prefix = str(sys.argv[6])
     full_df, checked_systems, start_at = resume_run(output_file)
-    # if input_file == 'generate':
-    #    input_df = create_system_list(file_label, power_column_label, s3_location, s3_bucket, prefix)
-    #    input_df.to_csv('./generated_system_list.csv')
-    #    print('System list generated and saved as ./generated_system_list')
-    # else:
-    #    print('Using input file' + ' ' + input_file)
-    #    input_df = load_input_dataframe(input_file)
-
-    # df_site = input_df
-    #
-    # sites, site_system_dict = create_system_dict(df_site)
 
     main(s3_location, s3_bucket, prefix, file_label, power_column_label, full_df, checked_systems, output_file)
