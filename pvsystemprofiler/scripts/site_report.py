@@ -81,7 +81,7 @@ if __name__ == '__main__':
     '''
         :param file_label:  Repeating portion of data files label. 
         :param power_column_label: Repeating portion of the power column label. 
-        :param output_file: Absolute path to csv containing report results.
+        :param output_file: Absolute path to csv file containing report results.
         :s3_location: Absolute path to s3 location of files. 
         '''
     s3_location = str(sys.argv[1])
