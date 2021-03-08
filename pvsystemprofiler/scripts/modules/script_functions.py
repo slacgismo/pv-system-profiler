@@ -226,10 +226,15 @@ def get_inspected_time_shift(df, sys_id):
     return int(df.loc[df['system'] == sys_id, 'manual_time_shift'].values[0])
 
 
-def run_failsafe_pipeline(dh_in, df_in, sys_tag):
+def run_failsafe_pipeline(dh_in, df_in, sys_tag, time_zone_correction):
+    if time_zone_correction == True:
+        tzc = True
+    else:
+        tzc = False
     try:
-        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=False, verbose=False)
+        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False)
     except:
         max_val = np.nanquantile(df_in[sys_tag], 0.95)
-        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=True, verbose=False, max_val=max_val * 3)
+        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False,
+                           max_val=max_val * 3)
     return

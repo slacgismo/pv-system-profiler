@@ -12,7 +12,7 @@ from modules.script_functions import get_checked_sites
 from modules.script_functions import get_s3_bucket_and_prefix
 from modules.script_functions import siteid_to_filename
 
-def evaluate_systems(df, power_column_label, site_id, checked_systems):
+def evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone_correction):
     partial_df = pd.DataFrame(columns=['site', 'system', 'passes pipeline', 'length', 'capacity_estimate',
                                        'data_sampling', 'data quality_score', 'data clearness_score',
                                        'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
@@ -29,7 +29,7 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems):
                 sys_tag = power_column_label + system_id
                 dh = DataHandler(df)
                 try:
-                    run_failsafe_pipeline(dh, df, sys_tag)
+                    run_failsafe_pipeline(dh, df, sys_tag, time_zone_correction)
                     passes_pipeline = True
                 except ValueError:
                     passes_pipeline = False
@@ -44,7 +44,7 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems):
 
 
 def main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
-         ext='.csv'):
+         time_zone_correction, ext='.csv'):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -72,7 +72,7 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
         site_id = file_id[:i]
         df = load_generic_data(s3_location, file_label, site_id)
 
-        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems)
+        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone_correction)
 
         full_df = full_df.append(partial_df)
         full_df.index = np.arange(len(full_df))
@@ -93,7 +93,8 @@ if __name__ == '__main__':
         :param file_label:  Repeating portion of data files label. 
         :param power_column_label: Repeating portion of the power column label. 
         :param output_file: Absolute path to csv file containing report results.
-        :s3_location: Absolute path to s3 location of files. 
+        :s3_location: Absolute path to s3 location of files.
+        :time_zone_correction: Boolean, states if time zone correction is performed when running the pipeline
         '''
     input_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
@@ -101,7 +102,9 @@ if __name__ == '__main__':
     file_label = str(sys.argv[4])
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
+    time_zone_correction = str(sys.argv[7])
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
-    main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file)
+    main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
+         time_zone_correction)
