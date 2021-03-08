@@ -10,7 +10,7 @@ from modules.script_functions import load_generic_data
 from modules.script_functions import enumerate_files
 from modules.script_functions import get_checked_sites
 from modules.script_functions import get_s3_bucket_and_prefix
-
+from modules.script_functions import siteid_to_filename
 
 def evaluate_systems(df, power_column_label, site_id, checked_systems):
     partial_df = pd.DataFrame(columns=['site', 'system', 'passes pipeline', 'length', 'capacity_estimate',
@@ -43,8 +43,8 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems):
     return partial_df
 
 
-def main(n_files, s3_location, file_label, power_column_label, full_df,
-         checked_systems, output_file, ext='.csv'):
+def main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
+         ext='.csv'):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -53,6 +53,14 @@ def main(n_files, s3_location, file_label, power_column_label, full_df,
     previously_checked_site_list = get_checked_sites(full_df, prefix, file_label, ext)
 
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
+
+    if input_file != 'None':
+        input_file_df = pd.read_csv(input_file, index_col=0)
+        site_list = input_file_df['site'].apply(str)
+        site_list = site_list.tolist()
+        input_file_list = siteid_to_filename(site_list, file_label, ext)
+        file_list = list(set(input_file_list) & set(file_list))
+
     file_list.sort()
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
@@ -80,18 +88,20 @@ def main(n_files, s3_location, file_label, power_column_label, full_df,
 
 if __name__ == '__main__':
     '''
+        :input_file :  csv file containing list of sites to be evaluated. 'None' if no input list.
         :param n_files: number of files to read. If 'all' all files in folder are read.
         :param file_label:  Repeating portion of data files label. 
         :param power_column_label: Repeating portion of the power column label. 
         :param output_file: Absolute path to csv file containing report results.
         :s3_location: Absolute path to s3 location of files. 
         '''
-    n_files = str(sys.argv[1])
-    s3_location = str(sys.argv[2])
-    file_label = str(sys.argv[3])
-    power_column_label = str(sys.argv[4])
-    output_file = str(sys.argv[5])
+    input_file = str(sys.argv[1])
+    n_files = str(sys.argv[2])
+    s3_location = str(sys.argv[3])
+    file_label = str(sys.argv[4])
+    power_column_label = str(sys.argv[5])
+    output_file = str(sys.argv[6])
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
-    main(n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file)
+    main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file)
