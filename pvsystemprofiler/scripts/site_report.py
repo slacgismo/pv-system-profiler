@@ -50,9 +50,10 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
     full_site_list = enumerate_files(s3_bucket, prefix)
 
-    previously_checked_site_list = get_checked_sites(full_df, prefix, file_label, ext)
+    previously_checked_site_list = get_checked_sites(full_df, file_label, ext)
 
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
+
 
     if input_file != 'None':
         input_file_df = pd.read_csv(input_file, index_col=0)
@@ -62,14 +63,19 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
         file_list = list(set(input_file_list) & set(file_list))
 
     file_list.sort()
+
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
         progress(file_ix, len(file_list), msg, bar_length=20)
-        i = file_id.find(file_label)
-        site_id = file_id[:i]
+        if file_label != '':
+            i = file_id.find(file_label)
+            site_id = file_id[:i]
+        else:
+            site_id = file_id.split('.')[0]
+
         df = load_generic_data(s3_location, file_label, site_id)
 
         partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone_correction)
@@ -88,13 +94,14 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
 
 if __name__ == '__main__':
     '''
-        :input_file :  csv file containing list of sites to be evaluated. 'None' if no input list.
+        :input_file :  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
         :param n_files: number of files to read. If 'all' all files in folder are read.
-        :param file_label:  Repeating portion of data files label. 
+        :s3_location: Absolute path to s3 location of files.
+        :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
         :param power_column_label: Repeating portion of the power column label. 
         :param output_file: Absolute path to csv file containing report results.
-        :s3_location: Absolute path to s3 location of files.
-        :time_zone_correction: Boolean, states if time zone correction is performed when running the pipeline
+        :time_zone_correction: String, 'True' or 'False', states if time zone correction is performed when running the 
+        pipeline
         '''
     input_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
@@ -103,6 +110,9 @@ if __name__ == '__main__':
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
     time_zone_correction = str(sys.argv[7])
+
+    if file_label == 'None':
+        file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
 

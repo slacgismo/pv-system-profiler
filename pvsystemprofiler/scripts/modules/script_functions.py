@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import boto3
 import numpy as np
@@ -20,7 +19,7 @@ def get_s3_bucket_and_prefix(s3_location):
     return bucket, prefix
 
 
-def get_checked_sites(df, prefix, file_label, ext):
+def get_checked_sites(df, file_label, ext):
     if len(df) != 0:
         checked_sites = df['site'].unique().tolist()
         checked_sites.sort()
