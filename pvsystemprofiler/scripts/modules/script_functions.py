@@ -1,12 +1,52 @@
 import os
 import json
 import boto3
+from smart_open import smart_open
 import numpy as np
 import pandas as pd
 from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
+
+def create_json_dict(json_list, location):
+    system_dict = {}
+    for file in json_list:
+        for line in smart_open(location + file, 'rb'):
+            file_json = json.loads(line)
+            if len(file_json['Inverters']) != 0:
+                for inv_id in file_json['Inverters']:
+                    system = file_json['Inverters'][inv_id]['inverter_id']
+                    system_dict[system] = file
+    return system_dict
+
+
+def extract_sys_parameters(file_name, system, location):
+    for line in smart_open(location + file_name, 'rb'):
+        file_json = json.loads(line)
+        site = file_name
+        if len(file_json['Inverters']) == 0:
+            parameters = [np.nan] * 5
+        else:
+            parameters = []
+            zc = file_json['Site']['location'][-5:]
+            zc = '00000' if not zc.isnumeric() else zc
+            parameters.append(zc)
+            for inv_id in file_json['Inverters']:
+                mount_id = 'Mount ' + inv_id.split(' ')[1]
+                sys_id = file_json['Inverters'][inv_id]['inverter_id']
+                if sys_id == system:
+                    for coord_ix, coord_id in enumerate(['longitude', 'latitude', 'tilt', 'azimuth']):
+                        try:
+                            if coord_id in ['longitude', 'latitude']:
+                                val = float(file_json['Site'][coord_id])
+                            if coord_id in ['tilt', 'azimuth']:
+                                val = file_json['Mount'][mount_id][coord_id]
+                        except KeyError:
+                            val = np.nan
+                        val = np.nan if val == '' else val
+                        parameters.append(val)
+        return parameters
 
 
 def get_s3_bucket_and_prefix(s3_location):
@@ -15,7 +55,7 @@ def get_s3_bucket_and_prefix(s3_location):
     i = s3_location.find('//') + 2
     j = s3_location.find('/', i)
     bucket = s3_location[i:j]
-    prefix = s3_location[j+1:-1]
+    prefix = s3_location[j + 1:-1]
     return bucket, prefix
 
 
@@ -78,7 +118,7 @@ def enumerate_files(s3_bucket, prefix, extension='.csv'):
         if (obj['Key']).find(extension) != -1:
             file_name = obj['Key']
             i = file_name.rfind('/')
-            file_name = file_name[i+1:]
+            file_name = file_name[i + 1:]
             output_list.append(file_name)
     return output_list
 

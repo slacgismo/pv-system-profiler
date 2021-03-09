@@ -11,12 +11,18 @@ from modules.script_functions import enumerate_files
 from modules.script_functions import get_checked_sites
 from modules.script_functions import get_s3_bucket_and_prefix
 from modules.script_functions import siteid_to_filename
+from modules.script_functions import create_json_dict
+from modules.script_functions import extract_sys_parameters
 
-def evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone_correction):
-    partial_df = pd.DataFrame(columns=['site', 'system', 'passes pipeline', 'length', 'capacity_estimate',
-                                       'data_sampling', 'data quality_score', 'data clearness_score',
-                                       'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
-                                       'capacity_changes', 'normal_quality_scores'])
+def evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone_correction, json_file_dict=None):
+    cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling', 'data quality_score',
+            'data clearness_score', 'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
+            'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude', 'latitude', 'tilt', 'azimuth']
+    if json_file_dict is None:
+        partial_df = pd.DataFrame(columns=cols[:-5])
+    else:
+        partial_df = pd.DataFrame(columns=cols)
+
     ll = len(power_column_label)
     cols = df.columns
     i = 0
@@ -39,12 +45,20 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone
                                 dh.data_quality_score, dh.data_clearness_score, dh.inverter_clipping,
                                 dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores]
 
+                if json_file_dict is not None:
+                    if system_id in json_file_dict.keys():
+                        source_file = json_file_dict[system_id]
+                        location_results = extract_sys_parameters(source_file, system_id, s3_location)
+                    else:
+                        location_results = [np.nan] * 5
+                    results_list += location_results
+
                 partial_df.loc[i] = results_list
     return partial_df
 
 
 def main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
-         time_zone_correction, ext='.csv'):
+         time_zone_correction, check_json, ext='.csv' ):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -54,6 +68,13 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
 
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
 
+    if check_json == 'True':
+        json_files = enumerate_files(s3_bucket, prefix, extension='.json')
+        print('Generating system list from json')
+        json_file_dict = create_json_dict(json_files, s3_location)
+        print('List generation completed')
+    else:
+        json_file_dict = None
 
     if input_file != 'None':
         input_file_df = pd.read_csv(input_file, index_col=0)
@@ -78,7 +99,8 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
 
         df = load_generic_data(s3_location, file_label, site_id)
 
-        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone_correction)
+        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems, time_zone_correction,
+                                      json_file_dict)
 
         full_df = full_df.append(partial_df)
         full_df.index = np.arange(len(full_df))
@@ -102,6 +124,8 @@ if __name__ == '__main__':
         :param output_file: Absolute path to csv file containing report results.
         :time_zone_correction: String, 'True' or 'False', states if time zone correction is performed when running the 
         pipeline
+        :check_json: String, 'True' or 'False'. Check json file for location information. 
+        pipeline
         '''
     input_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
@@ -110,11 +134,11 @@ if __name__ == '__main__':
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
     time_zone_correction = str(sys.argv[7])
-
+    check_json = str(sys.argv[8])
     if file_label == 'None':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
     main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
-         time_zone_correction)
+         time_zone_correction, check_json)
