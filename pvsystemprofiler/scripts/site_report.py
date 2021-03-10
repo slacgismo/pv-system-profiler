@@ -20,10 +20,11 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems, fix_time_
                      json_file_dict=None):
     cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling', 'data quality_score',
             'data clearness_score', 'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
-            'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude', 'latitude', 'tilt', 'azimuth']
+            'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude', 'latitude', 'tilt', 'azimuth',
+            'sys_id']
 
     if json_file_dict is None:
-        partial_df = pd.DataFrame(columns=cols[:-5])
+        partial_df = pd.DataFrame(columns=cols[:-6])
     else:
         partial_df = pd.DataFrame(columns=cols)
 
@@ -120,15 +121,15 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
 
 if __name__ == '__main__':
     '''
-        :input_file :  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
+        :input_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
         :param n_files: number of files to read. If 'all' all files in folder are read.
         :s3_location: Absolute path to s3 location of files.
         :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
         :param power_column_label: Repeating portion of the power column label. 
         :param output_file: Absolute path to csv file containing report results.
         :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
-        :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running the 
-        pipeline
+        :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running 
+        the pipeline
         :check_json: String, 'True' or 'False'. Check json file for location information. 
         pipeline
         '''

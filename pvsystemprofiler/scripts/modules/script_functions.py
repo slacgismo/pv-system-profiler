@@ -29,11 +29,10 @@ def create_json_dict(json_list, location):
 def extract_sys_parameters(file_name, system, location):
     for line in smart_open(location + file_name, 'rb'):
         file_json = json.loads(line)
-        site = file_name
+        parameters = []
         if len(file_json['Inverters']) == 0:
             parameters = [np.nan] * 5
         else:
-            parameters = []
             zc = file_json['Site']['location'][-5:]
             zc = '00000' if not zc.isnumeric() else zc
             parameters.append(zc)
@@ -51,6 +50,8 @@ def extract_sys_parameters(file_name, system, location):
                             val = np.nan
                         val = np.nan if val == '' else val
                         parameters.append(val)
+        file_id = file_json['System']['system_id']
+        parameters.append(file_id)
         return parameters
 
 
