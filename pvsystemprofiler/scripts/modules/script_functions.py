@@ -8,6 +8,11 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
+def string_to_boolean(value):
+    if value == 'True':
+        return True
+    elif value == 'False':
+        return False
 
 def create_json_dict(json_list, location):
     system_dict = {}
@@ -265,13 +270,10 @@ def get_inspected_time_shift(df, sys_id):
     return int(df.loc[df['system'] == sys_id, 'manual_time_shift'].values[0])
 
 
-def run_failsafe_pipeline(dh_in, df_in, sys_tag, time_zone_correction):
-    if time_zone_correction == True:
-        tzc = True
-    else:
-        tzc = False
+def run_failsafe_pipeline(dh_in, df_in, sys_tag, fts, tzc):
+
     try:
-        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False)
+        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
     except:
         max_val = np.nanquantile(df_in[sys_tag], 0.95)
         dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False,
