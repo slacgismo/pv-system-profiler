@@ -42,7 +42,7 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems, fix_time_
                 try:
                     run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
                     passes_pipeline = True
-                except ValueError:
+                except:
                     passes_pipeline = False
 
                 results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
