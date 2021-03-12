@@ -72,7 +72,7 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
     previously_checked_site_list = get_checked_sites(full_df, file_label, ext)
 
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
-
+   
     if check_json:
         json_files = enumerate_files(s3_bucket, prefix, extension='.json')
         print('Generating system list from json files')

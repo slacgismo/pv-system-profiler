@@ -33,8 +33,11 @@ def extract_sys_parameters(file_name, system, location):
         if len(file_json['Inverters']) == 0:
             parameters = [np.nan] * 5
         else:
-            zc = file_json['Site']['location'][-5:]
-            zc = '00000' if not zc.isnumeric() else zc
+            try:
+                zc = file_json['Site']['location'][-5:]
+                zc = '00000' if not zc.isnumeric() else zc
+            except KeyError:
+                zc = '00000'
             parameters.append(zc)
             for inv_id in file_json['Inverters']:
                 mount_id = 'Mount ' + inv_id.split(' ')[1]
