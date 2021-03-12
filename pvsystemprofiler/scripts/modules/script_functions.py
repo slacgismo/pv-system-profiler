@@ -8,6 +8,16 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
+
+def write_git_version_logfile(git_repository_location):
+    working_dir = os.getcwd()
+    for file_name in os.listdir(git_repository_location):
+        file = git_repository_location + file_name
+        if os.path.isdir(file):
+            command = 'git -C' + ' ' + file + ' ' + 'log -n 1 >' + working_dir + '/git_version_' + file_name + '.log'
+            os.system(command)
+    return
+
 def string_to_boolean(value):
     if value == 'True':
         return True
