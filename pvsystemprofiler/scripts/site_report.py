@@ -128,7 +128,6 @@ if __name__ == '__main__':
         :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
         :param power_column_label: Repeating portion of the power column label. 
         :param output_file: Absolute path to csv file containing report results.
-        :git_repository_location: absolute path to github repository location.
         :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
         :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running 
         the pipeline
@@ -141,17 +140,16 @@ if __name__ == '__main__':
     file_label = str(sys.argv[4])
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
-    git_repository_location = str(sys.argv[7])
-    fix_time_shifts = string_to_boolean(str(sys.argv[8]))
-    time_zone_correction = string_to_boolean(str(sys.argv[9]))
-    check_json = string_to_boolean(str(sys.argv[10]))
+    fix_time_shifts = string_to_boolean(str(sys.argv[7]))
+    time_zone_correction = string_to_boolean(str(sys.argv[8]))
+    check_json = string_to_boolean(str(sys.argv[9]))
 
     if file_label == 'None':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
-    write_git_version_logfile(git_repository_location)
+    #write_git_version_logfile(git_repository_location)
 
     main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
          fix_time_shifts, time_zone_correction, check_json)
