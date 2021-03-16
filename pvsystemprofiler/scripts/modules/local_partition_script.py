@@ -18,12 +18,12 @@ df_part = df_full.copy()
 df_part = df_part[start_index:end_index]
 df_part.to_csv(local_input_file)
 
-command = 'setsid nohup' + ' ' + python + ' ' + script_name
-arguments = data_source + ' ' \
-            + power_column_id + ' ' \
-            + local_input_file + ' ' \
-            + local_output_file + ' ' \
-            + time_shift_inspection
-
-os.system(command + ' ' + arguments + '>out &')
+# command = 'setsid nohup' + ' ' + python + ' ' + script_name
+# arguments = data_source + ' ' \
+#             + power_column_id + ' ' \
+#             + local_input_file + ' ' \
+#             + local_output_file + ' ' \
+#             + time_shift_inspection
+# print(command + ' ' + arguments + '>out &')
+# os.system(command + ' ' + arguments + '>out &')
 

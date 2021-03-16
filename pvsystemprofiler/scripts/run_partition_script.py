@@ -28,7 +28,8 @@ def combine_results(partitions, destination_dict):
 
 def check_completion(ssh_username, instance_id, ssh_key_file):
     commands = ["grep 'finished' ./out"]
-    commands_dict = remote_execute(user=ssh_username, instance_id=instance, key=ssh_key_file, shell_commands=commands)
+    commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
+                                   shell_commands=commands)
     if str(commands_dict["grep 'finished' ./out"][0]).find('finished') != -1:
         return True
     else:
@@ -60,6 +61,43 @@ def remote_execute(user, instance_id, key, shell_commands):
 
     c.close()
     return command_dict
+
+
+def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
+         aws_region, aws_client, script_name, script_location, data_source, power_column_id, time_shift_inspection):
+    n_part = len(ec2_instances)
+    ll = len(df) - 1
+    part_size = int(ll / n_part) + 1
+    i = 0
+    jj = 0
+    partitions = []
+    while jj < ll:
+        ii = i * part_size
+        jj = part_size * (i + 1)
+        if jj >= ll:
+            jj = ll
+        part = get_config(part_id=i, ix_0=ii, ix_n=ii + 3, n_part=n_part, ifl=input_file_location,
+                          ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
+                          ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
+                          scripts_location=script_location, ds=data_source, pcid=power_column_id,
+                          tsi=time_shift_inspection)
+
+        partitions.append(part)
+        create_partition(part)
+        i += 1
+
+    process_completed = False
+    # while not process_completed:
+    #     for part_ix, part_id in enumerate(partitions):
+    #         if part.process_completed is False:
+    #             process_completed = True
+    #             ssh_key_file = part_id.ssh_key_file
+    #             instance = part_id.public_ip_address
+    #             ssh_username = part_id.aws_username
+    #             part_id.process_completed = check_completion(ssh_username, instance, ssh_key_file)
+    #             process_completed = process_completed & part_id.process_completed
+    #     time.sleep(60)
+    # return process_completed
 
 
 if __name__ == '__main__':
@@ -100,42 +138,14 @@ if __name__ == '__main__':
                             gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection)
 
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
+    print(ec2_instances)
     df = pd.read_csv(input_file_location, index_col=0)
-    n_part = len(ec2_instances)
-    ll = len(df) - 1
-    part_size = int(ll / n_part) + 1
-    i = 0
-    jj = 0
-    partitions = []
-    processes = []
-    while jj < ll:
-        ii = i * part_size
-        jj = part_size * (i + 1)
-        if jj >= ll:
-            jj = ll
-        part = get_config(part_id=i, ix_0=ii, ix_n=ii + 3, n_part=n_part, ifl=input_file_location,
-                          ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
-                          ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
-                          scripts_location=script_location, ds=data_source, pcid=power_column_id,
-                          tsi=time_shift_inspection)
-
-        partitions.append(part)
-        create_partition(part)
-        i += 1
-
-    process_completed = False
-    while not process_completed:
-        for part_ix, part_id in enumerate(partitions):
-            if part.process_completed is False:
-                process_completed = True
-                ssh_key_file = part_id.ssh_key_file
-                instance = part_id.public_ip_address
-                ssh_username = part_id.aws_username
-                part_id.process_completed = check_completion(ssh_username, instance, ssh_key_file)
-                process_completed = process_completed & part_id.process_completed
-        time.sleep(60)
-
-    if process_completed:
-        get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
-        results_df = combine_results(partitions, main_class.global_output_directory)
-        results_df.to_csv(main_class.global_output_file)
+    print(df.head())
+    process_completed = main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
+                             aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
+                             power_column_id, time_shift_inspection)
+    #
+    # if process_completed:
+    #     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
+    #     results_df = combine_results(partitions, main_class.global_output_directory)
+    #     results_df.to_csv(main_class.global_output_file)

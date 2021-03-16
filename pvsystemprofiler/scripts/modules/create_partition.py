@@ -36,6 +36,7 @@ def create_partition(partition):
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     c.connect(hostname=instance, username=ssh_username, pkey=k, allow_agent=False, look_for_keys=False)
+
     for command in commands:
         print("running command: {}".format(command))
         stdin, stdout, stderr = c.exec_command(command)
