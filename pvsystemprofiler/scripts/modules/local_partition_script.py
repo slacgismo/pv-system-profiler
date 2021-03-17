@@ -34,4 +34,9 @@ arguments = local_input_file + ' '  \
             + fix_time_shifts + ' '\
             + time_zone_correction + ' ' \
             + check_json
-os.system(command + ' ' + arguments + '>out &')
+full_command = command + ' ' + arguments + '>out &'
+file1 = open(local_input_file.split('data')[0] + 'run_local_partition.sh', "w")
+file1.write('#!/bin/sh\n')
+file1.write(full_command)
+file1.close()
+#os.system(full_command)
