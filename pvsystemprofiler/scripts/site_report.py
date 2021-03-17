@@ -117,6 +117,7 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
 
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
     progress(len(file_list), len(file_list), msg, bar_length=20)
+    print('finished')
     return
 
 

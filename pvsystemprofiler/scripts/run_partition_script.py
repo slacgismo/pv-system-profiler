@@ -92,18 +92,22 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
         create_partition(part)
         i += 1
 
-    process_completed = False
-    # while not process_completed:
-    #     for part_ix, part_id in enumerate(partitions):
-    #         if part.process_completed is False:
-    #             process_completed = True
-    #             ssh_key_file = part_id.ssh_key_file
-    #             instance = part_id.public_ip_address
-    #             ssh_username = part_id.aws_username
-    #             part_id.process_completed = check_completion(ssh_username, instance, ssh_key_file)
-    #             process_completed = process_completed & part_id.process_completed
-    #     time.sleep(60)
-    # return process_completed
+    completion = [False] * len(partitions)
+    while False in completion:
+        for part_ix, part_id in enumerate(partitions):
+            if completion[part_ix] is False:
+                ssh_key_file = part_id.ssh_key_file
+                instance = part_id.public_ip_address
+                ssh_username = part_id.aws_username
+                new_value = check_completion(ssh_username, instance, ssh_key_file)
+                part_id.process_completed = new_value
+                completion[part_ix] = new_value
+        time.sleep(60)
+
+    get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
+    results_df = combine_results(partitions, main_class.global_output_directory)
+    results_df.to_csv(main_class.global_output_file)
+    return
 
 
 if __name__ == '__main__':
@@ -130,28 +134,41 @@ if __name__ == '__main__':
     check_json = str(sys.argv[21])
 
     '''
-    create_input_file: True if a csv file with the system's information to be generated. False if provided.
-    input file location: a csv file with the system's information.
-    ssh_key_file: .pem aws key file.
-    aws_username: aws linux username in instances.
-    aws_instance_name: aws name key used to identify instances to be used in the partitioning.
-    aws_region: region as specified by aws. For example: 'us-west-1'.
-    aws_client: in most cases "ec2".
-    script_name: name of the script that will be run in the partitioned data.
-    script_location: directory where script_name is located. 
-    output_folder location: Folder where local results will be saved. This folder will be created during script execution.
-    data_source: source of the data to be analyzed.
-    power_column_id: id given to the power column to be analyzed.
-    global_output_directory:  directory where consolidated results are saved.
-    global_output_file:  name of csv file with the consolidated results.
-    time_shift_inspection: indicate if manual time shift inspection should be taken into account for pipeline run.
+    :create_input_file: True if a csv file with the system's information to be generated. False if provided.
+    :input file location: a csv file with the system's information.
+    :ssh_key_file: .pem aws key file.
+    :aws_username: aws linux username in instances.
+    :aws_instance_name: aws name key used to identify instances to be used in the partitioning.
+    :aws_region: region as specified by aws. For example: 'us-west-1'.
+    :aws_client: in most cases "ec2".
+    :script_name: name of the script that will be run partitioned.
+    :script_location: directory where script_name is located. 
+    :output_folder location: Folder where local results will be saved. This folder will be created during script execution.
+    :data_source: source of the data to be analyzed.
+    :power_column_id: id given to the power column to be analyzed.
+    :global_output_directory:  directory where consolidated results are saved.
+    :global_output_file:  name of csv file with the consolidated results.
+    :time_shift_inspection: indicate if manual time shift inspection should be taken into account for pipeline run.
+    :s3_location: Absolute path to s3 location of files.
+    :file_label:  Repeating portion of data files label. If 'None', no file label is used. 
+    :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
+    :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running  the
+     pipeline
+    :check_json: String, 'True' or 'False'. Check json file for location information. 
+    
+    
+    
+    file_label = str(sys.argv[18])
+    fix_time_shifts = str(sys.argv[19])
+    time_zone_correction = str(sys.argv[20])
+    check_json = str(sys.argv[21])
     '''
 
     if create_input_file == 'True':
         bucket, prefix = get_s3_bucket_and_prefix(s3_location)
         site_list = enumerate_files(bucket, prefix)
         site_df = pd.DataFrame()
-        site_df['site'] = site_list[:16]
+        site_df['site'] = site_list[:8]
         site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
         site_df.to_csv('./generated_site_list.csv')
         bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
@@ -166,12 +183,10 @@ if __name__ == '__main__':
 
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
     df = pd.read_csv(input_file_location, index_col=0)
-    process_completed = main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
+
+    main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
                              aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
                              power_column_id, time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts,
                              time_zone_correction, check_json)
 
-    # if process_completed:
-    #     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
-    #     results_df = combine_results(partitions, main_class.global_output_directory)
-    #     results_df.to_csv(main_class.global_output_file)
+
