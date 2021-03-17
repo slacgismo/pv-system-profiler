@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from modules.config_partitions import get_config
 from modules.create_partition import create_partition
-
+from modules.script_functions import string_to_boolean
 
 def get_remote_output_files(partitions, username, destination_dict):
     os.system('mkdir' + ' ' + destination_dict)
@@ -64,7 +64,8 @@ def remote_execute(user, instance_id, key, shell_commands):
 
 
 def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, data_source, power_column_id, time_shift_inspection):
+         aws_region, aws_client, script_name, script_location, data_source, power_column_id, time_shift_inspection,
+         s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json):
     n_part = len(ec2_instances)
     ll = len(df) - 1
     part_size = int(ll / n_part) + 1
@@ -80,7 +81,9 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
                           scripts_location=script_location, ds=data_source, pcid=power_column_id,
-                          tsi=time_shift_inspection)
+                          tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
+                          fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
+                          check_json=check_json)
 
         partitions.append(part)
         create_partition(part)
@@ -115,6 +118,12 @@ if __name__ == '__main__':
     global_output_directory = str(sys.argv[12])
     global_output_file = str(sys.argv[13])
     time_shift_inspection = str(sys.argv[14])
+    s3_location = str(sys.argv[15])
+    n_files = str(sys.argv[16])
+    file_label = str(sys.argv[17])
+    fix_time_shifts = str(sys.argv[18])
+    time_zone_correction = str(sys.argv[19])
+    check_json = str(sys.argv[20])
 
     '''
     input file location: a csv file with the system's information.
@@ -135,15 +144,16 @@ if __name__ == '__main__':
 
     main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
-                            gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection)
+                            gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
+                            s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+                            time_zone_correction=time_zone_correction, check_json=check_json)
 
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
-    print(ec2_instances)
     df = pd.read_csv(input_file_location, index_col=0)
-    print(df.head())
     process_completed = main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
                              aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
-                             power_column_id, time_shift_inspection)
+                             power_column_id, time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts,
+                             time_zone_correction, check_json)
     #
     # if process_completed:
     #     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)

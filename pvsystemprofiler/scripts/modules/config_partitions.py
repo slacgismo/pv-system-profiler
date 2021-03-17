@@ -1,7 +1,9 @@
 class ConfigPartitions:
     def __init__(self, part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None,
                  au=None, ain=None, ar=None, ac=None, script_name=None, scripts_location=None, ds=None,
-                 pcid=None, gof=None, god=None, tsi=None):
+                 pcid=None, gof=None, god=None, tsi=None, s3l=None, n_files=None, file_label=None,
+                 fix_time_shifts=None, time_zone_correction=None, check_json=None):
+
         self.input_file_location = ifl
         self.ssh_key_file = skf
         self.aws_username = au
@@ -29,6 +31,15 @@ class ConfigPartitions:
             self.time_shift_inspection = tsi
             self.public_ip_address = ip_address
             self.process_completed = False
+            self.s3_location = s3l
+            self.n_files = n_files
+            self.file_label = file_label
+            self.fix_time_shifts = fix_time_shifts
+            self.time_zone_correction = time_zone_correction
+            self.check_json = check_json
+
+
+
         else:
             self.global_output_directory = god
             self.global_output_file = god + gof
@@ -36,10 +47,13 @@ class ConfigPartitions:
 
 def get_config(part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None, au=None,
                ain=None, ar=None, ac=None, script_name=None, scripts_location=None, ds=None, pcid=None, gof=None,
-               god=None, tsi=None):
+               god=None, tsi=None, s3l=None, n_files=None, file_label=None, fix_time_shifts=None,
+               time_zone_correction=None, check_json=None):
     if ix_0 is not None and ix_n is not None:
         return ConfigPartitions(part_id=part_id, ix_0=ix_0, ix_n=ix_n, n_part=n_part, ifl=ifl, ofl=ofl,
                                 ip_address=ip_address, skf=skf, au=au, ain=ain, ar=ar, ac=ac, script_name=script_name,
-                                scripts_location=scripts_location, ds=ds, pcid=pcid, tsi=tsi)
+                                scripts_location=scripts_location, ds=ds, pcid=pcid, tsi=tsi, s3l=s3l, n_files=n_files,
+                                file_label=file_label, fix_time_shifts=fix_time_shifts,
+                                time_zone_correction=time_zone_correction, check_json=check_json)
     else:
         return ConfigPartitions(ifl=ifl, skf=skf, au=au, ain=ain, ar=ar, ac=ac, gof=gof, god=god)

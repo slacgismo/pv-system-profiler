@@ -18,6 +18,12 @@ def create_partition(partition):
     data_source = partition.data_source
     power_column_id = partition.power_column_id
     time_shift_inspection = partition.time_shift_inspection
+    s3_location = partition.s3_location
+    n_files = partition.n_files
+    file_label = partition.file_label
+    fix_time_shifts = partition.fix_time_shifts
+    time_zone_correction = partition.time_zone_correction
+    check_json = partition.check_json
 
     commands = ['rm estimation* -rf',
                 'mkdir -p' + ' ' + local_working_folder + 'data',
@@ -30,7 +36,13 @@ def create_partition(partition):
                 + local_output_file + ' '
                 + data_source + ' '
                 + power_column_id + ' '
-                + time_shift_inspection]
+                + time_shift_inspection + ' '
+                + s3_location + ' '
+                + n_files + ' '
+                + file_label + ' '
+                + fix_time_shifts + ' '
+                + time_zone_correction + ' '
+                + check_json]
 
     k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
     c = paramiko.SSHClient()
