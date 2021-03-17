@@ -34,7 +34,4 @@ arguments = local_input_file + ' '  \
             + fix_time_shifts + ' '\
             + time_zone_correction + ' ' \
             + check_json
-print(' ')
-print(arguments)
-print(' ')
-#os.system(command + ' ' + arguments + '>out &')
+os.system(command + ' ' + arguments + '>out &')

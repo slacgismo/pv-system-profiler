@@ -1,6 +1,7 @@
 import sys
 import os
 import boto3
+import math
 import time
 import paramiko
 import numpy as np
@@ -69,8 +70,8 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
          aws_region, aws_client, script_name, script_location, data_source, power_column_id, time_shift_inspection,
          s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json):
     n_part = len(ec2_instances)
-    ll = len(df) - 1
-    part_size = int(ll / n_part) + 1
+    ll = len(df)
+    part_size = math.ceil(ll / n_part)
     i = 0
     jj = 0
     partitions = []
@@ -79,7 +80,7 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
         jj = part_size * (i + 1)
         if jj >= ll:
             jj = ll
-        part = get_config(part_id=i, ix_0=ii, ix_n=ii + 3, n_part=n_part, ifl=input_file_location,
+        part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=input_file_location,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
                           scripts_location=script_location, ds=data_source, pcid=power_column_id,
@@ -150,25 +151,26 @@ if __name__ == '__main__':
         bucket, prefix = get_s3_bucket_and_prefix(s3_location)
         site_list = enumerate_files(bucket, prefix)
         site_df = pd.DataFrame()
-        site_df['site'] = site_list
+        site_df['site'] = site_list[:16]
+        site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
         site_df.to_csv('./generated_site_list.csv')
         bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
         copy_to_s3('./generated_site_list.csv', bucket, prefix)
 
 
-    # main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
-    #                         ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
-    #                         gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
-    #                         s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
-    #                         time_zone_correction=time_zone_correction, check_json=check_json)
-    #
-    # ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
-    # df = pd.read_csv(input_file_location, index_col=0)
-    # process_completed = main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
-    #                          aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
-    #                          power_column_id, time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts,
-    #                          time_zone_correction, check_json)
-    #
+    main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
+                            ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
+                            gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
+                            s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+                            time_zone_correction=time_zone_correction, check_json=check_json)
+
+    ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
+    df = pd.read_csv(input_file_location, index_col=0)
+    process_completed = main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
+                             aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
+                             power_column_id, time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts,
+                             time_zone_correction, check_json)
+
     # if process_completed:
     #     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
     #     results_df = combine_results(partitions, main_class.global_output_directory)
