@@ -9,6 +9,12 @@ from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
 
+def copy_to_s3(input_file_name, bucket, destination_file_name):
+    content = open(input_file_name, 'rb')
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)
+
+
 def write_git_version_logfile(git_repository_location):
     working_dir = os.getcwd()
     for file_name in os.listdir(git_repository_location):
@@ -18,11 +24,13 @@ def write_git_version_logfile(git_repository_location):
             os.system(command)
     return
 
+
 def string_to_boolean(value):
     if value == 'True':
         return True
     elif value == 'False':
         return False
+
 
 def create_json_dict(json_list, location):
     system_dict = {}
@@ -285,7 +293,6 @@ def get_inspected_time_shift(df, sys_id):
 
 
 def run_failsafe_pipeline(dh_in, df_in, sys_tag, fts, tzc):
-
     try:
         dh_in.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
     except:
