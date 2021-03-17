@@ -68,7 +68,7 @@ def remote_execute(user, instance_id, key, shell_commands):
 
 
 def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, data_source, power_column_id, time_shift_inspection,
+         aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection,
          s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json):
     n_part = len(ec2_instances)
     ll = len(df)
@@ -84,11 +84,9 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
         part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=input_file_location,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
-                          scripts_location=script_location, ds=data_source, pcid=power_column_id,
-                          tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
-                          fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
-                          check_json=check_json)
-
+                          scripts_location=script_location, pcid=power_column_id, tsi=time_shift_inspection,
+                          s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+                          time_zone_correction=time_zone_correction, check_json=check_json)
         partitions.append(part)
         create_partition(part)
         i += 1
@@ -122,17 +120,16 @@ if __name__ == '__main__':
     script_name = str(sys.argv[8])
     script_location = str(sys.argv[9])
     output_folder_location = str(sys.argv[10])
-    data_source = str(sys.argv[11])
-    power_column_id = str(sys.argv[12])
-    global_output_directory = str(sys.argv[13])
-    global_output_file = str(sys.argv[14])
-    time_shift_inspection = str(sys.argv[15])
-    s3_location = str(sys.argv[16])
-    n_files = str(sys.argv[17])
-    file_label = str(sys.argv[18])
-    fix_time_shifts = str(sys.argv[19])
-    time_zone_correction = str(sys.argv[20])
-    check_json = str(sys.argv[21])
+    power_column_id = str(sys.argv[11])
+    global_output_directory = str(sys.argv[12])
+    global_output_file = str(sys.argv[13])
+    time_shift_inspection = str(sys.argv[14])
+    s3_location = str(sys.argv[15])
+    n_files = str(sys.argv[16])
+    file_label = str(sys.argv[17])
+    fix_time_shifts = str(sys.argv[18])
+    time_zone_correction = str(sys.argv[19])
+    check_json = str(sys.argv[20])
 
     '''
     :create_input_file: True if a csv file with the system's information to be generated. False if file provided.
@@ -158,7 +155,6 @@ if __name__ == '__main__':
     pipeline
     :check_json: String, 'True' or 'False'. Check json file for location information. 
     '''
-
     if create_input_file == 'True':
         bucket, prefix = get_s3_bucket_and_prefix(s3_location)
         site_list = enumerate_files(bucket, prefix)
@@ -170,7 +166,7 @@ if __name__ == '__main__':
         copy_to_s3('./generated_site_list.csv', bucket, prefix)
 
     main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
-                            ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
+                            ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
                             gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
                             s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
                             time_zone_correction=time_zone_correction, check_json=check_json)
@@ -179,6 +175,5 @@ if __name__ == '__main__':
     df = pd.read_csv(input_file_location, index_col=0)
 
     main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
-         aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
-         power_column_id, time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts,
-         time_zone_correction, check_json)
+         aws_instance_name, aws_region, aws_client, script_name, script_location, power_column_id,
+         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json)

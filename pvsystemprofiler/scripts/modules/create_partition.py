@@ -15,7 +15,6 @@ def create_partition(partition):
     instance = partition.public_ip_address
     ssh_username = partition.aws_username
     ssh_key_file = partition.ssh_key_file
-    data_source = partition.data_source
     power_column_id = partition.power_column_id
     time_shift_inspection = partition.time_shift_inspection
     s3_location = partition.s3_location
@@ -34,7 +33,6 @@ def create_partition(partition):
                 + global_input_file + ' '
                 + local_input_file + ' '
                 + local_output_file + ' '
-                + data_source + ' '
                 + power_column_id + ' '
                 + time_shift_inspection + ' '
                 + s3_location + ' '
