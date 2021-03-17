@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from modules.config_partitions import get_config
 from modules.create_partition import create_partition
-from modules.script_functions import string_to_boolean
+from modules.script_functions import enumerate_files
 
 def get_remote_output_files(partitions, username, destination_dict):
     os.system('mkdir' + ' ' + destination_dict)
@@ -104,28 +104,30 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
 
 
 if __name__ == '__main__':
-    input_file_location = str(sys.argv[1])
-    ssh_key_file = str(sys.argv[2])
-    aws_username = str(sys.argv[3])
-    aws_instance_name = str(sys.argv[4])
-    aws_region = str(sys.argv[5])
-    aws_client = str(sys.argv[6])
-    script_name = str(sys.argv[7])
-    script_location = str(sys.argv[8])
-    output_folder_location = str(sys.argv[9])
-    data_source = str(sys.argv[10])
-    power_column_id = str(sys.argv[11])
-    global_output_directory = str(sys.argv[12])
-    global_output_file = str(sys.argv[13])
-    time_shift_inspection = str(sys.argv[14])
-    s3_location = str(sys.argv[15])
-    n_files = str(sys.argv[16])
-    file_label = str(sys.argv[17])
-    fix_time_shifts = str(sys.argv[18])
-    time_zone_correction = str(sys.argv[19])
-    check_json = str(sys.argv[20])
+    create_input_file = str(sys.argv[1])
+    input_file_location = str(sys.argv[2])
+    ssh_key_file = str(sys.argv[3])
+    aws_username = str(sys.argv[4])
+    aws_instance_name = str(sys.argv[5])
+    aws_region = str(sys.argv[6])
+    aws_client = str(sys.argv[7])
+    script_name = str(sys.argv[8])
+    script_location = str(sys.argv[9])
+    output_folder_location = str(sys.argv[10])
+    data_source = str(sys.argv[11])
+    power_column_id = str(sys.argv[12])
+    global_output_directory = str(sys.argv[13])
+    global_output_file = str(sys.argv[14])
+    time_shift_inspection = str(sys.argv[15])
+    s3_location = str(sys.argv[16])
+    n_files = str(sys.argv[17])
+    file_label = str(sys.argv[18])
+    fix_time_shifts = str(sys.argv[19])
+    time_zone_correction = str(sys.argv[20])
+    check_json = str(sys.argv[21])
 
     '''
+    create_input_file: True if a csv file with the system's information to be generated. False if provided.
     input file location: a csv file with the system's information.
     ssh_key_file: .pem aws key file.
     aws_username: aws linux username in instances.
@@ -141,6 +143,13 @@ if __name__ == '__main__':
     global_output_file:  name of csv file with the consolidated results.
     time_shift_inspection: indicate if manual time shift inspection should be taken into account for pipeline run.
     '''
+
+    if create_input_file == 'True':
+        bucket, prefix = get_s3_bucket_and_prefix(s3_location)
+        site_list = enumerate_files(bucket, prefix)
+        site_df = pd.DataFrame()
+        site_df['site'] = site_list
+        site_df.to_csv(input_file_location)
 
     main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
