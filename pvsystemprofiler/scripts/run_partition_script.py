@@ -8,6 +8,8 @@ import pandas as pd
 from modules.config_partitions import get_config
 from modules.create_partition import create_partition
 from modules.script_functions import enumerate_files
+from modules.script_functions import get_s3_bucket_and_prefix
+from modules.script_functions import copy_to_s3
 
 def get_remote_output_files(partitions, username, destination_dict):
     os.system('mkdir' + ' ' + destination_dict)
@@ -149,20 +151,23 @@ if __name__ == '__main__':
         site_list = enumerate_files(bucket, prefix)
         site_df = pd.DataFrame()
         site_df['site'] = site_list
-        site_df.to_csv(input_file_location)
+        site_df.to_csv('./generated_site_list.csv')
+        bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
+        copy_to_s3('./generated_site_list.csv', bucket, prefix)
 
-    main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
-                            ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
-                            gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
-                            s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
-                            time_zone_correction=time_zone_correction, check_json=check_json)
 
-    ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
-    df = pd.read_csv(input_file_location, index_col=0)
-    process_completed = main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
-                             aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
-                             power_column_id, time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts,
-                             time_zone_correction, check_json)
+    # main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
+    #                         ain=aws_instance_name, ar=aws_region, ac=aws_client, ds=data_source, pcid=power_column_id,
+    #                         gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
+    #                         s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+    #                         time_zone_correction=time_zone_correction, check_json=check_json)
+    #
+    # ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
+    # df = pd.read_csv(input_file_location, index_col=0)
+    # process_completed = main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
+    #                          aws_instance_name, aws_region, aws_client, script_name, script_location, data_source,
+    #                          power_column_id, time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts,
+    #                          time_zone_correction, check_json)
     #
     # if process_completed:
     #     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
