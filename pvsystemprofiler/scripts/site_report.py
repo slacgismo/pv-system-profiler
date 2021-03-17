@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 from time import time
+
 sys.path.append('/home/ubuntu/github/pv-system-profiler/')
 sys.path.append('/home/ubuntu/github/solar-data-tools/')
 from solardatatools import DataHandler
@@ -19,8 +20,9 @@ from modules.script_functions import extract_sys_parameters
 from modules.script_functions import string_to_boolean
 from modules.script_functions import write_git_version_logfile
 
-def evaluate_systems(df, power_column_label, site_id, checked_systems, fix_time_shifts, time_zone_correction,
-                     json_file_dict=None):
+
+def evaluate_systems(df, power_column_label, site_id, checked_systems, time_shift_inspection, fix_time_shifts,
+                     time_zone_correction, json_file_dict=None):
     cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling', 'data quality_score',
             'data clearness_score', 'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
             'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude', 'latitude', 'tilt', 'azimuth',
@@ -38,10 +40,12 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems, fix_time_
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
             if system_id not in checked_systems:
-                #print(site_id, system_id)
+                # print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
                 dh = DataHandler(df)
+                if time_shift_inspection == 'True':
+                    dh.fix_dst()
                 try:
                     run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
                     passes_pipeline = True
@@ -66,7 +70,7 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems, fix_time_
 
 
 def main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
-         fix_time_shifts, time_zone_correction, check_json, ext='.csv' ):
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -105,8 +109,8 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
 
         df = load_generic_data(s3_location, file_label, site_id)
 
-        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems, fix_time_shifts,
-                                      time_zone_correction, json_file_dict)
+        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems, time_shift_inspection,
+                                      fix_time_shifts, time_zone_correction, json_file_dict)
 
         full_df = full_df.append(partial_df)
         full_df.index = np.arange(len(full_df))
@@ -129,6 +133,8 @@ if __name__ == '__main__':
         :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
         :param power_column_label: Repeating portion of the power column label. 
         :param output_file: Absolute path to csv file containing report results.
+        :time_shift_inspection: String, 'True' or 'False'. Determines indicates if manual time shift inspection should 
+        be taken into account for pipeline run.
         :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
         :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running 
         the pipeline
@@ -141,16 +147,17 @@ if __name__ == '__main__':
     file_label = str(sys.argv[4])
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
-    fix_time_shifts = string_to_boolean(str(sys.argv[7]))
-    time_zone_correction = string_to_boolean(str(sys.argv[8]))
-    check_json = string_to_boolean(str(sys.argv[9]))
+    time_shift_inspection = str(sys.argv[7])
+    fix_time_shifts = string_to_boolean(str(sys.argv[8]))
+    time_zone_correction = string_to_boolean(str(sys.argv[9]))
+    check_json = string_to_boolean(str(sys.argv[10]))
 
     if file_label == 'None':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
-    #write_git_version_logfile(git_repository_location)
+    # write_git_version_logfile(git_repository_location)
 
     main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
-         fix_time_shifts, time_zone_correction, check_json)
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)

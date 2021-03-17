@@ -31,6 +31,7 @@ arguments = local_input_file + ' '  \
             + file_label + ' ' \
             + power_column_id + ' ' \
             + local_output_file + ' ' \
+            + time_shift_inspection + ' '\
             + fix_time_shifts + ' '\
             + time_zone_correction + ' ' \
             + check_json

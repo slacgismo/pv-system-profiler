@@ -13,6 +13,17 @@ from modules.script_functions import get_s3_bucket_and_prefix
 from modules.script_functions import copy_to_s3
 
 
+def build_input_file(s3_location, input_file_location):
+    bucket, prefix = get_s3_bucket_and_prefix(s3_location)
+    site_list = enumerate_files(bucket, prefix)
+    site_df = pd.DataFrame()
+    site_df['site'] = site_list[:8]
+    site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
+    site_df.to_csv('./generated_site_list.csv')
+    bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
+    copy_to_s3('./generated_site_list.csv', bucket, prefix)
+
+
 def get_remote_output_files(partitions, username, destination_dict):
     os.system('mkdir' + ' ' + destination_dict)
     for part_id in partitions:
@@ -155,15 +166,9 @@ if __name__ == '__main__':
     pipeline
     :check_json: String, 'True' or 'False'. Check json file for location information. 
     '''
+
     if create_input_file == 'True':
-        bucket, prefix = get_s3_bucket_and_prefix(s3_location)
-        site_list = enumerate_files(bucket, prefix)
-        site_df = pd.DataFrame()
-        site_df['site'] = site_list[:8]
-        site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
-        site_df.to_csv('./generated_site_list.csv')
-        bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
-        copy_to_s3('./generated_site_list.csv', bucket, prefix)
+        build_input_file(s3_location, input_file_location)
 
     main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
