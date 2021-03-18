@@ -2,6 +2,7 @@ import os
 import json
 import boto3
 import subprocess
+import paramiko
 from smart_open import smart_open
 import numpy as np
 import pandas as pd
@@ -10,13 +11,27 @@ from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
 
+def remote_execute(user, instance_id, key, shell_commands):
+    k = paramiko.RSAKey.from_private_key_file(key)
+    c = paramiko.SSHClient()
+    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    c.connect(hostname=instance_id, username=user, pkey=k, allow_agent=False, look_for_keys=False)
+    command_dict = {}
+    for command in shell_commands:
+        print("running command: {}".format(command))
+        stdin, stdout, stderr = c.exec_command(command)
+        command_dict[command] = [stdout.read(), stderr.read()]
+    c.close()
+    return command_dict
+
+
 def copy_to_s3(input_file_name, bucket, destination_file_name):
     content = open(input_file_name, 'rb')
     s3 = boto3.client('s3')
     s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)
 
 
-def log_file_versions(utility):
+def log_file_versions(utility, folder_location='./'):
     active_conda_env = subprocess.check_output("conda env list | grep '*'", shell=True, encoding='utf-8')
 
     active_conda_env = active_conda_env.split('/')[-1]
@@ -28,14 +43,14 @@ def log_file_versions(utility):
     location = location.split('\n')[0]
     i = location.find('/')
     location = location[i:]
-    repository = subprocess.check_output('git -C' + ' ' + location + ' ' + 'log -n 1',
-                                     shell=True, encoding='utf-8')
     output_string = 'conda environment:' + ' ' + active_conda_env + '\n'
     output_string += 'utility:' + ' ' + utility + '\n'
     output_string += version + '\n'
     output_string += 'repository location:' + ' ' + location + '\n'
-    output_string += repository + '\n'
-    output_file = open(utility + '_' + 'versions.log', 'w')
+    if location.find('miniconda') == -1:
+        repository = subprocess.check_output('git -C' + ' ' + location + ' ' + 'log -n 1', shell=True, encoding='utf-8')
+        output_string += repository + '\n'
+    output_file = open(folder_location + utility + '_' + 'versions.log', 'w')
     output_file.write(output_string)
     output_file.close()
     return

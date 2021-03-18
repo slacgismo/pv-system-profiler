@@ -18,7 +18,7 @@ from modules.script_functions import siteid_to_filename
 from modules.script_functions import create_json_dict
 from modules.script_functions import extract_sys_parameters
 from modules.script_functions import string_to_boolean
-from modules.script_functions import write_git_version_logfile
+from modules.script_functions import log_file_versions
 
 
 def evaluate_systems(df, power_column_label, site_id, checked_systems, time_shift_inspection, fix_time_shifts,
@@ -128,11 +128,11 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
 if __name__ == '__main__':
     '''
         :input_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
-        :param n_files: number of files to read. If 'all' all files in folder are read.
+        :n_files: number of files to read. If 'all' all files in folder are read.
         :s3_location: Absolute path to s3 location of files.
-        :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
-        :param power_column_label: Repeating portion of the power column label. 
-        :param output_file: Absolute path to csv file containing report results.
+        :file_label:  Repeating portion of data files label. If 'None', no file label is used. 
+        :power_column_label: Repeating portion of the power column label. 
+        :output_file: Absolute path to csv file containing report results.
         :time_shift_inspection: String, 'True' or 'False'. Determines indicates if manual time shift inspection should 
         be taken into account for pipeline run.
         :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
@@ -152,12 +152,15 @@ if __name__ == '__main__':
     time_zone_correction = string_to_boolean(str(sys.argv[9]))
     check_json = string_to_boolean(str(sys.argv[10]))
 
+    local_output_folder = output_file.split('data')[0]
+    #log_file_versions('solar_data_tools', local_output_folder)
+
     if file_label == 'None':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
 
-    # write_git_version_logfile(git_repository_location)
+
 
     main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)

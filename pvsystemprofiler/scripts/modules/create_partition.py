@@ -1,5 +1,5 @@
 import paramiko
-
+from modules.script_functions import remote_execute
 
 def create_partition(partition):
     python = '/home/ubuntu/miniconda3/envs/pvi-dev/bin/python'
@@ -24,32 +24,40 @@ def create_partition(partition):
     time_zone_correction = partition.time_zone_correction
     check_json = partition.check_json
 
-    commands = ['rm estimation* -rf',
-                'mkdir -p' + ' ' + local_working_folder + 'data',
-                python + ' ' + local_script + ' '
-                + str(start_index) + ' '
-                + str(end_index) + ' '
-                + script_name + ' '
-                + global_input_file + ' '
-                + local_input_file + ' '
-                + local_output_file + ' '
-                + power_column_id + ' '
-                + time_shift_inspection + ' '
-                + s3_location + ' '
-                + n_files + ' '
-                + file_label + ' '
-                + fix_time_shifts + ' '
-                + time_zone_correction + ' '
-                + check_json]
+    commands = ['rm estimation* -rf', 'ls' + ' ' + local_working_folder + 'd']
+    output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    if str(output[commands[0]][1]).find('No such file or directory') == -1:
+        commands = ['rm estimation* -rf',
+                    'mkdir -p' + ' ' + local_working_folder + 'data',
+                    python + ' ' + local_script + ' '
+                    + str(start_index) + ' '
+                    + str(end_index) + ' '
+                    + script_name + ' '
+                    + global_input_file + ' '
+                    + local_input_file + ' '
+                    + local_output_file + ' '
+                    + power_column_id + ' '
+                    + time_shift_inspection + ' '
+                    + s3_location + ' '
+                    + n_files + ' '
+                    + file_label + ' '
+                    + fix_time_shifts + ' '
+                    + time_zone_correction + ' '
+                    + check_json]
 
-    k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
-    c = paramiko.SSHClient()
-    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    c.connect(hostname=instance, username=ssh_username, pkey=k, allow_agent=False, look_for_keys=False)
+    else:
+        commands = [local_input_file.split('data')[0] + 'run_local_partition.sh']
 
-    for command in commands:
-        print("running command: {}".format(command))
-        stdin, stdout, stderr = c.exec_command(command)
-        print(stdout.read())
-        print(stderr.read())
-    c.close()
+    remote_execute(ssh_username, instance, ssh_key_file, commands)
+
+    # k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
+    # c = paramiko.SSHClient()
+    # c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    # c.connect(hostname=instance, username=ssh_username, pkey=k, allow_agent=False, look_for_keys=False)
+    #
+    # for command in commands:
+    #     print("running command: {}".format(command))
+    #     stdin, stdout, stderr = c.exec_command(command)
+    #     print(stdout.read())
+    #     print(stderr.read())
+    # c.close()
