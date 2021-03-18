@@ -1,6 +1,7 @@
 import os
 import json
 import boto3
+import subprocess
 from smart_open import smart_open
 import numpy as np
 import pandas as pd
@@ -15,15 +16,29 @@ def copy_to_s3(input_file_name, bucket, destination_file_name):
     s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)
 
 
-def write_git_version_logfile(git_repository_location):
-    working_dir = os.getcwd()
-    for file_name in os.listdir(git_repository_location):
-        file = git_repository_location + file_name
-        if os.path.isdir(file):
-            command = 'git -C' + ' ' + file + ' ' + 'log -n 1 >' + working_dir + '/git_version_' + file_name + '.log'
-            os.system(command)
-    return
+def log_file_versions(utility):
+    active_conda_env = subprocess.check_output("conda env list | grep '*'", shell=True, encoding='utf-8')
 
+    active_conda_env = active_conda_env.split('/')[-1]
+    active_conda_env = active_conda_env.split('\n')[0]
+    version = subprocess.check_output("pip show" + " " + utility + "| grep 'Version'", shell=True, encoding='utf-8')
+    version = version.split('\n')[0]
+    location = str(subprocess.check_output("pip show" + " " + utility + "| grep 'Location'", shell=True,
+                                           encoding='utf-8'))
+    location = location.split('\n')[0]
+    i = location.find('/')
+    location = location[i:]
+    repository = subprocess.check_output('git -C' + ' ' + location + ' ' + 'log -n 1',
+                                     shell=True, encoding='utf-8')
+    output_string = 'conda environment:' + ' ' + active_conda_env + '\n'
+    output_string += 'utility:' + ' ' + utility + '\n'
+    output_string += version + '\n'
+    output_string += 'repository location:' + ' ' + location + '\n'
+    output_string += repository + '\n'
+    output_file = open(utility + '_' + 'versions.log', 'w')
+    output_file.write(output_string)
+    output_file.close()
+    return
 
 def string_to_boolean(value):
     if value == 'True':
