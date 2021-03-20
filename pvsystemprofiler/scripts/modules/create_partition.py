@@ -24,9 +24,12 @@ def create_partition(partition):
     time_zone_correction = partition.time_zone_correction
     check_json = partition.check_json
 
-    commands = ['rm estimation* -rf', 'ls' + ' ' + local_working_folder + 'd']
+    commands = ['rm estimation* -rf']
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
-    if str(output[commands[0]][1]).find('No such file or directory') == -1:
+
+    commands = ['ls' + ' ' + local_working_folder + 'd']
+    output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    if str(output[commands[0]][1]).find('No such file or directory'):
         commands = ['rm estimation* -rf',
                     'mkdir -p' + ' ' + local_working_folder + 'data',
                     python + ' ' + local_script + ' '

@@ -160,7 +160,7 @@ if __name__ == '__main__':
     pipeline
     :check_json: String, 'True' or 'False'. Check json file for location information. 
     '''
-    log_file_versions('solar_data_tools')
+    #log_file_versions('solar_data_tools')
     if create_input_file == 'True':
         build_input_file(s3_location, input_file_location)
 
