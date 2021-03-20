@@ -95,22 +95,22 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
         create_partition(part)
         i += 1
 
-    completion = [False] * len(partitions)
-    while False in completion:
-        for part_ix, part_id in enumerate(partitions):
-            if completion[part_ix] is False:
-                ssh_key_file = part_id.ssh_key_file
-                instance = part_id.public_ip_address
-                ssh_username = part_id.aws_username
-                new_value = check_completion(ssh_username, instance, ssh_key_file)
-                part_id.process_completed = new_value
-                completion[part_ix] = new_value
-        time.sleep(60)
-
-    get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
-    results_df = combine_results(partitions, main_class.global_output_directory)
-    results_df.to_csv(main_class.global_output_file)
-    return
+    # completion = [False] * len(partitions)
+    # while False in completion:
+    #     for part_ix, part_id in enumerate(partitions):
+    #         if completion[part_ix] is False:
+    #             ssh_key_file = part_id.ssh_key_file
+    #             instance = part_id.public_ip_address
+    #             ssh_username = part_id.aws_username
+    #             new_value = check_completion(ssh_username, instance, ssh_key_file)
+    #             part_id.process_completed = new_value
+    #             completion[part_ix] = new_value
+    #     time.sleep(60)
+    #
+    # get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
+    # results_df = combine_results(partitions, main_class.global_output_directory)
+    # results_df.to_csv(main_class.global_output_file)
+    # return
 
 
 if __name__ == '__main__':

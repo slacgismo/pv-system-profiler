@@ -32,13 +32,15 @@ def copy_to_s3(input_file_name, bucket, destination_file_name):
 
 
 def log_file_versions(utility, folder_location='./'):
-    active_conda_env = subprocess.check_output("conda env list | grep '*'", shell=True, encoding='utf-8')
-
+    conda_location = '/home/ubuntu/miniconda3/'
+    conda = conda_location + 'bin/conda' + ' '
+    pip = conda_location + '/envs/pvi-dev/bin/pip'
+    active_conda_env = subprocess.check_output(conda + "env list | grep '*'", shell=True, encoding='utf-8')
     active_conda_env = active_conda_env.split('/')[-1]
     active_conda_env = active_conda_env.split('\n')[0]
-    version = subprocess.check_output("pip show" + " " + utility + "| grep 'Version'", shell=True, encoding='utf-8')
+    version = subprocess.check_output(pip + " " + "show" + " " + utility + "| grep 'Version'", shell=True, encoding='utf-8')
     version = version.split('\n')[0]
-    location = str(subprocess.check_output("pip show" + " " + utility + "| grep 'Location'", shell=True,
+    location = str(subprocess.check_output(pip + " " + "show" + " " + utility + "| grep 'Location'", shell=True,
                                            encoding='utf-8'))
     location = location.split('\n')[0]
     i = location.find('/')
@@ -47,13 +49,15 @@ def log_file_versions(utility, folder_location='./'):
     output_string += 'utility:' + ' ' + utility + '\n'
     output_string += version + '\n'
     output_string += 'repository location:' + ' ' + location + '\n'
-    if location.find('miniconda') == -1:
-        repository = subprocess.check_output('git -C' + ' ' + location + ' ' + 'log -n 1', shell=True, encoding='utf-8')
+
+    if location.find('miniconda'):
+        repository = subprocess.check_output('/usr/bin/git -C' + ' ' + location + ' ' + 'log -n 1', shell=True, encoding='utf-8')
         output_string += repository + '\n'
     output_file = open(folder_location + utility + '_' + 'versions.log', 'w')
     output_file.write(output_string)
     output_file.close()
     return
+
 
 def string_to_boolean(value):
     if value == 'True':

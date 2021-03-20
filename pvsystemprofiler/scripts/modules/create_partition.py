@@ -52,15 +52,3 @@ def create_partition(partition):
         commands = [local_input_file.split('data')[0] + 'run_local_partition.sh']
 
     remote_execute(ssh_username, instance, ssh_key_file, commands)
-
-    # k = paramiko.RSAKey.from_private_key_file(ssh_key_file)
-    # c = paramiko.SSHClient()
-    # c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    # c.connect(hostname=instance, username=ssh_username, pkey=k, allow_agent=False, look_for_keys=False)
-    #
-    # for command in commands:
-    #     print("running command: {}".format(command))
-    #     stdin, stdout, stderr = c.exec_command(command)
-    #     print(stdout.read())
-    #     print(stderr.read())
-    # c.close()

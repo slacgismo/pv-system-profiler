@@ -153,14 +153,12 @@ if __name__ == '__main__':
     check_json = string_to_boolean(str(sys.argv[10]))
 
     local_output_folder = output_file.split('data')[0]
-    #log_file_versions('solar_data_tools', local_output_folder)
+    log_file_versions('solar_data_tools', local_output_folder)
 
     if file_label == 'None':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
-
-
 
     main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
