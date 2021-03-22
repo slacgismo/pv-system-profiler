@@ -139,9 +139,9 @@ def siteid_to_filename(sites, file_label, ext):
     return checked_sites
 
 
-def load_generic_data(location, file_label, file_id, extension='.csv'):
+def load_generic_data(location, file_label, file_id, extension='.csv', parse_dates=[0]):
     to_read = location + file_id + file_label + extension
-    df = pd.read_csv(to_read, index_col=0)
+    df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
     return df
 
 
