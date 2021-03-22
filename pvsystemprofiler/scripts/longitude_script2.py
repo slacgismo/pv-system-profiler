@@ -24,19 +24,18 @@ from pvsystemprofiler.longitude_study import LongitudeStudy
 
 def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     try:
-        runs_pipeline = True
+        runs_lon_estimation = True
         lon_study = LongitudeStudy(data_handler=dh_in, gmt_offset=gmt_offset, true_value=real_longitude)
-        #lon_study.run(verbose=False)
-        lon_study.run(verbose=True)
+        lon_study.run(verbose=False)
         p_df = lon_study.results.sort_index().copy()
     except ValueError:
-        runs_pipeline = False
+        runs_lon_estimation = False
         p_df = pd.DataFrame(columns=['longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
                                      'day_selection_method', 'data_matrix', 'residual', 'site', 'system',
                                      'length', 'data sampling', 'data quality score', 'data clearness score',
                                      'inverter clipping', 'time shift manual'])
         partial_df.loc[0, :] = np.nan
-    return p_df, runs_pipeline
+    return p_df, runs_lon_estimation
 
 
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_systems, time_shift_inspection,
@@ -67,12 +66,8 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_sy
                 except:
                     passes_pipeline = False
 
-                partial_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
-                partial_df['site'] = site_id
-                partial_df['system'] = system_id
-                if time_shift_inspection:
-                    partial_df['manual_time shift'] = manual_time_shift
-                if passes_pipeline is True:
+                if passes_pipeline:
+                    partial_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
                     partial_df['length'] = dh.num_days
                     partial_df['data sampling'] = dh.data_sampling
                     partial_df['data quality score'] = dh.data_quality_score
@@ -80,12 +75,19 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_sy
                     partial_df['inverter clipping'] = dh.inverter_clipping
                     partial_df['runs estimation'] = passes_estimation
                 else:
+                    partial_df = pd.DataFrame()
                     partial_df['length'] = np.nan
                     partial_df['data sampling'] = np.nan
                     partial_df['data quality score'] = np.nan
                     partial_df['data clearness score'] = np.nan
                     partial_df['inverter clipping'] = np.nan
                     partial_df['runs estimation'] = np.nan
+
+                partial_df['site'] = site_id
+                partial_df['system'] = system_id
+                if time_shift_inspection:
+                    partial_df['manual_time shift'] = manual_time_shift
+
     return partial_df
 
 
