@@ -23,6 +23,7 @@ def create_partition(partition):
     fix_time_shifts = partition.fix_time_shifts
     time_zone_correction = partition.time_zone_correction
     check_json = partition.check_json
+    supplementary_file = partition.supplementary_file
 
     commands = ['rm estimation* -rf']
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
@@ -46,7 +47,9 @@ def create_partition(partition):
                     + file_label + ' '
                     + fix_time_shifts + ' '
                     + time_zone_correction + ' '
-                    + check_json]
+                    + check_json + ' '
+                    + supplementary_file
+                    ]
 
     else:
         commands = [local_input_file.split('data')[0] + 'run_local_partition.sh']

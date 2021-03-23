@@ -1,9 +1,9 @@
 import sys
 import os
 import boto3
-import math
-import time
 import paramiko
+import time
+import math
 import numpy as np
 import pandas as pd
 from modules.config_partitions import get_config
@@ -66,12 +66,9 @@ def get_address(tag_name, region, client):
     return ec2_instances
 
 
-
-
-
 def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection,
-         s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json):
+         s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file):
     n_part = len(ec2_instances)
     ll = len(df)
     part_size = math.ceil(ll / n_part)
@@ -89,7 +86,7 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
                           scripts_location=script_location, pcid=power_column_id, tsi=time_shift_inspection,
                           s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
-                          time_zone_correction=time_zone_correction, check_json=check_json)
+                          time_zone_correction=time_zone_correction, check_json=check_json, sup_file=supplementary_file)
 
         partitions.append(part)
         create_partition(part)
@@ -127,14 +124,14 @@ if __name__ == '__main__':
     power_column_id = str(sys.argv[11])
     global_output_directory = str(sys.argv[12])
     global_output_file = str(sys.argv[13])
-    time_shift_inspection = str(sys.argv[14])
-    s3_location = str(sys.argv[15])
-    n_files = str(sys.argv[16])
-    file_label = str(sys.argv[17])
+    s3_location = str(sys.argv[14])
+    n_files = str(sys.argv[15])
+    file_label = str(sys.argv[16])
+    time_shift_inspection = str(sys.argv[17])
     fix_time_shifts = str(sys.argv[18])
     time_zone_correction = str(sys.argv[19])
     check_json = str(sys.argv[20])
-
+    supplementary_file = str(sys.argv[21])
     '''
     :create_input_file: True if a csv file with the system's information to be generated. False if file provided.
     :input file location: The csv file with the system's information. If create_input_file=True a file with the 
@@ -159,6 +156,7 @@ if __name__ == '__main__':
     :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running  the
     pipeline
     :check_json: String, 'True' or 'False'. Check json file for location information. 
+    :supplementary_file: csv file with supplementary information need to run script.
     '''
     #log_file_versions('solar_data_tools')
     if create_input_file == 'True':
@@ -168,7 +166,8 @@ if __name__ == '__main__':
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
                             gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
                             s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
-                            time_zone_correction=time_zone_correction, check_json=check_json)
+                            time_zone_correction=time_zone_correction, check_json=check_json,
+                            sup_file=supplementary_file)
 
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
 
@@ -176,5 +175,6 @@ if __name__ == '__main__':
 
     main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
          aws_instance_name, aws_region, aws_client, script_name, script_location, power_column_id,
-         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json)
+         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+         supplementary_file)
 

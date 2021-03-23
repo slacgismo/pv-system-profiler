@@ -2,7 +2,7 @@ class ConfigPartitions:
     def __init__(self, part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None,
                  au=None, ain=None, ar=None, ac=None, script_name=None, scripts_location=None, pcid=None, gof=None,
                  god=None, tsi=None, s3l=None, n_files=None, file_label=None, fix_time_shifts=None,
-                 time_zone_correction=None, check_json=None):
+                 time_zone_correction=None, check_json=None, sup_file=None):
 
         self.input_file_location = ifl
         self.ssh_key_file = skf
@@ -10,6 +10,7 @@ class ConfigPartitions:
         self.aws_instance_name = ain
         self.aws_region = ar
         self.aws_client = ac
+        self.supplementary_file = sup_file
         if ix_0 is not None and ix_n is not None:
 
             self.part_id = part_id
@@ -47,12 +48,12 @@ class ConfigPartitions:
 def get_config(part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None, au=None,
                ain=None, ar=None, ac=None, script_name=None, scripts_location=None, pcid=None, gof=None, god=None,
                tsi=None, s3l=None, n_files=None, file_label=None, fix_time_shifts=None, time_zone_correction=None,
-               check_json=None):
+               check_json=None, sup_file=None):
     if ix_0 is not None and ix_n is not None:
         return ConfigPartitions(part_id=part_id, ix_0=ix_0, ix_n=ix_n, n_part=n_part, ifl=ifl, ofl=ofl,
                                 ip_address=ip_address, skf=skf, au=au, ain=ain, ar=ar, ac=ac, script_name=script_name,
                                 scripts_location=scripts_location, pcid=pcid, tsi=tsi, s3l=s3l, n_files=n_files,
                                 file_label=file_label, fix_time_shifts=fix_time_shifts,
-                                time_zone_correction=time_zone_correction, check_json=check_json)
+                                time_zone_correction=time_zone_correction, check_json=check_json, sup_file=sup_file)
     else:
         return ConfigPartitions(ifl=ifl, skf=skf, au=au, ain=ain, ar=ar, ac=ac, gof=gof, god=god)

@@ -3,10 +3,10 @@ import os
 import pandas as pd
 import numpy as np
 from time import time
-#sys.path.append('/home/ubuntu/github/pv-system-profiler/')
-#sys.path.append('/home/ubuntu/github/solar-data-tools/')
-sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
-sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
+sys.path.append('/home/ubuntu/github/pv-system-profiler/')
+sys.path.append('/home/ubuntu/github/solar-data-tools/')
+#sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
+#sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline
@@ -113,13 +113,13 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
         input_file_df = pd.read_csv(input_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        input_file_list = siteid_to_filename(site_list, file_label, ext)
+        #input_file_list = siteid_to_filename(site_list, file_label, ext)
         #file_list = list(set(input_file_list) & set(file_list))
-        manually_checked_sites = df_ground_data['site'].apply(str)
-        file_list = list(set(input_file_list) & set(file_list) & set(manually_checked_sites))
+        manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
+        file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
     file_list.sort()
-
+    print(file_list)
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
     for file_ix, file_id in enumerate(file_list):
@@ -167,16 +167,16 @@ if __name__ == '__main__':
         '''
 
     input_file = str(sys.argv[1])
-    df_ground_data = str(sys.argv[2])
-    n_files = str(sys.argv[3])
-    s3_location = str(sys.argv[4])
-    file_label = str(sys.argv[5])
-    power_column_label = str(sys.argv[6])
-    output_file = str(sys.argv[7])
-    time_shift_inspection = str(sys.argv[8])
-    fix_time_shifts = string_to_boolean(str(sys.argv[9]))
-    time_zone_correction = string_to_boolean(str(sys.argv[10]))
-    check_json = string_to_boolean(str(sys.argv[11]))
+    n_files = str(sys.argv[2])
+    s3_location = str(sys.argv[3])
+    file_label = str(sys.argv[4])
+    power_column_label = str(sys.argv[5])
+    output_file = str(sys.argv[6])
+    time_shift_inspection = str(sys.argv[7])
+    fix_time_shifts = string_to_boolean(str(sys.argv[8]))
+    time_zone_correction = string_to_boolean(str(sys.argv[9]))
+    check_json = string_to_boolean(str(sys.argv[10]))
+    df_ground_data = str(sys.argv[11])
 
     local_output_folder = output_file.split('data')[0]
     #log_file_versions('solar_data_tools', local_output_folder)
@@ -189,9 +189,9 @@ if __name__ == '__main__':
     df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
     df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
     df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
-
     df_ground_data['site'] = df_ground_data['site'].apply(str)
     df_ground_data['system'] = df_ground_data['system'].apply(str)
+    df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
     main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
