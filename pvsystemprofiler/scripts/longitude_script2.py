@@ -43,6 +43,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_sy
     ll = len(power_column_label)
     cols = df.columns
     i = 0
+    partial_df = None
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
@@ -50,16 +51,14 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_sy
                 print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
-                real_longitude = int(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
-                gmt_offset = int(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
-
+                real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
+                gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
                 dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                 'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
-
                 try:
                     run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
                     passes_pipeline = True
@@ -87,7 +86,6 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_sy
                 partial_df['system'] = system_id
                 if time_shift_inspection:
                     partial_df['manual_time shift'] = manual_time_shift
-
     return partial_df
 
 
@@ -118,8 +116,7 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
         manually_checked_sites = df_ground_data['site'].apply(str)
         file_list = list(set(input_file_list) & set(file_list) & set(manually_checked_sites))
     file_list.sort()
-    file_list = file_list[:1]
-
+    file_list = file_list[92:]
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
     for file_ix, file_id in enumerate(file_list):
@@ -135,13 +132,13 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_systems,
                                       time_shift_inspection, fix_time_shifts, time_zone_correction, json_file_dict)
-
-        full_df = full_df.append(partial_df)
-        full_df.index = np.arange(len(full_df))
-        full_df.to_csv(output_file)
-        t1 = time()
-        site_run_time = t1 - t0
-        total_time += site_run_time
+        if partial_df is not None:
+            full_df = full_df.append(partial_df)
+            full_df.index = np.arange(len(full_df))
+            full_df.to_csv(output_file)
+            t1 = time()
+            site_run_time = t1 - t0
+            total_time += site_run_time
 
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
     progress(len(file_list), len(file_list), msg, bar_length=20)
@@ -186,7 +183,12 @@ if __name__ == '__main__':
 
     full_df, checked_systems, start_at = resume_run(output_file)
     df_ground_data = pd.read_csv('s3://pv.insight.misc/report_files/constellation_site_list.csv', index_col=0)
-    df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([1, -1])]
+    df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
+    df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
+    df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
+
+    df_ground_data['site'] = df_ground_data['site'].apply(str)
+    df_ground_data['system'] = df_ground_data['system'].apply(str)
 
     main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, checked_systems,
          output_file,
