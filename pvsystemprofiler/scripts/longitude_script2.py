@@ -3,10 +3,10 @@ import os
 import pandas as pd
 import numpy as np
 from time import time
-sys.path.append('/home/ubuntu/github/pv-system-profiler/')
-sys.path.append('/home/ubuntu/github/solar-data-tools/')
-#sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
-#sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
+#sys.path.append('/home/ubuntu/github/pv-system-profiler/')
+#sys.path.append('/home/ubuntu/github/solar-data-tools/')
+sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
+sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline
@@ -47,7 +47,6 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            print(site_id, system_id)
             i += 1
             sys_tag = power_column_label + system_id
             real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
@@ -119,7 +118,7 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
         file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
     file_list.sort()
-    print(file_list)
+
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
     for file_ix, file_id in enumerate(file_list):
