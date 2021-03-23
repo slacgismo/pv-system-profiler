@@ -43,7 +43,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_sy
     ll = len(power_column_label)
     cols = df.columns
     i = 0
-    partial_df = None
+    partial_df = pd.DataFrame()
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
@@ -66,26 +66,29 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_sy
                     passes_pipeline = False
 
                 if passes_pipeline:
-                    partial_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
-                    partial_df['length'] = dh.num_days
-                    partial_df['data sampling'] = dh.data_sampling
-                    partial_df['data quality score'] = dh.data_quality_score
-                    partial_df['data clearness score'] = dh.data_clearness_score
-                    partial_df['inverter clipping'] = dh.inverter_clipping
-                    partial_df['runs estimation'] = passes_estimation
+                    results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
+                    results_df['length'] = dh.num_days
+                    results_df['data sampling'] = dh.data_sampling
+                    results_df['data quality score'] = dh.data_quality_score
+                    results_df['data clearness score'] = dh.data_clearness_score
+                    results_df['inverter clipping'] = dh.inverter_clipping
+                    results_df['runs estimation'] = passes_estimation
                 else:
-                    partial_df = pd.DataFrame()
-                    partial_df['length'] = np.nan
-                    partial_df['data sampling'] = np.nan
-                    partial_df['data quality score'] = np.nan
-                    partial_df['data clearness score'] = np.nan
-                    partial_df['inverter clipping'] = np.nan
-                    partial_df['runs estimation'] = np.nan
+                    results_df = pd.DataFrame()
+                    results_df['length'] = np.nan
+                    results_df['data sampling'] = np.nan
+                    results_df['data quality score'] = np.nan
+                    results_df['data clearness score'] = np.nan
+                    results_df['inverter clipping'] = np.nan
+                    results_df['runs estimation'] = np.nan
 
-                partial_df['site'] = site_id
-                partial_df['system'] = system_id
+                results_df['site'] = site_id
+                results_df['system'] = system_id
                 if time_shift_inspection:
-                    partial_df['manual_time shift'] = manual_time_shift
+                    results_df['manual_time shift'] = manual_time_shift
+
+                partial_df = partial_df.append(results_df)
+
     return partial_df
 
 
@@ -116,7 +119,7 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
         manually_checked_sites = df_ground_data['site'].apply(str)
         file_list = list(set(input_file_list) & set(file_list) & set(manually_checked_sites))
     file_list.sort()
-    file_list = file_list[92:]
+    file_list = file_list[0:1]
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
     for file_ix, file_id in enumerate(file_list):
@@ -132,7 +135,7 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, checked_systems,
                                       time_shift_inspection, fix_time_shifts, time_zone_correction, json_file_dict)
-        if partial_df is not None:
+        if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
             full_df.to_csv(output_file)
