@@ -120,15 +120,13 @@ def get_s3_bucket_and_prefix(s3_location):
     return bucket, prefix
 
 
-def get_checked_sites(df, file_label, ext):
-    if len(df) != 0:
+def get_checked_sites(df):
+    if not df.empty:
         checked_sites = df['site'].unique().tolist()
         checked_sites.sort()
-        checked_sites = checked_sites[:-1]
-        checked_sites_list = siteid_to_filename(checked_sites, file_label, ext)
     else:
-        checked_sites_list = []
-    return checked_sites_list
+        checked_sites = []
+    return checked_sites
 
 
 def siteid_to_filename(sites, file_label, ext):
@@ -137,6 +135,13 @@ def siteid_to_filename(sites, file_label, ext):
         file_name = site_id + file_label + ext
         checked_sites.append(file_name)
     return checked_sites
+
+def filename_to_siteid(sites):
+    site_list = []
+    for site_id in sites:
+        site_id = site_id.split('.')[0]
+        site_list.append(site_id)
+    return site_list
 
 
 def load_generic_data(location, file_label, file_id, extension='.csv', parse_dates=[0]):
