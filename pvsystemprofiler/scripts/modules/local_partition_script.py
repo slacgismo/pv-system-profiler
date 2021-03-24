@@ -2,8 +2,7 @@ import sys
 import os
 import pandas as pd
 
-
-python = '/home/ubuntu/miniconda3/envs/pvi-dev/bin/python'
+python = '/home/ubuntu/miniconda3/envs/pvi-user/bin/python'
 start_index = int(sys.argv[1])
 end_index = int(sys.argv[2])
 script_name = str(sys.argv[3])

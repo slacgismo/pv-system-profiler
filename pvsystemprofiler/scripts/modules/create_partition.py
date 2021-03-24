@@ -1,8 +1,7 @@
-import paramiko
 from modules.script_functions import remote_execute
 
 def create_partition(partition):
-    python = '/home/ubuntu/miniconda3/envs/pvi-dev/bin/python'
+    python = '/home/ubuntu/miniconda3/envs/pvi-user/bin/python'
     start_index = partition.ix_0
     end_index = partition.ix_n
     global_input_file = partition.input_file_location

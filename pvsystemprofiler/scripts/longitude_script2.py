@@ -3,10 +3,10 @@ import os
 import pandas as pd
 import numpy as np
 from time import time
-#sys.path.append('/home/ubuntu/github/pv-system-profiler/')
+sys.path.append('/home/ubuntu/github/pv-system-profiler/')
 #sys.path.append('/home/ubuntu/github/solar-data-tools/')
-sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
-sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
+#sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
+#sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline
@@ -178,7 +178,7 @@ if __name__ == '__main__':
     df_ground_data = str(sys.argv[11])
 
     local_output_folder = output_file.split('data')[0]
-    #log_file_versions('solar_data_tools', local_output_folder)
+    log_file_versions('solar_data_tools', local_output_folder)
 
     if file_label == 'None':
         file_label = ''
