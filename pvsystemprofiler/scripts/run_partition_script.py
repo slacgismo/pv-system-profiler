@@ -14,7 +14,6 @@ from modules.script_functions import log_file_versions
 from modules.script_functions import remote_execute
 
 
-
 def build_input_file(s3_location, input_file_location):
     bucket, prefix = get_s3_bucket_and_prefix(s3_location)
     site_list = enumerate_files(bucket, prefix)
@@ -44,9 +43,16 @@ def combine_results(partitions, destination_dict):
 
 
 def check_completion(ssh_username, instance_id, ssh_key_file):
+    print(instance_id)
+    commands = ["grep '%' ./out", "ps -x |grep -o 'python'"]
+    commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
+                                   shell_commands=commands, verbose=False)
+    for command_i in commands_dict.keys():
+        print(commands_dict[command_i][0])
+        print('')
     commands = ["grep 'finished' ./out"]
     commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
-                                   shell_commands=commands)
+                                   shell_commands=commands, verbose=False)
     if str(commands_dict["grep 'finished' ./out"][0]).find('finished') != -1:
         return True
     else:
@@ -95,13 +101,15 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
     while False in completion:
         for part_ix, part_id in enumerate(partitions):
             if completion[part_ix] is False:
+                print(' ')
+                print('Partition' + ' ', part_ix)
                 ssh_key_file = part_id.ssh_key_file
                 instance = part_id.public_ip_address
                 ssh_username = part_id.aws_username
                 new_value = check_completion(ssh_username, instance, ssh_key_file)
                 part_id.process_completed = new_value
                 completion[part_ix] = new_value
-        time.sleep(60*5)
+        time.sleep(1 * 60)
 
     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
     results_df = combine_results(partitions, main_class.global_output_directory)
@@ -157,7 +165,7 @@ if __name__ == '__main__':
     :check_json: String, 'True' or 'False'. Check json file for location information. 
     :supplementary_file: csv file with supplementary information need to run script.
     '''
-    #log_file_versions('solar_data_tools')
+    # log_file_versions('solar_data_tools')
     if create_input_file == 'True':
         build_input_file(s3_location, input_file_location)
 
@@ -176,4 +184,3 @@ if __name__ == '__main__':
          aws_instance_name, aws_region, aws_client, script_name, script_location, power_column_id,
          time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
          supplementary_file)
-

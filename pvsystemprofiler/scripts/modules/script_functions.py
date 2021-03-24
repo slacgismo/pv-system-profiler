@@ -11,14 +11,15 @@ from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
 
-def remote_execute(user, instance_id, key, shell_commands):
+def remote_execute(user, instance_id, key, shell_commands, verbose=True):
     k = paramiko.RSAKey.from_private_key_file(key)
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     c.connect(hostname=instance_id, username=user, pkey=k, allow_agent=False, look_for_keys=False)
     command_dict = {}
     for command in shell_commands:
-        print("running command: {}".format(command))
+        if verbose:
+            print("running command: {}".format(command))
         stdin, stdout, stderr = c.exec_command(command)
         command_dict[command] = [stdout.read(), stderr.read()]
     c.close()
