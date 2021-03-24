@@ -25,7 +25,6 @@ df_part = df_part[start_index:end_index]
 df_part.to_csv(local_input_file)
 
 command = 'setsid nohup' + ' ' + python + ' ' + script_name
-#command = python + ' ' + script_name
 arguments = local_input_file + ' '  \
             + n_files + ' ' \
             + s3_location + ' ' \

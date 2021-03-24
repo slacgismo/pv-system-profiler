@@ -18,7 +18,7 @@ def build_input_file(s3_location, input_file_location):
     bucket, prefix = get_s3_bucket_and_prefix(s3_location)
     site_list = enumerate_files(bucket, prefix)
     site_df = pd.DataFrame()
-    site_df['site'] = site_list[:8]
+    site_df['site'] = site_list
     site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
     site_df.to_csv('./generated_site_list.csv')
     bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
@@ -49,7 +49,7 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
                                    shell_commands=commands, verbose=False)
     for command_i in commands_dict.keys():
         print(commands_dict[command_i][0])
-        print('')
+
     commands = ["grep 'finished' ./out"]
     commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
                                    shell_commands=commands, verbose=False)
@@ -101,7 +101,6 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
     while False in completion:
         for part_ix, part_id in enumerate(partitions):
             if completion[part_ix] is False:
-                print(' ')
                 print('Partition' + ' ', part_ix)
                 ssh_key_file = part_id.ssh_key_file
                 instance = part_id.public_ip_address
@@ -109,7 +108,7 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
                 new_value = check_completion(ssh_username, instance, ssh_key_file)
                 part_id.process_completed = new_value
                 completion[part_ix] = new_value
-        time.sleep(1 * 60)
+        time.sleep(10 * 60)
 
     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
     results_df = combine_results(partitions, main_class.global_output_directory)
@@ -177,7 +176,6 @@ if __name__ == '__main__':
                             sup_file=supplementary_file)
 
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
-
     df = pd.read_csv(input_file_location, index_col=0)
 
     main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
