@@ -44,13 +44,13 @@ def combine_results(partitions, destination_dict):
 
 def check_completion(ssh_username, instance_id, ssh_key_file):
     print(instance_id)
-    commands = ["grep '%' ./out", "ps -x |grep -o 'python'"]
+    commands = ["grep -a '%' ./out", "ps -x |grep -o 'python'"]
     commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
                                    shell_commands=commands, verbose=False)
     for command_i in commands_dict.keys():
         print(commands_dict[command_i][0])
 
-    commands = ["grep 'finished' ./out"]
+    commands = ["grep -a 'finished' ./out"]
     commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
                                    shell_commands=commands, verbose=False)
     if str(commands_dict["grep 'finished' ./out"][0]).find('finished') != -1:
