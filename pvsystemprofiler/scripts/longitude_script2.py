@@ -47,7 +47,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
             if system_id in df_ground_data['system'].tolist():
-                print(site_id, system_id)
+                #print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
 
@@ -148,7 +148,8 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
             total_time += site_run_time
 
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
-    progress(len(file_list), len(file_list), msg, bar_length=20)
+    if len(file_list) != 0:
+        progress(len(file_list), len(file_list), msg, bar_length=20)
     print('finished')
     return
 
