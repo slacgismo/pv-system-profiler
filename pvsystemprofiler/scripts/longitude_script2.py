@@ -46,45 +46,50 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            i += 1
-            sys_tag = power_column_label + system_id
-            real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
-            gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
-            dh = DataHandler(df)
-            if time_shift_inspection:
-                manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                            'time_shift_manual'].values[0])
-                if manual_time_shift == 1:
-                    dh.fix_dst()
-            try:
-                run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
-                passes_pipeline = True
-            except:
-                passes_pipeline = False
-            if passes_pipeline:
-                results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
-                results_df['length'] = dh.num_days
-                results_df['data sampling'] = dh.data_sampling
-                results_df['data quality score'] = dh.data_quality_score
-                results_df['data clearness score'] = dh.data_clearness_score
-                results_df['inverter clipping'] = dh.inverter_clipping
-                results_df['runs estimation'] = passes_estimation
-            else:
-                results_df = pd.DataFrame()
-                results_df['length'] = np.nan
-                results_df['data sampling'] = np.nan
-                results_df['data quality score'] = np.nan
-                results_df['data clearness score'] = np.nan
-                results_df['inverter clipping'] = np.nan
-                results_df['runs estimation'] = np.nan
+            if system_id in df_ground_data['system'].tolist():
+                print(site_id, system_id)
+                i += 1
+                sys_tag = power_column_label + system_id
 
-            results_df['site'] = site_id
-            results_df['system'] = system_id
+                real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
+                gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
 
-            if time_shift_inspection:
-                results_df['manual_time shift'] = manual_time_shift
 
-            partial_df = partial_df.append(results_df)
+                dh = DataHandler(df)
+                if time_shift_inspection:
+                    manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
+                                                                'time_shift_manual'].values[0])
+                    if manual_time_shift == 1:
+                        dh.fix_dst()
+                try:
+                    run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
+                    passes_pipeline = True
+                except:
+                    passes_pipeline = False
+                if passes_pipeline:
+                    results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
+                    results_df['length'] = dh.num_days
+                    results_df['data sampling'] = dh.data_sampling
+                    results_df['data quality score'] = dh.data_quality_score
+                    results_df['data clearness score'] = dh.data_clearness_score
+                    results_df['inverter clipping'] = dh.inverter_clipping
+                    results_df['runs estimation'] = passes_estimation
+                else:
+                    results_df = pd.DataFrame()
+                    results_df['length'] = np.nan
+                    results_df['data sampling'] = np.nan
+                    results_df['data quality score'] = np.nan
+                    results_df['data clearness score'] = np.nan
+                    results_df['inverter clipping'] = np.nan
+                    results_df['runs estimation'] = np.nan
+
+                results_df['site'] = site_id
+                results_df['system'] = system_id
+
+                if time_shift_inspection:
+                    results_df['manual_time shift'] = manual_time_shift
+
+                partial_df = partial_df.append(results_df)
     return partial_df
 
 
@@ -93,6 +98,7 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
+
     full_site_list = enumerate_files(s3_bucket, prefix)
     full_site_list = filename_to_siteid(full_site_list)
 
@@ -177,7 +183,7 @@ if __name__ == '__main__':
     df_ground_data = str(sys.argv[11])
 
     local_output_folder = output_file.split('data')[0]
-    log_file_versions('solar_data_tools', local_output_folder)
+    #log_file_versions('solar_data_tools', local_output_folder)
 
     if file_label == 'None':
         file_label = ''
@@ -191,5 +197,8 @@ if __name__ == '__main__':
     df_ground_data['system'] = df_ground_data['system'].apply(str)
     df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
+
+
+
     main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+        time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
