@@ -53,7 +53,7 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
     commands = ["grep -a 'finished' ./out"]
     commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
                                    shell_commands=commands, verbose=False)
-    if str(commands_dict["grep 'finished' ./out"][0]).find('finished') != -1:
+    if str(commands_dict["grep -a 'finished' ./out"][0]).find('finished') != -1:
         return True
     else:
         return False
