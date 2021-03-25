@@ -28,15 +28,14 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
         lon_study = LongitudeStudy(data_handler=dh_in, gmt_offset=gmt_offset, true_value=real_longitude)
         lon_study.run(verbose=False)
         p_df = lon_study.results.sort_index().copy()
-    except ValueError:
+    except:
         runs_lon_estimation = False
         p_df = pd.DataFrame(columns=['longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
                                      'day_selection_method', 'data_matrix', 'residual', 'site', 'system',
                                      'length', 'data sampling', 'data quality score', 'data clearness score',
                                      'inverter clipping', 'time shift manual'])
-        partial_df.loc[0, :] = np.nan
+        p_df.loc[0, :] = np.nan
     return p_df, runs_lon_estimation
-
 
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
                      fix_time_shifts, time_zone_correction, json_file_dict=None):
