@@ -226,7 +226,5 @@ class LongitudeStudy():
                 self.estimates_sunset_filled = ss.sunset_estimates
                 self.measurements_sunrise_filled = ss.sunrise_measurements
                 self.measurements_sunset_filled = ss.sunset_measurements
-
-        self.opt_threshold = ss.threshold
         return
 
