@@ -50,7 +50,6 @@ class LatitudeStudy():
         self.estimates_sunset_filled = None
         self.measurements_sunrise_filled = None
         self.measurements_sunset_filled = None
-
         # Results
         self.results = None
 
@@ -155,3 +154,22 @@ class LatitudeStudy():
 
         latitude_estimate = calc_lat(self.hours_daylight, delta)
         return np.nanmedian(latitude_estimate)
+
+    def get_optimized_sunrise_sunset(self, data_matrix):
+        for matrix in data_matrix:
+            ss = SunriseSunset()
+            if matrix == 'raw':
+                ss.run_optimizer(data=self.raw_data_matrix)
+                self.estimates_sunrise_raw = ss.sunrise_estimates
+                self.estimates_sunset_raw = ss.sunset_estimates
+                self.measurements_sunrise_raw = ss.sunrise_measurements
+                self.measurements_sunset_raw = ss.sunset_measurements
+            if matrix == 'filled':
+                ss.run_optimizer(data=self.data_matrix)
+                self.estimates_sunrise_filled = ss.sunrise_estimates
+                self.estimates_sunset_filled = ss.sunset_estimates
+                self.measurements_sunrise_filled = ss.sunrise_measurements
+                self.measurements_sunset_filled = ss.sunset_measurements
+
+        self.opt_threshold = ss.threshold
+        return
