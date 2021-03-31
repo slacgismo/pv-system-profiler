@@ -60,6 +60,7 @@ class LatitudeStudy():
         data_matrix = np.atleast_1d(data_matrix)
         daylight_method = np.atleast_1d(daylight_method)
         delta_method = np.atleast_1d(delta_method)
+        day_selection_method = np.atleast_1d(day_selection_method)
 
         if threshold is None:
             self.daytime_threshold = 0.001 * np.ones(len(data_matrix) * len(daylight_method) * len(delta_method) *
