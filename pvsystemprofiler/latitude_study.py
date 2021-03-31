@@ -50,6 +50,8 @@ class LatitudeStudy():
         self.estimates_sunset_filled = None
         self.measurements_sunrise_filled = None
         self.measurements_sunset_filled = None
+        self.opt_threshold_filled = None
+        self.opt_threshold_raw = None
         # Results
         self.results = None
 
@@ -87,7 +89,6 @@ class LatitudeStudy():
             for matrix_ix, matrix_id in enumerate(data_matrix):
 
                 for daylight_method_id in daylight_method:
-                    print(daylight_method_id)
                     if daylight_method_id != 'optimized_estimates':
                         dtt = self.daytime_threshold[counter]
                     else:
@@ -137,13 +138,17 @@ class LatitudeStudy():
         elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
             if matrix_id == 'filled':
                 hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunset_filled
+                self.opt_threshold = self.opt_threshold_raw
             if matrix_id == 'raw':
                 hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunrise_raw
+                self.opt_threshold = self.opt_threshold_filled
         elif daylight_method in ('optimized_measurements', 'Optimized_Measurements'):
             if matrix_id == 'filled':
                 hours_daylight_all = self.measurements_sunset_filled - self.measurements_sunrise_filled
+                self.opt_threshold = self.opt_threshold_filled
             if matrix_id == 'raw':
                 hours_daylight_all = self.measurements_sunset_raw - self.measurements_sunrise_raw
+                self.opt_threshold = self.opt_threshold_raw
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
@@ -170,13 +175,12 @@ class LatitudeStudy():
                 self.estimates_sunset_raw = ss.sunset_estimates
                 self.measurements_sunrise_raw = ss.sunrise_measurements
                 self.measurements_sunset_raw = ss.sunset_measurements
-                
+                self.opt_threshold_filled = ss.threshold
             if matrix == 'filled':
                 ss.run_optimizer(data=self.data_matrix)
                 self.estimates_sunrise_filled = ss.sunrise_estimates
                 self.estimates_sunset_filled = ss.sunset_estimates
                 self.measurements_sunrise_filled = ss.sunrise_measurements
                 self.measurements_sunset_filled = ss.sunset_measurements
-
-        self.opt_threshold = ss.threshold
+                self.opt_threshold_raw = ss.threshold
         return
