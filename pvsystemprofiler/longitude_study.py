@@ -54,6 +54,14 @@ class LongitudeStudy():
         # Results
         self.results = None
         self.best_result = None
+        self.estimates_sunrise_raw = None
+        self.estimates_sunset_raw = None
+        self.measurements_sunrise_raw = None
+        self.measurements_sunset_raw = None
+        self.estimates_sunrise_filled = None
+        self.estimates_sunset_filled = None
+        self.measurements_sunrise_filled = None
+        self.measurements_sunset_filled = None
 
     def run(self, data_matrix=('raw', 'filled'),
             estimator=('calculated', 'fit_l1', 'fit_l2', 'fit_huber'),
@@ -97,6 +105,9 @@ class LongitudeStudy():
         solar_noon_method = np.atleast_1d(solar_noon_method)
         day_selection_method = np.atleast_1d(day_selection_method)
         data_matrix = np.atleast_1d(data_matrix)
+
+        self.get_optimized_sunrise_sunset(data_matrix)
+
         total = (len(estimator) * len(eot_calculation) * len(solar_noon_method)
                  * len(day_selection_method) * len(data_matrix))
         counter = 0
@@ -111,14 +122,20 @@ class LongitudeStudy():
                 elif sn == 'energy_com':
                     self.solarnoon = energy_com(data_in)
                 elif sn == 'optimized_estimates':
-                    ss = SunriseSunset()
-                    ss.run_optimizer(data=data_in)
-                    self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
+                    if dm == 'filled':
+                        sunset = np.copy(self.estimates_sunset_filled)
+                        sunrise = np.copy(self.estimates_sunrise_filled)
+                    if dm == 'raw':
+                        sunset = np.copy(self.estimates_sunset_raw)
+                        sunrise = np.copy(self.estimates_sunrise_raw)
+                    self.solarnoon = np.nanmean([sunrise, sunset], axis=0)
                 elif sn == 'optimized_measurements':
-                    ss = SunriseSunset()
-                    ss.run_optimizer(data=data_in)
-                    sunrise = np.copy(ss.sunrise_measurements)
-                    sunset = np.copy(ss.sunset_measurements)
+                    if dm == 'filled':
+                        sunset = np.copy(self.measurements_sunset_filled)
+                        sunrise = np.copy(self.measurements_sunrise_filled)
+                    if dm == 'raw':
+                        sunset = np.copy(self.measurements_sunset_raw)
+                        sunrise = np.copy(self.measurements_sunrise_raw)
                     sunrise[np.isnan(sunrise)] = 0
                     sunset[np.isnan(sunset)] = 0
                     self.solarnoon = np.nanmean([sunrise, sunset], axis=0)
@@ -193,4 +210,23 @@ class LongitudeStudy():
         problem = cvx.Problem(objective)
         problem.solve()
         return lon.value.item()
+
+    def get_optimized_sunrise_sunset(self, data_matrix):
+        for matrix in data_matrix:
+            ss = SunriseSunset()
+            if matrix == 'raw':
+                ss.run_optimizer(data=self.raw_data_matrix)
+                self.estimates_sunrise_raw = ss.sunrise_estimates
+                self.estimates_sunset_raw = ss.sunset_estimates
+                self.measurements_sunrise_raw = ss.sunrise_measurements
+                self.measurements_sunset_raw = ss.sunset_measurements
+            if matrix == 'filled':
+                ss.run_optimizer(data=self.data_matrix)
+                self.estimates_sunrise_filled = ss.sunrise_estimates
+                self.estimates_sunset_filled = ss.sunset_estimates
+                self.measurements_sunrise_filled = ss.sunrise_measurements
+                self.measurements_sunset_filled = ss.sunset_measurements
+
+        self.opt_threshold = ss.threshold
+        return
 
