@@ -164,6 +164,7 @@ class LongitudeStudy():
             progress(counter, total)
         if self.true_value is not None:
             results['residual'] = self.true_value - results['longitude']
+            results['measured_longitude'] = self.true_value
         self.results = results
         if self.true_value is not None:
             best_loc = results['residual'].apply(lambda x: np.abs(x)).argmin()

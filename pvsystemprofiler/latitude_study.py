@@ -115,6 +115,7 @@ class LatitudeStudy():
                         counter += 1
         if self.latitude_true_value is not None:
             results['residual'] = self.latitude_true_value - results['latitude']
+            results['measured_latitude'] = self.latitude_true_value
 
         self.results = results
 
