@@ -85,9 +85,14 @@ class LatitudeStudy():
         counter = 0
         for delta_id in delta_method:
             for matrix_ix, matrix_id in enumerate(data_matrix):
+
                 for daylight_method_id in daylight_method:
+                    print(daylight_method_id)
                     if daylight_method_id != 'optimized_estimates':
                         dtt = self.daytime_threshold[counter]
+                    else:
+                        dtt = None
+
                     for ds in day_selection_method:
                         if ds == 'all':
                             self.days = self.data_handler.daily_flags.no_errors
@@ -101,6 +106,7 @@ class LatitudeStudy():
 
                         lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                          delta_method=delta_id)
+
                         if daylight_method_id in ['optimized_estimates', 'optimized_measurements']:
                             dtt = self.opt_threshold
 
@@ -130,14 +136,14 @@ class LatitudeStudy():
             hours_daylight_all = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
         elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
             if matrix_id == 'filled':
-                hours_daylight_all = self.estimates_sunset_raw -self.estimates_sunset_filled
+                hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunset_filled
             if matrix_id == 'raw':
                 hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunrise_raw
         elif daylight_method in ('optimized_measurements', 'Optimized_Measurements'):
             if matrix_id == 'filled':
                 hours_daylight_all = self.measurements_sunset_filled - self.measurements_sunrise_filled
             if matrix_id == 'raw':
-                hours_daylight_all = self.measurements_sunset_raw -self.measurements_sunrise_raw
+                hours_daylight_all = self.measurements_sunset_raw - self.measurements_sunrise_raw
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
@@ -164,6 +170,7 @@ class LatitudeStudy():
                 self.estimates_sunset_raw = ss.sunset_estimates
                 self.measurements_sunrise_raw = ss.sunrise_measurements
                 self.measurements_sunset_raw = ss.sunset_measurements
+                
             if matrix == 'filled':
                 ss.run_optimizer(data=self.data_matrix)
                 self.estimates_sunrise_filled = ss.sunrise_estimates
