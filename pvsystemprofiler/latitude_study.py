@@ -42,6 +42,15 @@ class LatitudeStudy():
         self.daytime_threshold = None
         self.opt_threshold = None
         self.days = None
+        self.estimates_sunrise_raw = None
+        self.estimates_sunset_raw = None
+        self.measurements_sunrise_raw = None
+        self.measurements_sunset_raw = None
+        self.estimates_sunrise_filled = None
+        self.estimates_sunset_filled = None
+        self.measurements_sunrise_filled = None
+        self.measurements_sunset_filled = None
+
         # Results
         self.results = None
 
@@ -70,6 +79,7 @@ class LatitudeStudy():
 
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
+        self.get_optimized_sunrise_sunset(data_matrix)
 
         results = pd.DataFrame(columns=['declination_method', 'daylight_calculation', 'data_matrix', 'threshold',
                                         'day_selection_method', 'latitude'])
@@ -120,16 +130,15 @@ class LatitudeStudy():
         elif daylight_method in ('raw_daylight', 'raw daylight'):
             hours_daylight_all = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
         elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
-            ss = SunriseSunset()
-            ss.run_optimizer(data=data_in)
-            hours_daylight_all = ss.sunset_estimates - ss.sunrise_estimates
-            self.opt_threshold = ss.threshold
+            if matrix_id == 'filled':
+                hours_daylight_all = self.estimates_sunset_raw -self.estimates_sunset_filled
+            if matrix_id == 'raw':
+                hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunrise_raw
         elif daylight_method in ('optimized_measurements', 'Optimized_Measurements'):
-            ss = SunriseSunset()
-            ss.run_optimizer(data=data_in)
-            hours_daylight_all = ss.sunset_measurements - ss.sunrise_measurements
-            self.opt_threshold = ss.threshold
-
+            if matrix_id == 'filled':
+                hours_daylight_all = self.measurements_sunset_filled - self.measurements_sunrise_filled
+            if matrix_id == 'raw':
+                hours_daylight_all = self.measurements_sunset_raw -self.measurements_sunrise_raw
         if delta_method in ('Cooper', 'cooper'):
             delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
