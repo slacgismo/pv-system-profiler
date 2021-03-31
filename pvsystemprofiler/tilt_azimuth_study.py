@@ -191,6 +191,7 @@ class TiltAzimuthStudy():
 
     def find_daytime_threshold_quantile_seasonality(self):
         m = cvx.Parameter(nonneg=True, value=10 ** 6)
+        # setting local quantile for 10% of the data
         t = cvx.Parameter(nonneg=True, value=0.9)
         y = np.quantile(self.data_matrix, .9, axis=0)
         x1 = cvx.Variable(len(y))
