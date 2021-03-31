@@ -32,29 +32,50 @@ def copy_to_s3(input_file_name, bucket, destination_file_name):
     s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)
 
 
-def log_file_versions(utility, folder_location='./'):
-    conda_location = '/home/ubuntu/miniconda3/'
+def log_file_versions(utility, output_folder_location='./', conda_location='/home/ubuntu/miniconda3/',
+                      repository_location=None):
     conda = conda_location + 'bin/conda' + ' '
-    pip = conda_location + '/envs/pvi-dev/bin/pip'
-    active_conda_env = subprocess.check_output(conda + "env list | grep '*'", shell=True, encoding='utf-8')
-    active_conda_env = active_conda_env.split('/')[-1]
-    active_conda_env = active_conda_env.split('\n')[0]
-    version = subprocess.check_output(pip + " " + "show" + " " + utility + "| grep 'Version'", shell=True, encoding='utf-8')
-    version = version.split('\n')[0]
-    location = str(subprocess.check_output(pip + " " + "show" + " " + utility + "| grep 'Location'", shell=True,
-                                           encoding='utf-8'))
-    location = location.split('\n')[0]
-    i = location.find('/')
-    location = location[i:]
-    output_string = 'conda environment:' + ' ' + active_conda_env + '\n'
-    output_string += 'utility:' + ' ' + utility + '\n'
-    output_string += version + '\n'
-    output_string += 'repository location:' + ' ' + location + '\n'
 
-    if location.find('miniconda'):
-        repository = subprocess.check_output('/usr/bin/git -C' + ' ' + location + ' ' + 'log -n 1', shell=True, encoding='utf-8')
-        output_string += repository + '\n'
-    output_file = open(folder_location + utility + '_' + 'versions.log', 'w')
+    conda_list = subprocess.check_output(conda + "env list", shell=True, encoding='utf-8')
+    for line in conda_list.splitlines():
+        if '*' in line:
+            i = line.find('/')
+            active_conda_environment = line[i:].split('/')[-1]
+            output_string = 'active conda environment:' + ' ' + active_conda_environment + '\n'
+
+    pip = conda_location + 'envs/' + active_conda_environment + '/bin/pip'
+    pip_list = subprocess.check_output(pip + ' ' + 'list', shell=True, encoding='utf-8')
+
+    for line in pip_list.split():
+        if utility in line:
+            if line.find('/') != -1:
+                i = line.find('/')
+                location = line[i:]
+                output_string += 'repository location:' + ' ' + line[i:] + '\n'
+
+    try:
+        if repository_location is not None:
+            location = repository_location
+
+        repository = subprocess.check_output('/usr/bin/git -C' + ' ' + location + ' ' + 'log -n 1', shell=True,
+                                             encoding='utf-8')
+        for line in repository.splitlines():
+            if line.find('commit') != - 1:
+                i = line.find(' ')
+                commit_id = line[i:]
+                output_string += 'commit id:' + ' ' + commit_id + '\n'
+            if line.find('Author') != - 1:
+                i = line.find(': ')
+                author = line[i + 1:]
+                output_string += 'author:' + ' ' + author + '\n'
+            if line.find('Date') != - 1:
+                i = line.find(' ')
+                date = line[i:]
+                output_string += 'date:' + ' ' + date + '\n'
+    except:
+        pass
+
+    output_file = open(output_folder_location + utility + '_' + 'versions.log', 'w')
     output_file.write(output_string)
     output_file.close()
     return
