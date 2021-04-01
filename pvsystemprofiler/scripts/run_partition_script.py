@@ -16,14 +16,15 @@ from modules.script_functions import remote_execute
 
 def build_input_file(s3_location, input_file_location):
     bucket, prefix = get_s3_bucket_and_prefix(s3_location)
-    site_list = enumerate_files(bucket, prefix)
+    site_list, size_list = enumerate_files(bucket, prefix, file_size_list=True)
     site_df = pd.DataFrame()
     site_df['site'] = site_list
     site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
+    site_df['file_size'] = size_list
     site_df.to_csv('./generated_site_list.csv')
     bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
     copy_to_s3('./generated_site_list.csv', bucket, prefix)
-
+    return site_df
 
 def get_remote_output_files(partitions, username, destination_dict):
     os.system('mkdir' + ' ' + destination_dict)
@@ -75,11 +76,28 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
          aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection,
          s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file):
     n_part = len(ec2_instances)
-    ll = len(df)
-    part_size = math.ceil(ll / n_part)
-    i = 0
+    total_size = np.sum(df['file_size'])
+    part_size = np.ceil(total_size / n_part) * 0.8
+    ii = 0
     jj = 0
     partitions = []
+    for i in range(n_part):
+        local_size = 0
+        while local_size < part_size:
+            local_size = np.sum(df.loc[ii:jj, 'file_size'])
+            jj += 1
+            if jj > len(df):
+                local_size = part_size + 1
+        part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=input_file_location,
+                          ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
+                          ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
+                          scripts_location=script_location, pcid=power_column_id, tsi=time_shift_inspection,
+                          s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+                          time_zone_correction=time_zone_correction, check_json=check_json, sup_file=supplementary_file)
+        partitions.append(part)
+        create_partition(part)
+        ii = jj + 1
+        jj = ii
 
     while jj < ll:
         ii = i * part_size
@@ -178,7 +196,6 @@ if __name__ == '__main__':
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
     df = pd.read_csv(input_file_location, index_col=0)
 
-    main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username,
-         aws_instance_name, aws_region, aws_client, script_name, script_location, power_column_id,
-         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file)
+    main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
+         aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection, s3_location,
+         n_files, file_label, fix_time_shifts, time_zone_correction, check_json,supplementary_file)

@@ -199,16 +199,22 @@ def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     return system_list
 
 
-def enumerate_files(s3_bucket, prefix, extension='.csv'):
+def enumerate_files(s3_bucket, prefix, extension='.csv', file_size_list=False):
     s3 = boto3.client('s3')
     output_list = []
+    size_list = []
     for obj in s3.list_objects_v2(Bucket=s3_bucket, Prefix=prefix)['Contents']:
         if (obj['Key']).find(extension) != -1:
             file_name = obj['Key']
+            file_size = obj['Size']
             i = file_name.rfind('/')
             file_name = file_name[i + 1:]
             output_list.append(file_name)
-    return output_list
+            size_list.append(file_size)
+    if file_size_list:
+        return output_list, size_list
+    else:
+        return output_list
 
 
 def get_io_file_locations(text_file):
