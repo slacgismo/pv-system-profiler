@@ -223,6 +223,6 @@ if __name__ == '__main__':
 
     's3://pv.insight.misc/constellation parameter estimation/latitude/latitude_results.csv'
     's3://pv.insight.misc/constellation parameter estimation/longitude/longitude_results.csv'
-
+    s3://pv.insight.misc/report_files/lon_lat_precalculates.csv
     main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
