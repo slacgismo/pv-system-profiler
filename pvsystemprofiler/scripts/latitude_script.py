@@ -26,8 +26,9 @@ def run_failsafe_lat_estimation(dh_in, real_latitude):
     try:
         runs_lat_estimation = True
         lat_study = LatitudeStudy(data_handler=dh_in, lat_true_value=real_latitude)
-        lat_study.run()
-        lat_study.run()
+        #lat_study.run()
+        lat_study.run(data_matrix='filled', daylight_method='sunrise-sunset', delta_method='spencer',
+                      day_selection_method='all')
         p_df = lat_study.results.sort_index().copy()
     except:
         runs_lat_estimation = False
