@@ -84,10 +84,13 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
     for i in range(n_part):
         local_size = 0
         while local_size < part_size:
+            local_size = jj - ii
+            if i == n_part - 1:
+                jj = len(df)
+                local_size = part_size + 1
             local_size = np.sum(df.loc[ii:jj, 'file_size'])
             jj += 1
-            if jj > len(df):
-                local_size = part_size + 1
+            
         part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=input_file_location,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,

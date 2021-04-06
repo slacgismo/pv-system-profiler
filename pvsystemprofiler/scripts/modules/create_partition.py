@@ -29,7 +29,7 @@ def create_partition(partition):
 
     commands = ['ls' + ' ' + local_working_folder]
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
-    if str(output[commands[0]][1]).find('No such file or directory') == -1:
+    if str(output[commands[0]][1]).find('No such file or directory') != -1:
         commands = ['rm estimation* -rf',
                     'mkdir -p' + ' ' + local_working_folder + 'data',
                     python + ' ' + local_script + ' '
