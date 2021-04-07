@@ -186,8 +186,8 @@ if __name__ == '__main__':
     df_ground_data = str(sys.argv[11])
 
     local_output_folder = output_file.split('data')[0]
-    log_file_versions('solar-data-tools')
-    log_file_versions('pv-system-profiler', '/home/ubuntu/github/pv-system-profiler')
+    #log_file_versions('solar-data-tools')
+    #log_file_versions('pv-system-profiler', '/home/ubuntu/github/pv-system-profiler')
     if file_label == 'None':
         file_label = ''
 

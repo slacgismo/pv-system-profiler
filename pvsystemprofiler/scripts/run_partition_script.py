@@ -84,11 +84,10 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
     for i in range(n_part):
         local_size = 0
         while local_size < part_size:
-            local_size = jj - ii
+            local_size = np.sum(df.loc[ii:jj, 'file_size'])
             if i == n_part - 1:
                 jj = len(df) - 1
                 local_size = part_size + 1
-            local_size = np.sum(df.loc[ii:jj, 'file_size'])
             jj += 1
 
         part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=input_file_location,
