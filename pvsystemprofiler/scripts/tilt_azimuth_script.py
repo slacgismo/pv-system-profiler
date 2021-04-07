@@ -73,7 +73,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 real_tilt = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'tilt'])
                 real_azimuth = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'azimuth'])
                 lat_precalculate = float(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                            'latitude_precalculate'])
+                                                            'latitude'])
                 dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
@@ -161,7 +161,7 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, json_file_dict)
+                                      fix_time_shifts, time_zone_correction)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -213,7 +213,8 @@ if __name__ == '__main__':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
-    df_ground_data = pd.read_csv('s3://pv.insight.misc/report_files/constellation_site_list.csv', index_col=0)
+    #df_ground_data = pd.read_csv('s3://pv.insight.misc/report_files/constellation_site_list.csv', index_col=0)
+    df_ground_data = pd.read_csv('s3://pv.insight.misc/report_files/lon_lat_precalculates.csv', index_col=0)
     df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
     df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
     df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
@@ -221,8 +222,5 @@ if __name__ == '__main__':
     df_ground_data['system'] = df_ground_data['system'].apply(str)
     df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
-    's3://pv.insight.misc/constellation parameter estimation/latitude/latitude_results.csv'
-    's3://pv.insight.misc/constellation parameter estimation/longitude/longitude_results.csv'
-    s3://pv.insight.misc/report_files/lon_lat_precalculates.csv
     main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)

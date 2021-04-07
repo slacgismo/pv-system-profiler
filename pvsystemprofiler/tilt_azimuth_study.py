@@ -50,7 +50,8 @@ class TiltAzimuthStudy():
 
         if day_range is None:
             self.day_range_dict = {}
-            self.day_range_dict = {'summer': [152, 245], 'no winter': [60, 335], 'spring': [60, 153], 'Full Year': None}
+            self.day_range_dict = {'summer': [152, 245], 'no winter': [60, 335], 'spring': [60, 153], 'Full Year': None,
+                                   'winter': [0, 79], 'winter_spring': [0, 171]}
         else:
             self.day_range_dict = {'manual': day_range}
         self.data_matrix = self.data_handler.filled_data_matrix
