@@ -68,12 +68,13 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 i += 1
                 sys_tag = power_column_label + system_id
                 gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
-                real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
+                longitude_precalculate = float(df_ground_data.loc[df_ground_data['system'] == system_id,
+                                                                  'estimated_longitude'])
                 real_latitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'latitude'])
                 real_tilt = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'tilt'])
                 real_azimuth = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'azimuth'])
-                lat_precalculate = float(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                            'latitude'])
+                latitude_precalculate = float(df_ground_data.loc[df_ground_data['system'] == system_id,
+                                                                 'estimated_latitude'])
                 dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
@@ -87,8 +88,8 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                     passes_pipeline = False
                 if passes_pipeline:
 
-                    results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, real_longitude,
-                                                                               lat_precalculate, None, None,
+                    results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_precalculate,
+                                                                               latitude_precalculate, None, None,
                                                                                real_latitude, real_tilt, real_azimuth,
                                                                                gmt_offset)
                     results_df['length'] = dh.num_days
