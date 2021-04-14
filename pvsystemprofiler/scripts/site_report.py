@@ -3,9 +3,10 @@ import os
 import pandas as pd
 import numpy as np
 from time import time
-
 sys.path.append('/home/ubuntu/github/pv-system-profiler/')
-sys.path.append('/home/ubuntu/github/solar-data-tools/')
+#sys.path.append('/home/ubuntu/github/solar-data-tools/')
+#sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
+#sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline
@@ -16,46 +17,66 @@ from modules.script_functions import get_checked_sites
 from modules.script_functions import get_s3_bucket_and_prefix
 from modules.script_functions import siteid_to_filename
 from modules.script_functions import create_json_dict
-from modules.script_functions import extract_sys_parameters
 from modules.script_functions import string_to_boolean
 from modules.script_functions import log_file_versions
+from modules.script_functions import filename_to_siteid
+from modules.script_functions import extract_sys_parameters
 
+def load_ground_data(df_loc):
+    df = pd.read_csv(df_loc, index_col=0)
+    df = df[~df['time_shift_manual'].isnull()]
+    df['time_shift_manual'] = df['time_shift_manual'].apply(int)
+    df = df[df['time_shift_manual'].isin([0, 1])]
+    df['site'] = df['site'].apply(str)
+    df['system'] = df['system'].apply(str)
+    df['site_file'] = df['site'].apply(lambda x: str(x) + '_20201006_composite')
+    return df
 
-def evaluate_systems(df, power_column_label, site_id, checked_systems, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, json_file_dict=None):
-    cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling', 'data quality_score',
-            'data clearness_score', 'inverter_clipping', 'time_shifts_corrected', 'time_zone_correction',
-            'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude', 'latitude', 'tilt', 'azimuth',
-            'sys_id']
+def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
+                     fix_time_shifts, time_zone_correction, json_file_dict=None):
+    partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
+                       'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
+                       'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
+                       'latitude', 'tilt', 'azimuth', 'sys_id']
+
 
     if json_file_dict is None:
-        partial_df = pd.DataFrame(columns=cols[:-6])
+        partial_df = pd.DataFrame(columns=partial_df_cols[:13])
     else:
-        partial_df = pd.DataFrame(columns=cols)
+        partial_df = pd.DataFrame(columns=partial_df_cols)
+    if time_shift_inspection:
+        partial_df['manual_time_shift'] = np.nan
 
     ll = len(power_column_label)
     cols = df.columns
-    i = 0
+
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            if system_id not in checked_systems:
-                # print(site_id, system_id)
-                i += 1
+            #print(site_id, system_id)
+            if system_id in df_ground_data['system'].tolist() or df_ground_data is None:
                 sys_tag = power_column_label + system_id
+
                 dh = DataHandler(df)
-                if time_shift_inspection == 'True':
-                    dh.fix_dst()
+                if time_shift_inspection:
+                    manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
+                                                            'time_shift_manual'].values[0])
+                    if manual_time_shift == 1:
+                        dh.fix_dst()
                 try:
                     run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
                     passes_pipeline = True
                 except:
                     passes_pipeline = False
 
-                results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
-                                dh.data_sampling,
-                                dh.data_quality_score, dh.data_clearness_score, dh.inverter_clipping,
-                                dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores]
+                if passes_pipeline:
+                    results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
+                                    dh.data_sampling,
+                                    dh.data_quality_score, dh.data_clearness_score, dh.inverter_clipping,
+                                    dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores]
+
+                else:
+                    results_list = [site_id, system_id, passes_pipeline] + [np.nan]*10
 
                 if json_file_dict is not None:
                     if system_id in json_file_dict.keys():
@@ -65,18 +86,23 @@ def evaluate_systems(df, power_column_label, site_id, checked_systems, time_shif
                         location_results = [np.nan] * 5
                     results_list += location_results
 
-                partial_df.loc[i] = results_list
+                if time_shift_inspection:
+                    results_list += str(manual_time_shift)
+
+                partial_df.loc[len(partial_df)] = results_list
     return partial_df
 
 
-def main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
+def main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
-    full_site_list = enumerate_files(s3_bucket, prefix)
-    previously_checked_site_list = get_checked_sites(full_df, file_label, ext)
 
+    full_site_list = enumerate_files(s3_bucket, prefix)
+    full_site_list = filename_to_siteid(full_site_list)
+
+    previously_checked_site_list = get_checked_sites(full_df)
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
 
     if check_json:
@@ -91,8 +117,11 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
         input_file_df = pd.read_csv(input_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        input_file_list = siteid_to_filename(site_list, file_label, ext)
-        file_list = list(set(input_file_list) & set(file_list))
+        #input_file_list = siteid_to_filename(site_list, file_label, ext)
+        #file_list = list(set(input_file_list) & set(file_list))
+        manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
+        file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
+
     file_list.sort()
 
     if n_files != 'all':
@@ -108,19 +137,19 @@ def main(input_file, n_files, s3_location, file_label, power_column_label, full_
             site_id = file_id.split('.')[0]
 
         df = load_generic_data(s3_location, file_label, site_id)
-
-        partial_df = evaluate_systems(df, power_column_label, site_id, checked_systems, time_shift_inspection,
+        partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
                                       fix_time_shifts, time_zone_correction, json_file_dict)
-
-        full_df = full_df.append(partial_df)
-        full_df.index = np.arange(len(full_df))
-        full_df.to_csv(output_file)
-        t1 = time()
-        site_run_time = t1 - t0
-        total_time += site_run_time
+        if not partial_df.empty:
+            full_df = full_df.append(partial_df)
+            full_df.index = np.arange(len(full_df))
+            full_df.to_csv(output_file)
+            t1 = time()
+            site_run_time = t1 - t0
+            total_time += site_run_time
 
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
-    progress(len(file_list), len(file_list), msg, bar_length=20)
+    if len(file_list) != 0:
+        progress(len(file_list), len(file_list), msg, bar_length=20)
     print('finished')
     return
 
@@ -151,14 +180,17 @@ if __name__ == '__main__':
     fix_time_shifts = string_to_boolean(str(sys.argv[8]))
     time_zone_correction = string_to_boolean(str(sys.argv[9]))
     check_json = string_to_boolean(str(sys.argv[10]))
+    df_ground_data_loc = str(sys.argv[11])
 
     local_output_folder = output_file.split('data')[0]
-    log_file_versions('solar_data_tools', local_output_folder)
-
+    #log_file_versions('solar-data-tools')
+    #log_file_versions('pv-system-profiler', '/home/ubuntu/github/pv-system-profiler')
     if file_label == 'None':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
+    if df_ground_data_loc is not None:
+        df_ground_data = load_ground_data(df_ground_data_loc)
 
-    main(input_file, n_files, s3_location, file_label, power_column_label, full_df, checked_systems, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+    main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+        time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
