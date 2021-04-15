@@ -47,11 +47,11 @@ class TiltAzimuthStudy():
         """
 
         self.data_handler = data_handler
-
+        print(day_range)
         if day_range is None:
             self.day_range_dict = {}
-            self.day_range_dict = {'summer': [152, 245], 'no winter': [60, 335], 'spring': [60, 153], 'Full Year': None,
-                                   'winter': [0, 79], 'winter_spring': [0, 171]}
+            self.day_range_dict = {'summer': [171, 265], 'no_winter': [79, 355], 'spring': [79, 171], 'full_year': None,
+                                   'winter': [355, 79], 'winter_spring': [355, 171]}
         else:
             self.day_range_dict = {'manual': day_range}
         self.data_matrix = self.data_handler.filled_data_matrix
@@ -176,7 +176,10 @@ class TiltAzimuthStudy():
 
     def get_day_range(self, interval):
         if interval is not None:
-            day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
+            if interval[0] < interval[1]:
+                day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
+            elif interval[0] > interval[1]:
+                day_range = (self.day_of_year > interval[1]) & (self.day_of_year < interval[0])
         else:
             day_range = np.ones(self.day_of_year.shape, dtype=bool)
         self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
