@@ -24,7 +24,7 @@ from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions impo
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 
 class TiltAzimuthStudy():
-    def __init__(self, data_handler, day_range=None, init_values=None, nrandom_init_values=None, daytime_threshold=None,
+    def __init__(self, data_handler, day_range='full_year', init_values=None, nrandom_init_values=None, daytime_threshold=None,
                  lon_precalculate=None, lat_precalculate=None, tilt_precalculate=None, azimuth_precalculate=None,
                  lat_true_value=None, tilt_true_value=None, azimuth_true_value=None, gmt_offset=-8):
         """
@@ -47,13 +47,15 @@ class TiltAzimuthStudy():
         """
 
         self.data_handler = data_handler
-        print(day_range)
         if day_range is None:
             self.day_range_dict = {}
-            self.day_range_dict = {'summer': [171, 265], 'no_winter': [79, 355], 'spring': [79, 171], 'full_year': None,
-                                   'winter': [355, 79], 'winter_spring': [355, 171]}
-        else:
+            self.day_range_dict = {'summer': [171, 265], 'no_winter': [79, 355], 'spring': [79, 171],
+                                   'winter': [355, 79], 'winter_spring': [355, 171], 'full_year': None}
+        elif day_range is 'full_year':
+            self.day_range_dict = {'full_year': None}
+        elif day_range is 'manual':
             self.day_range_dict = {'manual': day_range}
+
         self.data_matrix = self.data_handler.filled_data_matrix
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
@@ -176,10 +178,7 @@ class TiltAzimuthStudy():
 
     def get_day_range(self, interval):
         if interval is not None:
-            if interval[0] < interval[1]:
-                day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
-            elif interval[0] > interval[1]:
-                day_range = (self.day_of_year > interval[1]) & (self.day_of_year < interval[0])
+            day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
         else:
             day_range = np.ones(self.day_of_year.shape, dtype=bool)
         self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
