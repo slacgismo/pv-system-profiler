@@ -15,7 +15,6 @@ from modules.script_functions import load_generic_data
 from modules.script_functions import enumerate_files
 from modules.script_functions import get_checked_sites
 from modules.script_functions import get_s3_bucket_and_prefix
-from modules.script_functions import siteid_to_filename
 from modules.script_functions import create_json_dict
 from modules.script_functions import string_to_boolean
 from modules.script_functions import log_file_versions
@@ -93,7 +92,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     return partial_df
 
 
-def main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+def main(input_site_list, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
     site_run_time = 0
     total_time = 0
@@ -113,15 +112,14 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
     else:
         json_file_dict = None
 
-    if input_file != 'None':
-        input_file_df = pd.read_csv(input_file, index_col=0)
-        site_list = input_file_df['site'].apply(str)
+    if input_site_list != 'None':
+        input_site_list_df = pd.read_csv(input_site_list, index_col=0)
+        site_list = input_site_list_df['site'].apply(str)
         site_list = site_list.tolist()
-        #input_file_list = siteid_to_filename(site_list, file_label, ext)
-        #file_list = list(set(input_file_list) & set(file_list))
-        manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
-        file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
-
+        file_list = list(set(site_list) & set(file_list))
+        if time_shift_inspection:
+            manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
+            file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
 
     if n_files != 'all':
@@ -155,22 +153,22 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
 
 
 if __name__ == '__main__':
-    '''
-        :input_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
-        :n_files: number of files to read. If 'all' all files in folder are read.
-        :s3_location: Absolute path to s3 location of files.
-        :file_label:  Repeating portion of data files label. If 'None', no file label is used. 
-        :power_column_label: Repeating portion of the power column label. 
-        :output_file: Absolute path to csv file containing report results.
-        :time_shift_inspection: String, 'True' or 'False'. Determines indicates if manual time shift inspection should 
-        be taken into account for pipeline run.
-        :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
-        :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running 
-        the pipeline
-        :check_json: String, 'True' or 'False'. Check json file for location information. 
-        '''
+    """
+    :param input_site_list: A csv file containing a list of sites to be evaluated. 'None' if no input list is provided.
+    :param n_files:  number of files to read. If 'all' all files in folder are read.
+    :param s3_location: Absolute path to s3 location of csv files containing site power time series.
+    :param file_label: Repeating portion of the power column label. 
+    :param power_column_label: Repeating portion of data files label. If 'None', no file label is used.
+    :param output_file: Absolute path to csv file containing report results.
+    :param time_shift_inspection: True or False. Determines indicates if manual time shift inspection should 
+    be taken into account for pipeline run
+    :param fix_time_shifts: True or False. determines if time shifts are fixed when running the pipeline.
+    :param time_zone_correction: True or False, determines if time zone correction is performed when running the
+     pipeline.
+    :param check_json: True or False. Check json file for location information.
+    """
 
-    input_file = str(sys.argv[1])
+    input_site_list = str(sys.argv[1])
     n_files = str(sys.argv[2])
     s3_location = str(sys.argv[3])
     file_label = str(sys.argv[4])
@@ -192,5 +190,5 @@ if __name__ == '__main__':
     if df_ground_data_loc is not None:
         df_ground_data = load_ground_data(df_ground_data_loc)
 
-    main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+    main(input_site_list, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
