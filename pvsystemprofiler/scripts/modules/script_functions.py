@@ -36,27 +36,33 @@ def log_file_versions(utility, output_folder_location='./', conda_location='/hom
                       repository_location=None):
     conda = conda_location + 'bin/conda' + ' '
 
-    conda_list = subprocess.check_output(conda + "env list", shell=True, encoding='utf-8')
-    for line in conda_list.splitlines():
+    conda_env = subprocess.check_output(conda + "env list", shell=True, encoding='utf-8')
+    for line in conda_env.splitlines():
         if '*' in line:
             i = line.find('/')
             active_conda_environment = line[i:].split('/')[-1]
             output_string = 'active conda environment:' + ' ' + active_conda_environment + '\n'
 
     pip = conda_location + 'envs/' + active_conda_environment + '/bin/pip'
-    pip_list = subprocess.check_output(pip + ' ' + 'list', shell=True, encoding='utf-8')
 
-    for line in pip_list.split():
-        if utility in line:
-            if line.find('/') != -1:
-                i = line.find('/')
-                location = line[i:]
-                output_string += 'repository location:' + ' ' + line[i:] + '\n'
+    try:
+        pip_list = subprocess.check_output(pip + ' ' + 'show' + ' ' + utility, shell=True, encoding='utf-8')
+
+        for line in pip_list.splitlines():
+            if 'Location' in line:
+                i = line.find(':')
+                location = line[i + 1:]
+            if 'Version' in line:
+                i = line.find(':')
+                location = line[i + 1:]
+                output_string += 'utility version:' + ' ' + location + '\n'
+    except:
+        output_string += 'utility version:' + ' ' + 'n/a' + '\n'
 
     try:
         if repository_location is not None:
             location = repository_location
-
+        output_string += 'repository location:' + ' ' + location + '\n'
         repository = subprocess.check_output('/usr/bin/git -C' + ' ' + location + ' ' + 'log -n 1', shell=True,
                                              encoding='utf-8')
         for line in repository.splitlines():
@@ -73,13 +79,14 @@ def log_file_versions(utility, output_folder_location='./', conda_location='/hom
                 date = line[i:]
                 output_string += 'date:' + ' ' + date + '\n'
     except:
-        pass
+        output_string += 'commit id:' + ' ' + 'n/a' + '\n'
+        output_string += 'author:' + ' ' + 'n/a' + '\n'
+        output_string += 'date:' + ' ' + 'n/a' + '\n'
 
     output_file = open(output_folder_location + utility + '_' + 'versions.log', 'w')
     output_file.write(output_string)
     output_file.close()
     return
-
 
 def string_to_boolean(value):
     if value == 'True':
