@@ -23,7 +23,9 @@ def build_input_file(s3_location, input_file_location):
     site_df['file_size'] = size_list
     site_df.to_csv('./generated_site_list.csv')
     bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
-    copy_to_s3('./generated_site_list.csv', bucket, prefix)
+    print(bucket)
+    print(prefix)
+    copy_to_s3('./generated_site_list.csv', bucket, prefix + '/generated_site_list.csv')
     return site_df
 
 def get_remote_output_files(partitions, username, destination_dict):
@@ -121,8 +123,8 @@ def main(df, ec2_instances, input_file_location, output_folder_location, ssh_key
 
 
 if __name__ == '__main__':
-    create_input_file = str(sys.argv[1])
-    input_file_location = str(sys.argv[2])
+    input_site_file = str(sys.argv[1])
+    s3_location = str(sys.argv[2])
     ssh_key_file = str(sys.argv[3])
     aws_username = str(sys.argv[4])
     aws_instance_name = str(sys.argv[5])
@@ -143,9 +145,9 @@ if __name__ == '__main__':
     check_json = str(sys.argv[20])
     supplementary_file = str(sys.argv[21])
     '''
-    :create_input_file: True if a csv file with the system's information to be generated. False if file provided.
-    :input file location: The csv file with the system's information. If create_input_file=True a file with the 
-    specified name and location is created.
+    :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
+    list is provided.
+    :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     :ssh_key_file: .pem aws key file.
     :aws_username: aws linux username in instances.
     :aws_instance_name: aws name key used to identify instances to be used in the partitioning.
@@ -169,19 +171,24 @@ if __name__ == '__main__':
     :supplementary_file: csv file with supplementary information need to run script.
     '''
     # log_file_versions('solar_data_tools')
-    if create_input_file == 'True':
+
+    if input_site_file != 'None':
+        input_file_location = 's3://pv.insight.misc/report_files/'
         build_input_file(s3_location, input_file_location)
+    else:
+        pos = input_site_file.rfind('/') + 1
+        input_file_location = input_site_file[:pos]
 
-    main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
-                            ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
-                            gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
-                            s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
-                            time_zone_correction=time_zone_correction, check_json=check_json,
-                            sup_file=supplementary_file)
-
-    ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
-    df = pd.read_csv(input_file_location, index_col=0)
-
-    main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection, s3_location,
-         n_files, file_label, fix_time_shifts, time_zone_correction, check_json,supplementary_file)
+    # main_class = get_config(ifl=input_file_location, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
+    #                         ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
+    #                         gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
+    #                         s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+    #                         time_zone_correction=time_zone_correction, check_json=check_json,
+    #                         sup_file=supplementary_file)
+    #
+    # ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
+    # df = pd.read_csv(input_file_location, index_col=0)
+    #
+    # main(df, ec2_instances, input_file_location, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
+    #      aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection, s3_location,
+    #      n_files, file_label, fix_time_shifts, time_zone_correction, check_json,supplementary_file)
