@@ -156,13 +156,13 @@ if __name__ == '__main__':
     """
     :param input_site_list: A csv file containing a list of sites to be evaluated. 'None' if no input list is provided.
     :param n_files:  number of files to read. If 'all' all files in folder are read.
-    :param s3_location: Absolute path to s3 location of csv files containing site power time series.
+    :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     :param file_label: Repeating portion of the power column label. 
     :param power_column_label: Repeating portion of data files label. If 'None', no file label is used.
     :param output_file: Absolute path to csv file containing report results.
-    :param time_shift_inspection: True or False. Determines indicates if manual time shift inspection should 
-    be taken into account for pipeline run
-    :param fix_time_shifts: True or False. determines if time shifts are fixed when running the pipeline.
+    :param time_shift_inspection: True or False. Determines if manual time shift inspection should  be taken into 
+    account for pipeline run
+    :param fix_time_shifts: True or False. Determines if time shifts are fixed when running the pipeline.
     :param time_zone_correction: True or False, determines if time zone correction is performed when running the
      pipeline.
     :param check_json: True or False. Check json file for location information.
