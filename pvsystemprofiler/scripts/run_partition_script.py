@@ -79,6 +79,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
          s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file):
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
+    #total_size = len(df)
     part_size = np.ceil(total_size / n_part) * 0.8
     ii = 0
     jj = 0
