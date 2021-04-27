@@ -127,17 +127,14 @@ if __name__ == '__main__':
     aws_instance_name = str(sys.argv[3])
     script_name = str(sys.argv[4])
     script_location = str(sys.argv[5])
-    output_folder_location = str(sys.argv[6])
-    power_column_id = str(sys.argv[7])
-    global_output_directory = str(sys.argv[8])
-    global_output_file = str(sys.argv[9])
-    n_files = str(sys.argv[10])
-    file_label = str(sys.argv[11])
-    time_shift_inspection = str(sys.argv[12])
-    fix_time_shifts = str(sys.argv[13])
-    time_zone_correction = str(sys.argv[14])
-    check_json = str(sys.argv[15])
-    supplementary_file = str(sys.argv[16])
+    power_column_id = str(sys.argv[6])
+    n_files = str(sys.argv[7])
+    file_label = str(sys.argv[8])
+    time_shift_inspection = str(sys.argv[9])
+    fix_time_shifts = str(sys.argv[10])
+    time_zone_correction = str(sys.argv[11])
+    check_json = str(sys.argv[12])
+    supplementary_file = str(sys.argv[13])
     '''
     :param site_input_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
     list is provided.
@@ -167,6 +164,10 @@ if __name__ == '__main__':
     aws_username = 'ubuntu'
     aws_region = 'us-west-1'
     aws_client = 'ec2'
+    output_folder_location = '~/'
+    global_output_directory = '~/results/'
+    global_output_file = 'results.csv'
+
     try:
         ssh_key_file = glob.glob("/Users/*/.aws/*.pem")[0]
     except:
