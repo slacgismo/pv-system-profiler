@@ -3,10 +3,11 @@ import os
 import pandas as pd
 import numpy as np
 from time import time
+
 sys.path.append('/home/ubuntu/github/pv-system-profiler/')
-#sys.path.append('/home/ubuntu/github/solar-data-tools/')
-#sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
-#sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
+# sys.path.append('/home/ubuntu/github/solar-data-tools/')
+# sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
+# sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline
@@ -21,6 +22,7 @@ from modules.script_functions import log_file_versions
 from modules.script_functions import filename_to_siteid
 from modules.script_functions import extract_sys_parameters
 
+
 def load_ground_data(df_loc):
     df = pd.read_csv(df_loc, index_col=0)
     df = df[~df['time_shift_manual'].isnull()]
@@ -31,13 +33,13 @@ def load_ground_data(df_loc):
     df['site_file'] = df['site'].apply(lambda x: str(x) + '_20201006_composite')
     return df
 
+
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
                      fix_time_shifts, time_zone_correction, json_file_dict=None):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
                        'latitude', 'tilt', 'azimuth', 'sys_id']
-
 
     if json_file_dict is None:
         partial_df = pd.DataFrame(columns=partial_df_cols[:13])
@@ -52,14 +54,14 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            #print(site_id, system_id)
+            # print(site_id, system_id)
             if system_id in df_ground_data['system'].tolist() or df_ground_data is None:
                 sys_tag = power_column_label + system_id
 
                 dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                            'time_shift_manual'].values[0])
+                                                               'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
                 try:
@@ -75,7 +77,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                                     dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores]
 
                 else:
-                    results_list = [site_id, system_id, passes_pipeline] + [np.nan]*10
+                    results_list = [site_id, system_id, passes_pipeline] + [np.nan] * 10
 
                 if json_file_dict is not None:
                     if system_id in json_file_dict.keys():
@@ -153,20 +155,6 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
 
 
 if __name__ == '__main__':
-    """
-    :param input_site_list: A csv file containing a list of sites to be evaluated. 'None' if no input list is provided.
-    :param n_files:  number of files to read. If 'all' all files in folder are read.
-    :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
-    :param file_label: Repeating portion of the power column label. 
-    :param power_column_label: Repeating portion of data files label. If 'None', no file label is used.
-    :param output_file: Absolute path to csv file containing report results.
-    :param time_shift_inspection: True or False. Determines if manual time shift inspection should  be taken into 
-    account for pipeline run
-    :param fix_time_shifts: True or False. Determines if time shifts are fixed when running the pipeline.
-    :param time_zone_correction: True or False, determines if time zone correction is performed when running the
-     pipeline.
-    :param check_json: True or False. Check json file for location information.
-    """
 
     input_site_list = str(sys.argv[1])
     n_files = str(sys.argv[2])
@@ -178,17 +166,34 @@ if __name__ == '__main__':
     fix_time_shifts = string_to_boolean(str(sys.argv[8]))
     time_zone_correction = string_to_boolean(str(sys.argv[9]))
     check_json = string_to_boolean(str(sys.argv[10]))
-    df_ground_data_loc = str(sys.argv[11])
+    ground_data = str(sys.argv[11])
+
+    '''
+    :param input_site_list: A csv file containing a list of sites to be evaluated. 'None' if no input list is provided.
+    :param n_files: number of files to read. If 'all' all files in folder are read.
+    :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
+    :param file_label: Repeating portion of the power column label.
+    :param power_column_label: Repeating portion of data files label. If 'None', no file label is used.
+    :param output_file: Absolute path to csv file containing report results.
+    :param time_shift_inspection: True or False. Determines if manual time shift inspection should  be taken into 
+    account for pipeline run.
+    :param fix_time_shifts: True or False. Determines if time shifts are fixed when running the pipeline.
+    :param time_zone_correction: True or False, determines if time zone correction is performed when running the
+     pipeline.
+    :param check_json: check_json: True or False. Check json file for location information.
+    :param ground_data: Full path to csv file with ground data.
+    :return: 
+    '''
 
     local_output_folder = output_file.split('data')[0]
-    #log_file_versions('solar-data-tools')
-    #log_file_versions('pv-system-profiler', '/home/ubuntu/github/pv-system-profiler')
+    # log_file_versions('solar-data-tools')
+    # log_file_versions('pv-system-profiler', '/home/ubuntu/github/pv-system-profiler')
     if file_label == 'None':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
     if df_ground_data_loc is not None:
-        df_ground_data = load_ground_data(df_ground_data_loc)
+        df_ground_data = load_ground_data(ground_data)
 
     main(input_site_list, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-        time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)

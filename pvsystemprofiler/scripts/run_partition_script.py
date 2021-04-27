@@ -139,22 +139,18 @@ if __name__ == '__main__':
     :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
     site file is provided.
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
-    :aws_username: aws linux username in instances.
-    :script_to_execute: Location of script to be executed.
-    :script_location: full path to directory where script_name is located. 
-    :output_folder_location: Full path to folder where local results will be saved. This folder will be created during 
-    script execution.
-    :power_column_id: id given to the power column to be analyzed.
-    :global_output_directory:  directory where consolidated results are saved.
-    :global_output_file:  name of csv file with the consolidated results.
-    :time_shift_inspection: indicate if manual time shift inspection should be taken into account for pipeline run.
-    :n_files: number of files to read. If 'all' all files in folder are read.
-    :file_label:  Repeating portion of data files label. If 'None', no file label is used. 
-    :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
-    :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running  the
-    pipeline
-    :check_json: String, 'True' or 'False'. Check json file for location information. 
-    :supplementary_file: csv file with supplementary information need to run script.
+    :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
+    :param Full path to python script to be executed.
+    :param power_column_id: id given to the power column to be analyzed.
+    :param time_shift_inspection: indicate if manual time shift inspection should be taken into account for pipeline
+     run.
+    :param n_files: number of files to read. If 'all' all files in folder are read.
+    :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
+    :param fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline.
+    :param time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running 
+    the pipeline
+    :param check_json: String, 'True' or 'False'. Check json file for location information. 
+    :param supplementary_file: csv file with supplementary information need to run script.
     '''
     # log_file_versions('solar_data_tools')
 
