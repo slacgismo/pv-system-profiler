@@ -46,13 +46,6 @@ def combine_results(partitions, destination_dict):
 
 
 def check_completion(ssh_username, instance_id, ssh_key_file):
-    print(instance_id)
-    commands = ["grep -a '%' ./out", "ps -x |grep -o 'python'"]
-    commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
-                                   shell_commands=commands, verbose=False)
-    for command_i in commands_dict.keys():
-        print(commands_dict[command_i][0])
-
     commands = ["grep -a 'finished' ./out"]
     commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
                                    shell_commands=commands, verbose=False)
@@ -106,16 +99,22 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
 
     completion = [False] * len(partitions)
     while False in completion:
+        print(' ')
         for part_ix, part_id in enumerate(partitions):
             if completion[part_ix] is False:
-                print('Partition' + ' ', part_ix)
                 ssh_key_file = part_id.ssh_key_file
                 instance = part_id.public_ip_address
                 ssh_username = part_id.aws_username
                 new_value = check_completion(ssh_username, instance, ssh_key_file)
                 part_id.process_completed = new_value
                 completion[part_ix] = new_value
-        time.sleep(10 * 60)
+                if new_value is False:
+                    status = 'running'
+                else:
+                    status = 'finished'
+                print('partition' + ' ' + str(part_ix) + ':' + ' ' + status)
+
+        time.sleep(0.5 * 60)
 
     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
     results_df = combine_results(partitions, main_class.global_output_directory)
