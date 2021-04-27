@@ -136,14 +136,13 @@ if __name__ == '__main__':
     power_column_id = str(sys.argv[11])
     global_output_directory = str(sys.argv[12])
     global_output_file = str(sys.argv[13])
-    s3_location = str(sys.argv[14])
-    n_files = str(sys.argv[15])
-    file_label = str(sys.argv[16])
-    time_shift_inspection = str(sys.argv[17])
-    fix_time_shifts = str(sys.argv[18])
-    time_zone_correction = str(sys.argv[19])
-    check_json = str(sys.argv[20])
-    supplementary_file = str(sys.argv[21])
+    n_files = str(sys.argv[14])
+    file_label = str(sys.argv[15])
+    time_shift_inspection = str(sys.argv[16])
+    fix_time_shifts = str(sys.argv[17])
+    time_zone_correction = str(sys.argv[18])
+    check_json = str(sys.argv[19])
+    supplementary_file = str(sys.argv[20])
     '''
     :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
     list is provided.
@@ -161,7 +160,6 @@ if __name__ == '__main__':
     :global_output_directory:  directory where consolidated results are saved.
     :global_output_file:  name of csv file with the consolidated results.
     :time_shift_inspection: indicate if manual time shift inspection should be taken into account for pipeline run.
-    :s3_location: Absolute path to s3 location of files with power data.
     :n_files: number of files to read. If 'all' all files in folder are read.
     :file_label:  Repeating portion of data files label. If 'None', no file label is used. 
     :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
