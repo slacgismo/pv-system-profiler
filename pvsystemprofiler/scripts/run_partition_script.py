@@ -27,6 +27,7 @@ def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/repo
     copy_to_s3('./generated_site_list.csv', bucket, prefix + '/generated_site_list.csv')
     return site_df
 
+
 def get_remote_output_files(partitions, username, destination_dict):
     os.system('mkdir' + ' ' + destination_dict)
     for part_id in partitions:
@@ -125,22 +126,21 @@ if __name__ == '__main__':
     input_site_file = str(sys.argv[1])
     s3_location = str(sys.argv[2])
     aws_instance_name = str(sys.argv[3])
-    script_name = str(sys.argv[4])
-    script_location = str(sys.argv[5])
-    power_column_id = str(sys.argv[6])
-    n_files = str(sys.argv[7])
-    file_label = str(sys.argv[8])
-    time_shift_inspection = str(sys.argv[9])
-    fix_time_shifts = str(sys.argv[10])
-    time_zone_correction = str(sys.argv[11])
-    check_json = str(sys.argv[12])
-    supplementary_file = str(sys.argv[13])
+    script_to_execute = str(sys.argv[4])
+    power_column_id = str(sys.argv[5])
+    n_files = str(sys.argv[6])
+    file_label = str(sys.argv[7])
+    time_shift_inspection = str(sys.argv[8])
+    fix_time_shifts = str(sys.argv[9])
+    time_zone_correction = str(sys.argv[10])
+    check_json = str(sys.argv[11])
+    supplementary_file = str(sys.argv[12])
     '''
-    :param site_input_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
-    list is provided.
+    :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
+    site file is provided.
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     :aws_username: aws linux username in instances.
-    :script_name: name of the script that will be run partitioned.
+    :script_to_execute: Location of script to be executed.
     :script_location: full path to directory where script_name is located. 
     :output_folder_location: Full path to folder where local results will be saved. This folder will be created during 
     script execution.
@@ -167,12 +167,14 @@ if __name__ == '__main__':
     output_folder_location = '~/'
     global_output_directory = '~/results/'
     global_output_file = 'results.csv'
+    pos = script_to_execute.rfind('/') + 1
+    script_location = script_to_execute[:pos]
+    script_name = script_to_execute.split('/')[-1]
 
     try:
         ssh_key_file = glob.glob("/Users/*/.aws/*.pem")[0]
     except:
         ssh_key_file = glob.glob("/home/*/.aws/*.pem")[0]
-
 
     main_class = get_config(ifl=site_input_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
@@ -186,4 +188,4 @@ if __name__ == '__main__':
 
     main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection, s3_location,
-         n_files, file_label, fix_time_shifts, time_zone_correction, check_json,supplementary_file)
+         n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file)
