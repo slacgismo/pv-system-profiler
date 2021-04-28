@@ -187,21 +187,21 @@ if __name__ == '__main__':
 
     local_output_folder = output_file.split('data')[0]
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/pv-system-profiler')
-    if file_label == 'None':
-        file_label = ''
-
-    full_df, checked_systems, start_at = resume_run(output_file)
-    df_ground_data = pd.read_csv(ground_data_file, index_col=0)
-    df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
-    df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
-    df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
-    df_ground_data['site'] = df_ground_data['site'].apply(str)
-    df_ground_data['system'] = df_ground_data['system'].apply(str)
-    df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
-
-
-
-
-    main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-        time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+    log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    # if file_label == 'None':
+    #     file_label = ''
+    #
+    # full_df, checked_systems, start_at = resume_run(output_file)
+    # df_ground_data = pd.read_csv(ground_data_file, index_col=0)
+    # df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
+    # df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
+    # df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
+    # df_ground_data['site'] = df_ground_data['site'].apply(str)
+    # df_ground_data['system'] = df_ground_data['system'].apply(str)
+    # df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
+    #
+    #
+    #
+    #
+    # main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+    #     time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
