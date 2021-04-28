@@ -1,0 +1,5 @@
+commit 5f51dfaef0bc103622f5da0f3b6227b130645228
+Author: Londono <londonoh@pm.me>
+Date:   Fri Mar 12 08:29:07 2021 -0800
+
+    Added try-except block to account for empty locations on json file.
