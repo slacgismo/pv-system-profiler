@@ -179,22 +179,6 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
 
 
 if __name__ == '__main__':
-    '''
-        :input_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
-        :df_ground_data: location of pandas dataframe containing longitude and gmt offset for each system.
-        :n_files: number of files to read. If 'all' all files in folder are read.
-        :s3_location: Absolute path to s3 location of files.
-        :file_label:  Repeating portion of data files label. If 'None', no file label is used. 
-        :power_column_label: Repeating portion of the power column label. 
-        :output_file: Absolute path to csv file containing report results.
-        :time_shift_inspection: String, 'True' or 'False'. Determines indicates if manual time shift inspection should 
-        be taken into account for pipeline run.
-        :fix_time_shifts: String, 'True' or 'False', determines if time shifts are fixed when running the pipeline
-        :time_zone_correction: String, 'True' or 'False', determines if time zone correction is performed when running 
-        the pipeline
-        :check_json: String, 'True' or 'False'. Check json file for location information. 
-        '''
-
     input_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
     s3_location = str(sys.argv[3])
@@ -205,8 +189,22 @@ if __name__ == '__main__':
     fix_time_shifts = string_to_boolean(str(sys.argv[8]))
     time_zone_correction = string_to_boolean(str(sys.argv[9]))
     check_json = string_to_boolean(str(sys.argv[10]))
-    df_ground_data = str(sys.argv[11])
-
+    ground_data_file = str(sys.argv[11])
+    '''
+    :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
+    :param n_files: number of files to read. If 'all' all files in folder are read.
+    :param s3_location: Absolute path to s3 location of files.
+    :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
+    :param power_column_label: Repeating portion of the power column label. 
+    :param output_file: Absolute path to csv file containing report results.
+    :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
+    when running the pipeline.
+    :param fix_time_shifts: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
+    :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
+    running the pipeline.
+    :param check_json: String, 'True' or 'False'. Check json file for location information.
+    :param ground_data_file: Full path to csv file containing longitude and gmt offset for each system. 
+    '''
     local_output_folder = output_file.split('data')[0]
     # log_file_versions('solar_data_tools', local_output_folder)
 
@@ -214,8 +212,7 @@ if __name__ == '__main__':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
-    #df_ground_data = pd.read_csv('s3://pv.insight.misc/report_files/constellation_site_list.csv', index_col=0)
-    df_ground_data = pd.read_csv('s3://pv.insight.misc/report_files/lon_lat_precalculates.csv', index_col=0)
+    df_ground_data = pd.read_csv(ground_data_file, index_col=0)
     df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
     df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
     df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
@@ -223,5 +220,5 @@ if __name__ == '__main__':
     df_ground_data['system'] = df_ground_data['system'].apply(str)
     df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
-    main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+    main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
