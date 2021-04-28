@@ -32,17 +32,19 @@ def copy_to_s3(input_file_name, bucket, destination_file_name):
     s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)
 
 
-def log_file_versions(utility, output_folder_location='./', conda_location='/home/ubuntu/miniconda3/',
-                      repository_location=None):
-    conda = conda_location + 'bin/conda' + ' '
+def log_file_versions(utility, active_conda_env=None,  output_folder_location='./',
+                      conda_location='/home/ubuntu/miniconda3/', repository_location=None):
+    if active_conda_env is None:
+        conda = conda_location + 'bin/conda' + ' '
+        conda_env = subprocess.check_output(conda + "env list", shell=True, encoding='utf-8')
+        for line in conda_env.splitlines():
+            if '*' in line:
+                i = line.find('/')
+                active_conda_environment = line[i:].split('/')[-1]
+    else:
+        active_conda_environment = active_conda_env
 
-    conda_env = subprocess.check_output(conda + "env list", shell=True, encoding='utf-8')
-    for line in conda_env.splitlines():
-        if '*' in line:
-            i = line.find('/')
-            active_conda_environment = line[i:].split('/')[-1]
-            output_string = 'active conda environment:' + ' ' + active_conda_environment + '\n'
-
+    output_string = 'active conda environment:' + ' ' + active_conda_environment + '\n'
     pip = conda_location + 'envs/' + active_conda_environment + '/bin/pip'
     try:
         pip_list = subprocess.check_output(pip + ' ' + 'show' + ' ' + utility, shell=True, encoding='utf-8')

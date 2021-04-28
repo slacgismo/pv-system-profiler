@@ -11,7 +11,6 @@ from modules.create_partition import create_partition
 from modules.script_functions import enumerate_files
 from modules.script_functions import get_s3_bucket_and_prefix
 from modules.script_functions import copy_to_s3
-from modules.script_functions import log_file_versions
 from modules.script_functions import remote_execute
 
 
@@ -155,7 +154,6 @@ if __name__ == '__main__':
     :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     '''
-    # log_file_versions('solar_data_tools')
 
     if input_site_file == 'None':
         build_input_file(s3_location)

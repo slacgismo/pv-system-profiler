@@ -186,8 +186,8 @@ if __name__ == '__main__':
     '''
 
     local_output_folder = output_file.split('data')[0]
-    #log_file_versions('solar-data-tools')
-    #log_file_versions('pv-system-profiler', '/home/ubuntu/github/pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/pv-system-profiler')
     if file_label == 'None':
         file_label = ''
 
