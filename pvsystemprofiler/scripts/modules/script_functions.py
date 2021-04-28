@@ -44,10 +44,9 @@ def log_file_versions(utility, output_folder_location='./', conda_location='/hom
             output_string = 'active conda environment:' + ' ' + active_conda_environment + '\n'
 
     pip = conda_location + 'envs/' + active_conda_environment + '/bin/pip'
-
     try:
         pip_list = subprocess.check_output(pip + ' ' + 'show' + ' ' + utility, shell=True, encoding='utf-8')
-
+    
         for line in pip_list.splitlines():
             if 'Location' in line:
                 i = line.find(':')
@@ -57,14 +56,18 @@ def log_file_versions(utility, output_folder_location='./', conda_location='/hom
                 location = line[i + 1:]
                 output_string += 'utility version:' + ' ' + location + '\n'
     except:
+        pip_list = ''
         output_string += 'utility version:' + ' ' + 'n/a' + '\n'
-
     try:
-        if repository_location is not None:
-            location = repository_location
+        if pip_list.find('site-packages') != -1:
+            repository = ''
+        else:
+            if repository_location is not None:
+                location = repository_location + utility
+            repository = subprocess.check_output('/usr/bin/git -C' + ' ' + location + ' ' + 'log -n 1', shell=True,
+                                                 encoding='utf-8')
         output_string += 'repository location:' + ' ' + location + '\n'
-        repository = subprocess.check_output('/usr/bin/git -C' + ' ' + location + ' ' + 'log -n 1', shell=True,
-                                             encoding='utf-8')
+
         for line in repository.splitlines():
             if line.find('commit') != - 1:
                 i = line.find(' ')
