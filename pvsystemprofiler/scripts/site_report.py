@@ -191,8 +191,8 @@ if __name__ == '__main__':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
-    if df_ground_data_loc is not None:
-        df_ground_data = load_ground_data(ground_data)
+    if ground_data_file is not None:
+        df_ground_data = load_ground_data(ground_data_file)
 
-    main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+    main(input_site_file, ground_data_file, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)

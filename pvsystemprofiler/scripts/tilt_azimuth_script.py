@@ -117,7 +117,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     return partial_df
 
 
-def main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
     site_run_time = 0
     total_time = 0
@@ -137,8 +137,8 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
     else:
         json_file_dict = None
 
-    if input_file != 'None':
-        input_file_df = pd.read_csv(input_file, index_col=0)
+    if input_site_file != 'None':
+        input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
         # input_file_list = siteid_to_filename(site_list, file_label, ext)
@@ -179,7 +179,7 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
 
 
 if __name__ == '__main__':
-    input_file = str(sys.argv[1])
+    input_site_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
     s3_location = str(sys.argv[3])
     file_label = str(sys.argv[4])

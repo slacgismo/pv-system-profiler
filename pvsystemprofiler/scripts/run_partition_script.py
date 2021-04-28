@@ -19,6 +19,8 @@ def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/repo
     bucket, prefix = get_s3_bucket_and_prefix(s3_location)
     site_list, size_list = enumerate_files(bucket, prefix, file_size_list=True)
     site_df = pd.DataFrame()
+    site_list = site_list[:9]
+    size_list = size_list[:9]
     site_df['site'] = site_list
     site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
     site_df['file_size'] = size_list
@@ -72,7 +74,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
          s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file):
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
-    #total_size = len(df)
+    total_size = len(df)
     part_size = np.ceil(total_size / n_part) * 0.8
     ii = 0
     jj = 0

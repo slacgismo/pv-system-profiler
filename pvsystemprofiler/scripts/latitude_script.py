@@ -3,10 +3,11 @@ import os
 import pandas as pd
 import numpy as np
 from time import time
+
 sys.path.append('/home/ubuntu/github/pv-system-profiler/')
-#sys.path.append('/home/ubuntu/github/solar-data-tools/')
-#sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
-#sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
+# sys.path.append('/home/ubuntu/github/solar-data-tools/')
+# sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
+# sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline
@@ -21,21 +22,22 @@ from modules.script_functions import log_file_versions
 from pvsystemprofiler.latitude_study import LatitudeStudy
 from modules.script_functions import filename_to_siteid
 
-def run_failsafe_lat_estimation(dh_in, real_latitude):
 
+def run_failsafe_lat_estimation(dh_in, real_latitude):
     try:
         runs_lat_estimation = True
         lat_study = LatitudeStudy(data_handler=dh_in, lat_true_value=real_latitude)
-        #lat_study.run()
+        # lat_study.run()
         lat_study.run(data_matrix='filled', daylight_method='sunrise-sunset', delta_method='spencer',
                       day_selection_method='all')
         p_df = lat_study.results.sort_index().copy()
     except:
         runs_lat_estimation = False
-        p_df = pd.DataFrame(columns=['declination_method', 'daylight_calculation',  'data_matrix', 'threshold',
+        p_df = pd.DataFrame(columns=['declination_method', 'daylight_calculation', 'data_matrix', 'threshold',
                                      'day_selection_method', 'latitude', 'residual'])
         p_df.loc[0, :] = np.nan
     return p_df, runs_lat_estimation
+
 
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
                      fix_time_shifts, time_zone_correction, json_file_dict=None):
@@ -46,9 +48,9 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            #print(site_id, system_id)
+            # print(site_id, system_id)
             if system_id in df_ground_data['system'].tolist():
-                #print(site_id, system_id)
+                # print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
 
@@ -57,7 +59,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                                'time_shift_manual'].values[0])
+                                                               'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
                 try:
@@ -92,7 +94,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     return partial_df
 
 
-def main(input_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
+def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
     site_run_time = 0
     total_time = 0
@@ -112,12 +114,12 @@ def main(input_file, df_ground_data, n_files, s3_location, file_label, power_col
     else:
         json_file_dict = None
 
-    if input_file != 'None':
-        input_file_df = pd.read_csv(input_file, index_col=0)
+    if input_site_file != 'None':
+        input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        #input_file_list = siteid_to_filename(site_list, file_label, ext)
-        #file_list = list(set(input_file_list) & set(file_list))
+        # input_file_list = siteid_to_filename(site_list, file_label, ext)
+        # file_list = list(set(input_file_list) & set(file_list))
         manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
         file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
@@ -198,4 +200,4 @@ if __name__ == '__main__':
     df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-        time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
