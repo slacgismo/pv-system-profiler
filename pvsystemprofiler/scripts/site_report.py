@@ -1,13 +1,9 @@
 import sys
-import os
 import pandas as pd
 import numpy as np
 from time import time
 
 sys.path.append('/home/ubuntu/github/pv-system-profiler/')
-# sys.path.append('/home/ubuntu/github/solar-data-tools/')
-# sys.path.append('/Users/londonoh/Documents/github/pv-system-profiler/')
-# sys.path.append('/Users/londonoh/Documents/github/solar-data-tools/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
 from modules.script_functions import run_failsafe_pipeline

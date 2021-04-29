@@ -10,7 +10,6 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
-
 def remote_execute(user, instance_id, key, shell_commands, verbose=True):
     k = paramiko.RSAKey.from_private_key_file(key)
     c = paramiko.SSHClient()

@@ -1,5 +1,6 @@
 from modules.script_functions import remote_execute
 
+
 def create_partition(partition):
     start_index = partition.ix_0
     end_index = partition.ix_n
