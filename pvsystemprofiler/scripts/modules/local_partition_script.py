@@ -2,7 +2,6 @@ import sys
 import os
 import pandas as pd
 
-python = '/home/ubuntu/miniconda3/envs/pvi-user/bin/python'
 start_index = int(sys.argv[1])
 end_index = int(sys.argv[2])
 script_name = str(sys.argv[3])
@@ -18,13 +17,14 @@ fix_time_shifts = str(sys.argv[12])
 time_zone_correction = str(sys.argv[13])
 check_json = str(sys.argv[14])
 supplementary_file = str(sys.argv[15])
+python_command = str(sys.argv[16])
 
 df_full = pd.read_csv(global_input_file, index_col=0)
 df_part = df_full.copy()
 df_part = df_part[start_index:end_index]
 df_part.to_csv(local_input_file)
 
-command = 'setsid nohup' + ' ' + python + ' ' + script_name
+command = 'setsid nohup' + ' ' + python_command + ' ' + script_name
 arguments = local_input_file + ' '  \
             + n_files + ' ' \
             + s3_location + ' ' \

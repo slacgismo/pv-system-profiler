@@ -66,7 +66,7 @@ def get_address(tag_name, region, client):
 
 
 def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection,
+         aws_region, aws_client, script_name, script_location, conda_environment, power_column_id, time_shift_inspection,
          s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file):
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
@@ -87,9 +87,10 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
         part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=site_input_file,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
-                          scripts_location=script_location, pcid=power_column_id, tsi=time_shift_inspection,
-                          s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
-                          time_zone_correction=time_zone_correction, check_json=check_json, sup_file=supplementary_file)
+                          scripts_location=script_location, conda_env= conda_environment, pcid=power_column_id,
+                          tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
+                          fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
+                          check_json=check_json, sup_file=supplementary_file)
         partitions.append(part)
         create_partition(part)
         ii = jj + 1
@@ -185,5 +186,6 @@ if __name__ == '__main__':
     df = pd.read_csv(site_input_file, index_col=0)
 
     main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, power_column_id, time_shift_inspection, s3_location,
-         n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file)
+         aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
+         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+         supplementary_file)
