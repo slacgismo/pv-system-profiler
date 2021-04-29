@@ -3,7 +3,6 @@ import os
 import boto3
 import time
 import glob
-import math
 import numpy as np
 import pandas as pd
 from modules.config_partitions import get_config
@@ -125,21 +124,23 @@ if __name__ == '__main__':
     input_site_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
     script_to_execute = str(sys.argv[3])
-    file_label = str(sys.argv[4])
-    power_column_id = str(sys.argv[5])
-    time_shift_inspection = str(sys.argv[6])
-    fix_time_shifts = str(sys.argv[7])
-    time_zone_correction = str(sys.argv[8])
-    check_json = str(sys.argv[9])
-    supplementary_file = str(sys.argv[10])
-    aws_instance_name = str(sys.argv[11])
-    s3_location = str(sys.argv[12])
+    conda_environment = str(sys.argv[4])
+    file_label = str(sys.argv[5])
+    power_column_id = str(sys.argv[6])
+    time_shift_inspection = str(sys.argv[7])
+    fix_time_shifts = str(sys.argv[8])
+    time_zone_correction = str(sys.argv[9])
+    check_json = str(sys.argv[10])
+    supplementary_file = str(sys.argv[11])
+    aws_instance_name = str(sys.argv[12])
+    s3_location = str(sys.argv[13])
 
     '''
     :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
     site file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
-    :param script_to_execute Full path to python script to be executed.
+    :param script_to_execute: Full path to python script to be executed.
+    :param conda environment: conda environment used to run script_to_execute.
     :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
     :param power_column_id: id given to the power column to be analyzed.
     :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 

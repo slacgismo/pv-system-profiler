@@ -200,8 +200,5 @@ if __name__ == '__main__':
     df_ground_data['system'] = df_ground_data['system'].apply(str)
     df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
-
-
-
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
