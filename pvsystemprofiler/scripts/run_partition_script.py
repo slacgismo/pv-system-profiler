@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
     if input_site_file == 'None':
         build_input_file(s3_location)
-        site_input_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
+        input_site_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
     aws_username = 'ubuntu'
     aws_region = 'us-west-1'
     aws_client = 'ec2'
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     except:
         ssh_key_file = glob.glob("/home/*/.aws/*.pem")[0]
 
-    main_class = get_config(ifl=site_input_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
+    main_class = get_config(ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
                             gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
                             s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
@@ -183,9 +183,9 @@ if __name__ == '__main__':
                             sup_file=supplementary_file)
 
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
-    df = pd.read_csv(site_input_file, index_col=0)
+    df = pd.read_csv(input_site_file, index_col=0)
 
-    main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
+    main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
          time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
          supplementary_file)
