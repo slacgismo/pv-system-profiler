@@ -51,6 +51,7 @@ class TiltAzimuthStudy():
             self.day_range_dict = {}
             self.day_range_dict = {'summer': [171, 265], 'no_winter': [79, 355], 'spring': [79, 171],
                                    'winter': [355, 79], 'winter_spring': [355, 171], 'full_year': None}
+            #self.day_range_dict = {'summer': [152, 245], 'no winter': [60, 335], 'spring': [60, 153], 'Full Year': None}
         elif day_range is 'full_year':
             self.day_range_dict = {'full_year': None}
         elif day_range is 'manual':
@@ -196,7 +197,7 @@ class TiltAzimuthStudy():
         m = cvx.Parameter(nonneg=True, value=10 ** 6)
         # setting local quantile for 10% of the data
         t = cvx.Parameter(nonneg=True, value=0.9)
-        y = np.quantile(self.data_matrix, .9, axis=0)
+        y = np.quantile(self.data_matrix, 0.9, axis=0)
         x1 = cvx.Variable(len(y))
         x2 = cvx.Variable(len(y))
         if self.data_matrix.shape[1] > 365:
