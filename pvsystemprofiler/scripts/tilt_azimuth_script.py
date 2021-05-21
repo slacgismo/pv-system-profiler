@@ -19,13 +19,14 @@ from modules.script_functions import filename_to_siteid
 
 
 def run_failsafe_ta_estimation(dh, nrandom, threshold, lon_p, lat_p, tilt_p, azim_p, real_lat, real_tilt, real_azim,
-                               gmt_offset):
+                               gmt_offset, cp, tq):
     try:
         runs_ta_estimation = True
         ta_study = TiltAzimuthStudy(data_handler=dh, nrandom_init_values=nrandom, daytime_threshold=threshold,
                                     lon_precalculate=lon_p, lat_precalculate=lat_p, tilt_precalculate=tilt_p,
                                     azimuth_precalculate=azim_p, lat_true_value=real_lat, tilt_true_value=real_tilt,
-                                    azimuth_true_value=real_azim, gmt_offset=gmt_offset)
+                                    azimuth_true_value=real_azim, gmt_offset=gmt_offset,  cvx_parameter=cp,
+                                    threshold_quantile=tq)
         ta_study.run()
         p_df = ta_study.results.sort_index().copy()
     except:
@@ -50,7 +51,7 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon_p, lat_p, tilt_p, azi
 
 
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction):
+                     time_zone_correction, cp, tq):
     ll = len(power_column_label)
     cols = df.columns
     i = 0
@@ -86,7 +87,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                     results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_precalculate,
                                                                                latitude_precalculate, None, None,
                                                                                real_latitude, real_tilt, real_azimuth,
-                                                                               gmt_offset)
+                                                                               gmt_offset, cp, tq)
                     results_df['length'] = dh.num_days
                     results_df['data sampling'] = dh.data_sampling
                     results_df['data quality score'] = dh.data_quality_score
@@ -113,7 +114,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
 
 
 def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, ext='.csv'):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -157,7 +158,7 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction)
+                                      fix_time_shifts, time_zone_correction, cp, tq)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -205,6 +206,8 @@ if __name__ == '__main__':
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
 
+    cp = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+    tq = cp
     if file_label == 'None':
         file_label = ''
 
@@ -218,4 +221,4 @@ if __name__ == '__main__':
     df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq)

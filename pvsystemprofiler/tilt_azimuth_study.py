@@ -174,7 +174,7 @@ class TiltAzimuthStudy():
                                                                                 tilt=self.tilt_true_value,
                                                                                 azim=self.azimuth_true_value)
 
-                            self.results.loc[counter] = [day_range_id, delta_id, x1, x2] + ivr + list(estimates) 
+                            self.results.loc[counter] = [day_range_id, delta_id, x1, x2] + ivr + list(estimates)
                             counter += 1
 
         if self.lat_true_value is not None and self.lat_precalc is None:
