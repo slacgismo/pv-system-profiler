@@ -21,9 +21,10 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     try:
         runs_lon_estimation = True
         lon_study = LongitudeStudy(data_handler=dh_in, gmt_offset=gmt_offset, true_value=real_longitude)
-        #lon_study.run(verbose=False)
-        lon_study.run(verbose=False, data_matrix='filled', estimator='fit_huber', eot_calculation='duffie',
+        lon_study.run(verbose=False)
+        #lon_study.run(verbose=False, data_matrix='filled', estimator='fit_huber', eot_calculation='duffie',
                       solar_noon_method='optimized_measurements', day_selection_method='cloudy')
+
         p_df = lon_study.results.sort_index().copy()
     except:
         runs_lon_estimation = False
