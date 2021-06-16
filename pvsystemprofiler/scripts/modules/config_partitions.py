@@ -17,10 +17,10 @@ class ConfigPartitions:
             self.local_working_folder_location = ofl
             self.local_working_folder = self.local_working_folder_location + 'estimation_part_{}_of_{}/'.format(
                 str(part_id + 1), str(n_part))
-            self.local_input_file = self.local_working_folder + 'data/input_part_{}_of_{}.csv'.format(str(part_id + 1),
-                                                                                                      str(n_part))
+            self.local_input_file = self.local_working_folder + 'input_part_{}_of_{}.csv'.format(str(part_id + 1),
+                                                                                                 str(n_part))
             self.local_output_file_name = 'results_part_{}_of_{}.csv'.format(str(part_id + 1), str(n_part))
-            self.local_output_file = self.local_working_folder + 'data/' + self.local_output_file_name
+            self.local_output_file = self.local_working_folder + self.local_output_file_name
             self.ix_0 = ix_0
             self.ix_n = ix_n
             self.scripts_location = scripts_location
@@ -36,9 +36,6 @@ class ConfigPartitions:
             self.fix_time_shifts = fix_time_shifts
             self.time_zone_correction = time_zone_correction
             self.check_json = check_json
-
-
-
         else:
             self.global_output_directory = god
             self.global_output_file = god + gof
