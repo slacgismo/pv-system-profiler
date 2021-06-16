@@ -162,7 +162,7 @@ if __name__ == '__main__':
     fix_time_shifts = string_to_boolean(str(sys.argv[8]))
     time_zone_correction = string_to_boolean(str(sys.argv[9]))
     check_json = string_to_boolean(str(sys.argv[10]))
-    ground_data_file = str(sys.argv[11])
+    summary_file = str(sys.argv[11])
 
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
-    :param ground_data_file: Full path to csv file containing longitude and gmt offset for each system. 
+    :param summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
 
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
@@ -187,8 +187,8 @@ if __name__ == '__main__':
         file_label = ''
 
     full_df, checked_systems, start_at = resume_run(output_file)
-    if ground_data_file is not None:
-        df_ground_data = load_ground_data(ground_data_file)
+    if summary_file is not None:
+        df_ground_data = load_ground_data(summary_file)
 
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
