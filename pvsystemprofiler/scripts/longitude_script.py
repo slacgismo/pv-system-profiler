@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 import numpy as np
 from time import time
+
 sys.path.append('/home/ubuntu/github/pv-system-profiler/')
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
@@ -17,13 +18,14 @@ from modules.script_functions import log_file_versions
 from pvsystemprofiler.longitude_study import LongitudeStudy
 from modules.script_functions import filename_to_siteid
 
+
 def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     try:
         runs_lon_estimation = True
         lon_study = LongitudeStudy(data_handler=dh_in, gmt_offset=gmt_offset, true_value=real_longitude)
         lon_study.run(verbose=False)
-        #lon_study.run(verbose=False, data_matrix='filled', estimator='fit_huber', eot_calculation='duffie',
-                      # solar_noon_method='optimized_measurements', day_selection_method='cloudy')
+        # lon_study.run(verbose=False, data_matrix='filled', estimator='fit_huber', eot_calculation='duffie',
+        # solar_noon_method='optimized_measurements', day_selection_method='cloudy')
 
         p_df = lon_study.results.sort_index().copy()
     except:
@@ -35,6 +37,7 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
         p_df.loc[0, :] = np.nan
     return p_df, runs_lon_estimation
 
+
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
                      fix_time_shifts, time_zone_correction, json_file_dict=None):
     ll = len(power_column_label)
@@ -45,18 +48,17 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
             if system_id in df_ground_data['system'].tolist():
-                #print(site_id, system_id)
+                # print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
 
                 real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
                 gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
 
-
                 dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                                'time_shift_manual'].values[0])
+                                                               'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
                 try:
@@ -115,8 +117,8 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
         input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        #input_file_list = siteid_to_filename(site_list, file_label, ext)
-        #file_list = list(set(input_file_list) & set(file_list))
+        # input_file_list = siteid_to_filename(site_list, file_label, ext)
+        # file_list = list(set(input_file_list) & set(file_list))
         manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
         file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
@@ -197,4 +199,4 @@ if __name__ == '__main__':
     df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
 
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-        time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
