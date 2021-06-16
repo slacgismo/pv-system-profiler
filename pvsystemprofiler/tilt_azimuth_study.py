@@ -91,7 +91,6 @@ class TiltAzimuthStudy():
         self.costheta_fit = None
         self.boolean_daytime_range = None
         self.results = None
-        #print(cvx_param)
         self.threshold_x1 = np.atleast_1d(cvx_parameter)
         self.threshold_x2 = np.atleast_1d(threshold_quantile)
     def run(self, delta_method=('cooper', 'spencer')):
