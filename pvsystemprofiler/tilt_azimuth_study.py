@@ -23,6 +23,7 @@ from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_keys
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 from pvsystemprofiler.utilities.tools import random_initial_values
+from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import find_boolean_daytime
 
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range='full_year', init_values=None, nrandom_init_values=None,
@@ -82,7 +83,6 @@ class TiltAzimuthStudy():
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
         self.clear_index = data_handler.daily_flags.clear
-        self.boolean_daytime = None
         self.delta_cooper = None
         self.delta_spencer = None
         self.omega = None
@@ -90,7 +90,6 @@ class TiltAzimuthStudy():
         self.costheta_estimated = None
         self.costheta_ground_truth = None
         self.costheta_fit = None
-        self.boolean_daytime_range = None
         self.results = None
         self.threshold_x1 = np.atleast_1d(cvx_parameter)
         self.threshold_x2 = np.atleast_1d(threshold_quantile)
@@ -119,7 +118,7 @@ class TiltAzimuthStudy():
         self.create_results_table()
         for x1 in self.threshold_x1:
             for x2 in self.threshold_x2:
-                self.find_boolean_daytime(x1, x2)
+                boolean_daytime = find_boolean_daytime(self.data_matrix, self.daytime_threshold, x1, x2)
                 for delta_id in delta_method:
                     if delta_id in ('Cooper', 'cooper'):
                         delta = self.delta_cooper
@@ -127,17 +126,17 @@ class TiltAzimuthStudy():
                         delta = self.delta_spencer
                     for day_range_id in self.day_range_dict:
                         day_interval = self.day_range_dict[day_range_id]
-                        self.get_day_range(day_interval)
-                        delta_f = delta[self.boolean_daytime_range]
-                        omega_f = self.omega[self.boolean_daytime_range]
-                        if ~np.any(self.boolean_daytime_range):
+                        boolean_daytime_range = self.get_day_range(boolean_daytime, day_interval)
+                        delta_f = delta[boolean_daytime_range]
+                        omega_f = self.omega[boolean_daytime_range]
+                        if ~np.any(boolean_daytime_range):
                             print('No data made it through filters')
 
                         func_customized, bounds = select_function(self.lat_precalc, self.tilt_precalc,
                                                                   self.azimuth_precalc)
 
                         dict_keys = determine_keys(latitude=self.lat_precalc, tilt=self.tilt_precalc,
-                                                            azimuth=self.azimuth_precalc)
+                                                   azimuth=self.azimuth_precalc)
 
                         nvalues = len(lat_initial)
                         for init_val_ix in np.arange(nvalues):
@@ -147,7 +146,7 @@ class TiltAzimuthStudy():
                             try:
                                 estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f,
                                                           omega=omega_f, costheta=self.costheta_fit,
-                                                          boolean_daytime_range=self.boolean_daytime_range,
+                                                          boolean_daytime_range=boolean_daytime_range,
                                                           init_values=init_values,
                                                           fit_bounds=bounds)
                             except RuntimeError:
@@ -185,41 +184,13 @@ class TiltAzimuthStudy():
             self.results['azimuth residual'] = self.azimuth_true_value - self.results['azimuth']
         return
 
-    def get_day_range(self, interval):
+    def get_day_range(self, boolean_daytime, interval):
         if interval is not None:
             day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
         else:
             day_range = np.ones(self.day_of_year.shape, dtype=bool)
-        self.boolean_daytime_range = self.boolean_daytime * self.clear_index * day_range
-        return
-
-    def find_boolean_daytime(self, x1, x2):
-        if self.daytime_threshold is None:
-            self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality(x1, x2)
-            self.boolean_daytime = self.data_matrix > self.daytime_threshold_fit
-        else:
-            self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
-        return
-
-    def find_daytime_threshold_quantile_seasonality(self, p1, p2):
-        m = cvx.Parameter(nonneg=True, value=10 ** 6)
-        # setting local quantile for 10% of the data
-        t = cvx.Parameter(nonneg=True, value=p1)
-        y = np.quantile(self.data_matrix, p2, axis=0)
-        x1 = cvx.Variable(len(y))
-        x2 = cvx.Variable(len(y))
-        if self.data_matrix.shape[1] > 365:
-            constraints = [
-                x2[365:] == x2[:-365], x1 + x2 == y
-            ]
-        else:
-            constraints = [x1 + x2 == y]
-        c1 = cvx.sum(1 / 2 * cvx.abs(x1) + (t - 1 / 2) * x1)
-        c2 = cvx.sum_squares(cvx.diff(x2, 2))
-        objective = cvx.Minimize(c1 + m * c2)
-        prob = cvx.Problem(objective, constraints=constraints)
-        prob.solve(solver='MOSEK')
-        return x2.value
+        boolean_daytime_range = boolean_daytime * self.clear_index * day_range
+        return boolean_daytime_range
 
     def create_results_table(self):
         cols = ['day range', 'declination method', 'cvx parameter', 'threshold quantile',  'latitude initial value',
@@ -230,6 +201,5 @@ class TiltAzimuthStudy():
             cols.append('tilt')
         if self.azimuth_precalc is None:
             cols.append('azimuth')
-
         self.results = pd.DataFrame(columns=cols)
 

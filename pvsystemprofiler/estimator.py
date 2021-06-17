@@ -43,9 +43,6 @@ class ConfigurationEstimator():
         self.hours_daylight = None
         self.days = None
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
-        self.day_range = None
-        self.boolean_daytime = None
-        self.boolean_daytime_range = None
         self.daytime_threshold = None
         self.day_interval = None
         self.daytime_threshold_fit = None
