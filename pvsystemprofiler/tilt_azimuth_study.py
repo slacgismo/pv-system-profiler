@@ -22,6 +22,7 @@ from pvsystemprofiler.algorithms.angle_of_incidence.lambda_functions import sele
 from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_keys
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
+from pvsystemprofiler.utilities.tools import random_initial_values
 
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range='full_year', init_values=None, nrandom_init_values=None,
@@ -112,7 +113,7 @@ class TiltAzimuthStudy():
                 tilt_initial = [10]
                 azim_initial = [10]
             else:
-                lat_initial, tilt_initial, azim_initial = self.random_initial_values()
+                lat_initial, tilt_initial, azim_initial = random_initial_values(self.nrandom)
 
         counter = 0
         self.create_results_table()
@@ -232,13 +233,3 @@ class TiltAzimuthStudy():
 
         self.results = pd.DataFrame(columns=cols)
 
-    def random_initial_values(self):
-        """ Bounds for latitude are -90 to 90. Bounds for tilt are 0 to 90. Bounds for azimuth  are -180 to 180. It is
-        noted that, theoretically, bounds for tilt are 0 to 180 (Duffie, John A., and William A. Beckman. Solar
-        engineering of thermal processes. New York: Wiley, 1991.). However a value of tilt >90 would mean that that the
-        surface has a downward-facing component, which is not the case of the current application."""
-
-        lat_initial_value = np.random.uniform(low=-90, high=90, size=self.nrandom)
-        tilt_initial_value = np.random.uniform(low=0, high=90, size=self.nrandom)
-        azim_initial_value = np.random.uniform(low=-180, high=180, size=self.nrandom)
-        return lat_initial_value, tilt_initial_value, azim_initial_value
