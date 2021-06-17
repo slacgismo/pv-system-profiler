@@ -13,7 +13,6 @@ from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
-from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.hour_angle_equation import calculate_omega
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.angle_of_incidence.curve_fitting import run_curve_fit
@@ -21,7 +20,8 @@ from pvsystemprofiler.algorithms.performance_model_estimation import find_fit_co
 from pvsystemprofiler.algorithms.angle_of_incidence.lambda_functions import select_function
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_keys
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
-
+from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import find_boolean_daytime
+from pvsystemprofiler.utilities.tools import random_initial_values
 
 class ConfigurationEstimator():
     def __init__(self, data_handler, gmt_offset):
@@ -44,6 +44,7 @@ class ConfigurationEstimator():
         self.days = None
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.day_range = None
+        self.boolean_daytime = None
         self.boolean_daytime_range = None
         self.daytime_threshold = None
         self.day_interval = None
@@ -57,7 +58,6 @@ class ConfigurationEstimator():
         self.eot_da_rosa = eot_da_rosa(self.day_of_year)
         self.delta = None
         self.omega = None
-        self.nrandom = 1
 
     def estimate_longitude(self, estimator='fit_l1',
                            eot_calculation='duffie',
@@ -124,7 +124,7 @@ class ConfigurationEstimator():
 
     def estimate_latitude(self, daytime_threshold=0.001, data_matrix='filled', daylight_method='optimized_estimates',
                           day_selection_method='all'):
-        'residual', 'spencer', 'sunrise-sunset', 'filled', 'all'
+
         dh = self.data_handler
         self.delta = delta_cooper(self.day_of_year, self.daily_meas)
         if data_matrix == 'raw':
@@ -153,7 +153,7 @@ class ConfigurationEstimator():
             self.hours_daylight = hours_daylight_all[self.days]
             self.delta = self.delta[:, self.days]
 
-        self.latitude = self._cal_lat_helper()
+        self.latitude_estimate = self._cal_lat_helper()
 
     def _cal_lat_helper(self):
         latitude_estimate = calc_lat(self.hours_daylight, self.delta)
@@ -187,16 +187,16 @@ class ConfigurationEstimator():
 
         scale_factor_costheta, costheta_fit = find_fit_costheta(self.data_matrix, self.days)
 
-        self.find_boolean_daytime(self.x1, self.x2)
+        boolean_daytime = find_boolean_daytime(self.data_matrix, self.daytime_threshold, self.x1, self.x2)
 
-        boolean_daytime_range = self.boolean_daytime * self.days * day_range
+        boolean_daytime_range = boolean_daytime * self.days * day_range
 
         delta_f = self.delta[boolean_daytime_range]
         omega_f = self.omega[boolean_daytime_range]
         if ~np.any(boolean_daytime_range):
             print('No data made it through filters')
 
-        lat_initial, tilt_initial, azim_initial = self.random_initial_values()
+        lat_initial, tilt_initial, azim_initial = random_initial_values(1)
 
         func_customized, bounds = select_function(self.latitude_precalculate, self.tilt_precalculate,
                                                   self.azimuth_precalculate)
@@ -224,39 +224,4 @@ class ConfigurationEstimator():
             tilt_estimate = None
         if 'azimuth_estimate' not in dict_keys:
             azimuth_estimate = None
-
         return lat_estimate, tilt_estimate, azimuth_estimate
-
-    def random_initial_values(self):
-        lat_initial_value = np.random.uniform(low=-90, high=90, size=self.nrandom)
-        tilt_initial_value = np.random.uniform(low=0, high=90, size=self.nrandom)
-        azim_initial_value = np.random.uniform(low=-180, high=180, size=self.nrandom)
-        return lat_initial_value, tilt_initial_value, azim_initial_value
-
-    def find_boolean_daytime(self, x1, x2):
-        if self.daytime_threshold is None:
-            self.daytime_threshold_fit = self.find_daytime_threshold_quantile_seasonality(x1, x2)
-            self.boolean_daytime = self.data_matrix > self.daytime_threshold_fit
-        else:
-            self.boolean_daytime = find_daytime(self.data_matrix, self.daytime_threshold)
-        return
-
-    def find_daytime_threshold_quantile_seasonality(self, p1, p2):
-        m = cvx.Parameter(nonneg=True, value=10 ** 6)
-        # setting local quantile for 10% of the data
-        t = cvx.Parameter(nonneg=True, value=p1)
-        y = np.quantile(self.data_matrix, p2, axis=0)
-        x1 = cvx.Variable(len(y))
-        x2 = cvx.Variable(len(y))
-        if self.data_matrix.shape[1] > 365:
-            constraints = [
-                x2[365:] == x2[:-365], x1 + x2 == y
-            ]
-        else:
-            constraints = [x1 + x2 == y]
-        c1 = cvx.sum(1 / 2 * cvx.abs(x1) + (t - 1 / 2) * x1)
-        c2 = cvx.sum_squares(cvx.diff(x2, 2))
-        objective = cvx.Minimize(c1 + m * c2)
-        prob = cvx.Problem(objective, constraints=constraints)
-        prob.solve(solver='MOSEK')
-        return x2.value
