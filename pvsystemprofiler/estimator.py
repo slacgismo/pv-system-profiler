@@ -30,10 +30,10 @@ class ConfigurationEstimator():
         self.data_handler = data_handler
         self.data_matrix = None
         # Parameters to be estimated
-        self.longitude_estimate = None
-        self.latitude_estimate = None
-        self.tilt_estimate = None
-        self.azimuth_estimate = None
+        self.longitude = None
+        self.latitude = None
+        self.tilt = None
+        self.azimuth = None
         self.longitude_precalculate = None
         self.latitude_precalculate = None
         self.tilt_precalculate = None
@@ -85,7 +85,7 @@ class ConfigurationEstimator():
             self.longitude_estimate = self._cal_lon_helper(eot_ref=eot_calculation)
         else:
             loss = estimator.split('_')[-1]
-            self.longitude_estimate = self._fit_lon_helper(loss=loss, eot_ref=eot_calculation)
+            self.longitude = self._fit_lon_helper(loss=loss, eot_ref=eot_calculation)
 
     def _cal_lon_helper(self, eot_ref='duffie'):
         sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
@@ -150,11 +150,11 @@ class ConfigurationEstimator():
             self.hours_daylight = hours_daylight_all[self.days]
             self.delta = self.delta[:, self.days]
 
-        self.latitude_estimate = self._cal_lat_helper()
+        self.latitude = self._cal_lat_helper()
 
     def _cal_lat_helper(self):
-        latitude_estimate = calc_lat(self.hours_daylight, self.delta)
-        return np.nanmedian(latitude_estimate)
+        latitude = calc_lat(self.hours_daylight, self.delta)
+        return np.nanmedian(latitude)
 
     def estimate_orientation(self, lon_precalculate=None, lat_precalculate=None, tilt_precalculate=None,
                              azimuth_precalculate=None, day_interval=None, x1=0.9, x2=0.9):
@@ -174,7 +174,7 @@ class ConfigurationEstimator():
         self.omega = calculate_omega(self.data_sampling, self.num_days, self.longitude_precalculate, self.day_of_year,
                                      self.gmt_offset)
 
-        self.latitude_estimate, self.tilt_estimate, self.azimuth_estimate = self._cal_orientation_helper()
+        self.latitude, self.tilt, self.azimuth = self._cal_orientation_helper()
 
     def _cal_orientation_helper(self):
         if self.day_interval is not None:
