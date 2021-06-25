@@ -50,11 +50,12 @@ class TiltAzimuthStudy():
         """
 
         self.data_handler = data_handler
+        # Choose day range from season dictionary
         if day_range is None:
             self.day_range_dict = {}
             self.day_range_dict = {'summer': [171, 265], 'no_winter': [79, 355], 'spring': [79, 171],
                                    'winter': [355, 79], 'winter_spring': [355, 171], 'full_year': None}
-            #self.day_range_dict = {'summer': [152, 245], 'no winter': [60, 335], 'spring': [60, 153], 'Full Year': None}
+
         elif day_range is 'full_year':
             self.day_range_dict = {'full_year': None}
         elif day_range is 'manual':
@@ -64,23 +65,31 @@ class TiltAzimuthStudy():
         if not data_handler._ran_pipeline:
             print('Running DataHandler preprocessing pipeline with defaults')
             self.data_handler.run_pipeline()
+        # initial values
         self.init_values = init_values
         self.nrandom = nrandom_init_values
-        self.daytime_threshold = daytime_threshold
+        # precalculates
         self.lon_precalc = lon_precalculate
         self.lat_precalc = lat_precalculate
         self.tilt_precalc = tilt_precalculate
         self.azimuth_precalc = azimuth_precalculate
+        # true values
         self.lat_true_value = lat_true_value
         self.tilt_true_value = tilt_true_value
         self.azimuth_true_value = azimuth_true_value
         self.gmt_offset = gmt_offset
+        # thresholds
+        self.daytime_threshold = daytime_threshold
         self.daytime_threshold_fit = None
+        self.threshold_x1 = np.atleast_1d(cvx_parameter)
+        self.threshold_x2 = np.atleast_1d(threshold_quantile)
+        # data specific variables
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.num_days = self.data_handler.num_days
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.data_sampling = self.data_handler.data_sampling
         self.clear_index = data_handler.daily_flags.clear
+        # angle of incidence parameters
         self.delta_cooper = None
         self.delta_spencer = None
         self.omega = None
@@ -88,18 +97,21 @@ class TiltAzimuthStudy():
         self.costheta_estimated = None
         self.costheta_ground_truth = None
         self.costheta_fit = None
+        # other
         self.results = None
-        self.threshold_x1 = np.atleast_1d(cvx_parameter)
-        self.threshold_x2 = np.atleast_1d(threshold_quantile)
+
     def run(self, delta_method=('cooper', 'spencer')):
 
         delta_method = np.atleast_1d(delta_method)
+        # calculate hour angle
         self.omega = calculate_omega(self.data_sampling, self.num_days, self.lon_precalc, self.day_of_year,
                                      self.gmt_offset)
+        # fit daily signal of cos theta
         self.scale_factor_costheta, self.costheta_fit = find_fit_costheta(self.data_matrix, self.clear_index)
+        # estimate declination angles
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
-
+        # initialize parameters
         if self.init_values is not None:
             lat_initial = self.init_values[0]
             tilt_initial = self.init_values[1]
@@ -115,33 +127,42 @@ class TiltAzimuthStudy():
         counter = 0
         self.create_results_table()
         for x1 in self.threshold_x1:
+            # first quantile value in signal decomposition algorithm
             for x2 in self.threshold_x2:
+                # second quantile value in signal decomposition algorithm
                 boolean_daytime = find_boolean_daytime(self.data_matrix, self.daytime_threshold, x1, x2)
                 for delta_id in delta_method:
+                    # declination angle
                     if delta_id in ('Cooper', 'cooper'):
                         delta = self.delta_cooper
                     if delta_id in ('Spencer', 'spencer'):
                         delta = self.delta_spencer
                     for day_range_id in self.day_range_dict:
+                        # day range
                         day_interval = self.day_range_dict[day_range_id]
                         boolean_daytime_range = self.get_day_range(boolean_daytime, day_interval)
                         delta_f = delta[boolean_daytime_range]
                         omega_f = self.omega[boolean_daytime_range]
                         if ~np.any(boolean_daytime_range):
                             print('No data made it through filters')
-
+                        # choose function and unknowns based on provided inputs
+                        # choose range for each unknown
                         func_customized, bounds = select_function(self.lat_precalc, self.tilt_precalc,
                                                                   self.azimuth_precalc)
-
+                        # create dictionary keys for unknowns. If a precalc value for lat, tilt or azimuth is not
+                        # provided, it will be tagged as an unknown
                         dict_keys = determine_keys(latitude=self.lat_precalc, tilt=self.tilt_precalc,
                                                    azimuth=self.azimuth_precalc)
-
                         nvalues = len(lat_initial)
+
                         for init_val_ix in np.arange(nvalues):
+                            # loop over initial values
                             init_values_dict = {'latitude': lat_initial[init_val_ix], 'tilt': tilt_initial[init_val_ix],
                                                 'azimuth': azim_initial[init_val_ix]}
                             init_values, ivr = select_init_values(init_values_dict, dict_keys)
                             try:
+                                # estimate latitude and/or tilt and/or azimuth. If parameter is in keys, it will be
+                                # estimated
                                 estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f,
                                                           omega=omega_f, costheta=self.costheta_fit,
                                                           boolean_daytime_range=boolean_daytime_range,
@@ -150,9 +171,9 @@ class TiltAzimuthStudy():
                             except RuntimeError:
                                 precalc_array = np.array([self.lat_precalc, self.tilt_precalc, self.azimuth_precalc])
                                 estimates = np.full(np.sum(precalc_array == None), np.nan)
-
+                            # create dictionary with dict_keys and estimates
                             estimates_dict = dict(zip(dict_keys, estimates))
-
+                            # dynamic results dataFrame based on provided inputs
                             lat = estimates_dict[
                                 'latitude_estimate'] if 'latitude_estimate' in estimates_dict else self.lat_precalc
                             tilt = estimates_dict['tilt_estimate'] if 'tilt_estimate' in estimates_dict else \
@@ -183,6 +204,11 @@ class TiltAzimuthStudy():
         return
 
     def get_day_range(self, boolean_daytime, interval):
+        """
+        :param boolean_daytime: boolean array containing daytime hours
+        :param interval:  day interval to be used in estimation
+        :return:
+        """
         if interval is not None:
             day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
         else:
