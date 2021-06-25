@@ -14,6 +14,12 @@ from modules.script_functions import remote_execute
 
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):
+    """
+    Builds a csv input file by looking at the contents of the s3 bucket containing csv files with power signals.
+    :param s3_location: aws s3 bucket location of csv files containing signals
+    :param input_file_location: s3 bucket location of report files
+    :return:
+    """
     bucket, prefix = get_s3_bucket_and_prefix(s3_location)
     site_list, size_list = enumerate_files(bucket, prefix, file_size_list=True)
     site_df = pd.DataFrame()
@@ -27,6 +33,12 @@ def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/repo
 
 
 def get_remote_output_files(partitions, username, destination_dict):
+    """
+    Collects partition results once estimation is finished
+    :param partitions: list containing aws partition addresses
+    :param username:  aws user name
+    :param destination_dict: folder where results are saved
+    """
     os.system('mkdir' + ' ' + destination_dict)
     for part_id in partitions:
         get_local_output_file = "scp -i" + part_id.ssh_key_file + ' ' + username + "@" + part_id.public_ip_address + \
@@ -35,6 +47,11 @@ def get_remote_output_files(partitions, username, destination_dict):
 
 
 def combine_results(partitions, destination_dict):
+    """
+    Combines partitioned results into single csv file
+    :param partitions: list containing aws partition addresses
+    :param destination_dict: folder where results are saved
+    """
     df = pd.DataFrame()
     for part_id in partitions:
         partial_df = pd.read_csv(destination_dict + part_id.local_output_file_name, index_col=0)
@@ -44,6 +61,13 @@ def combine_results(partitions, destination_dict):
 
 
 def check_completion(ssh_username, instance_id, ssh_key_file):
+    """
+    Checks for estiamation estimation in partitions
+    :param ssh_username: aws username
+    :param instance_id: id of the aws instance
+    :param ssh_key_file: full path to key file of aws_username
+    :return: boolean, True if all partitions are finished
+    """
     commands = ["grep -a 'finished' ./out"]
     commands_dict = remote_execute(user=ssh_username, instance_id=instance_id, key=ssh_key_file,
                                    shell_commands=commands, verbose=False)
@@ -54,6 +78,13 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
 
 
 def get_address(tag_name, region, client):
+    """
+    Collects the addresses of the aws instances being used for the estimation
+    :param tag_name: aws 'Name' tag of the instances
+    :param region: aws region
+    :param client: aws client
+    :return: list with aws instance addresses
+    """
     ec2 = boto3.Session(profile_name='default', region_name=region).client(client)
     target_instances = ec2.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [tag_name]}])
 
@@ -66,15 +97,19 @@ def get_address(tag_name, region, client):
 
 
 def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, conda_environment, power_column_id, time_shift_inspection,
-         s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json, supplementary_file):
+         aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
+         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+         supplementary_file):
+    # number of partitions
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
     #total_size = len(df)
+    # size of partition
     part_size = np.ceil(total_size / n_part) * 0.8
     ii = 0
     jj = 0
     partitions = []
+
     for i in range(n_part):
         local_size = 0
         while local_size < part_size:
@@ -83,7 +118,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                 jj = len(df) - 1
                 local_size = part_size + 1
             jj += 1
-
+        # create partition
         part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=site_input_file,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
@@ -91,12 +126,14 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                           tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
                           fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
                           check_json=check_json, sup_file=supplementary_file)
+        # add partition to list
         partitions.append(part)
         create_partition(part)
         ii = jj + 1
         jj = ii
 
     completion = [False] * len(partitions)
+    # check for completion
     while False in completion:
         print(' ')
         for part_ix, part_id in enumerate(partitions):
@@ -114,14 +151,17 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                 print('partition' + ' ' + str(part_ix) + ':' + ' ' + status)
 
         time.sleep(10 * 60)
-
+    # collect local result files
     get_remote_output_files(partitions, main_class.aws_username, main_class.global_output_directory)
+    # combine results files
     results_df = combine_results(partitions, main_class.global_output_directory)
+    # save consolidated results file
     results_df.to_csv(main_class.global_output_file)
     return
 
 
 if __name__ == '__main__':
+    # read kwargs
     input_site_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
     script_to_execute = str(sys.argv[3])
@@ -136,7 +176,7 @@ if __name__ == '__main__':
     aws_instance_name = str(sys.argv[12])
     s3_location = str(sys.argv[13])
 
-    '''
+    """
     :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
     site file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -155,8 +195,8 @@ if __name__ == '__main__':
     :param supplementary_file: csv file with supplementary information need to run script.
     :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
-    '''
-
+    """
+    # Default input variables
     if input_site_file == 'None':
         build_input_file(s3_location)
         input_site_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
@@ -169,20 +209,22 @@ if __name__ == '__main__':
     pos = script_to_execute.rfind('/') + 1
     script_location = script_to_execute[:pos]
     script_name = script_to_execute.split('/')[-1]
-
+    # aws licence file
     try:
         ssh_key_file = glob.glob("/Users/*/.aws/*.pem")[0]
     except:
         ssh_key_file = glob.glob("/home/*/.aws/*.pem")[0]
 
+    # create main class
     main_class = get_config(ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
                             gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
                             s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
                             time_zone_correction=time_zone_correction, check_json=check_json,
                             sup_file=supplementary_file)
-
+    # collect aws instance addresses
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
+    # read input site file
     df = pd.read_csv(input_site_file, index_col=0)
 
     main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
