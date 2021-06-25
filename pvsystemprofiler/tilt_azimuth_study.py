@@ -1,4 +1,4 @@
-''' Tilt and Azimuth Study Module
+""" Tilt and Azimuth Study Module
 This module contains a class for conducting a study
 to estimating Tilt and Azimuth from solar power data. This code accepts solar power
 data in the form of a `solar-data-tools` `DataHandler` object, which is used
@@ -7,11 +7,9 @@ the Tilt and Azimuth of the site that produced the data, using the `run` method.
 Tilt and Azimuth are estimated via numerical fit using equation (1.6.2) in:
     Duffie, John A., and William A. Beckman. Solar engineering of thermal
     processes. New York: Wiley, 1991.
-'''
+"""
 import numpy as np
 import pandas as pd
-import cvxpy as cvx
-from solardatatools.daytime import find_daytime
 from pvsystemprofiler.utilities.hour_angle_equation import calculate_omega
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
