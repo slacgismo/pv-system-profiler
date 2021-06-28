@@ -27,8 +27,8 @@ def create_partition(partition):
 
     python_command = '/home/ubuntu/miniconda3/envs/' + conda_env + '/bin/python'
 
-    commands = ['rm estimation* -rf']
-    output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    # commands = ['rm estimation* -rf']
+    # output = remote_execute(ssh_username, instance, ssh_key_file, commands)
 
     commands = ['ls' + ' ' + local_working_folder]
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
