@@ -59,7 +59,6 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            # print(site_id, system_id)
             if system_id in df_ground_data['system'].tolist():
                 i += 1
                 sys_tag = power_column_label + system_id
@@ -137,8 +136,6 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
         input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        # input_file_list = siteid_to_filename(site_list, file_label, ext)
-        # file_list = list(set(input_file_list) & set(file_list))
         manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
         file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
@@ -204,7 +201,7 @@ if __name__ == '__main__':
    
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
-
+    # threshold values
     cp = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
     tq = cp
     if file_label == 'None':
