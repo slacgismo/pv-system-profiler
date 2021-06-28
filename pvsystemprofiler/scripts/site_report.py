@@ -50,7 +50,6 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            # print(site_id, system_id)
             if system_id in df_ground_data['system'].tolist() or df_ground_data is None:
                 sys_tag = power_column_label + system_id
 
@@ -151,7 +150,6 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
 
 
 if __name__ == '__main__':
-
     input_site_file = str(sys.argv[1])
     n_files = str(sys.argv[2])
     s3_location = str(sys.argv[3])
@@ -163,7 +161,6 @@ if __name__ == '__main__':
     time_zone_correction = string_to_boolean(str(sys.argv[9]))
     check_json = string_to_boolean(str(sys.argv[10]))
     system_summary_file = str(sys.argv[11])
-
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -179,7 +176,6 @@ if __name__ == '__main__':
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
-
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
 
