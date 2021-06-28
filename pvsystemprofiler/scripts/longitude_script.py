@@ -24,9 +24,6 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
         runs_lon_estimation = True
         lon_study = LongitudeStudy(data_handler=dh_in, gmt_offset=gmt_offset, true_value=real_longitude)
         lon_study.run(verbose=False)
-        # lon_study.run(verbose=False, data_matrix='filled', estimator='fit_huber', eot_calculation='duffie',
-        # solar_noon_method='optimized_measurements', day_selection_method='cloudy')
-
         p_df = lon_study.results.sort_index().copy()
     except:
         runs_lon_estimation = False
@@ -38,8 +35,8 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     return p_df, runs_lon_estimation
 
 
-def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                     fix_time_shifts, time_zone_correction, json_file_dict=None):
+def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
+                     time_zone_correction):
     ll = len(power_column_label)
     cols = df.columns
     i = 0
@@ -48,7 +45,6 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
             if system_id in df_ground_data['system'].tolist():
-                # print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
 
@@ -94,7 +90,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
 
 
 def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -117,8 +113,6 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
         input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        # input_file_list = siteid_to_filename(site_list, file_label, ext)
-        # file_list = list(set(input_file_list) & set(file_list))
         manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
         file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
