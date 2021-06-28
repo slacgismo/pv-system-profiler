@@ -24,8 +24,6 @@ def run_failsafe_lat_estimation(dh_in, real_latitude):
         runs_lat_estimation = True
         lat_study = LatitudeStudy(data_handler=dh_in, lat_true_value=real_latitude)
         lat_study.run()
-        #lat_study.run(data_matrix='filled', daylight_method='sunrise-sunset', delta_method='spencer',
-        #              day_selection_method='all')
         p_df = lat_study.results.sort_index().copy()
     except:
         runs_lat_estimation = False
@@ -91,7 +89,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
 
 
 def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -114,8 +112,6 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
         input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        # input_file_list = siteid_to_filename(site_list, file_label, ext)
-        # file_list = list(set(input_file_list) & set(file_list))
         manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
         file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
