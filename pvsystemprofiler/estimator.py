@@ -23,6 +23,7 @@ from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions impo
 from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import find_boolean_daytime
 from pvsystemprofiler.utilities.tools import random_initial_values
 
+
 class ConfigurationEstimator():
     def __init__(self, data_handler, gmt_offset):
         if not data_handler._ran_pipeline:
@@ -156,13 +157,24 @@ class ConfigurationEstimator():
         latitude = calc_lat(self.hours_daylight, self.delta)
         return np.nanmedian(latitude)
 
-    def estimate_orientation(self, lon_precalculate=None, lat_precalculate=None, tilt_precalculate=None,
-                             azimuth_precalculate=None, day_interval=None, x1=0.9, x2=0.9):
+    def estimate_orientation(self, longitude=None, latitude=None, tilt=None, azimuth=None, day_interval=None, x1=0.9,
+                             x2=0.9):
 
-        self.longitude_precalculate = lon_precalculate
-        self.latitude_precalculate = lat_precalculate
-        self.tilt_precalculate = tilt_precalculate
-        self.azimuth_precalculate = azimuth_precalculate
+        if longitude is None:
+            est_lon = ConfigurationEstimator(self.data_handler, self.gmt_offset)
+            est_lon.estimate_longitude()
+            self.longitude = est_lon.longitude
+        else:
+            self.longitude = longitude
+        if latitude is None:
+            est_lat = ConfigurationEstimator(self.data_handler, self.gmt_offset)
+            est_lat.estimate_latitude()
+            self.latitude = est_lat.latitude
+        else:
+            self.latitude = latitude
+
+        self.tilt = tilt
+        self.azimuth = azimuth
         self.day_interval = day_interval
         self.x1 = x1
         self.x2 = x2
@@ -171,10 +183,33 @@ class ConfigurationEstimator():
         self.days = dh.daily_flags.clear
         self.num_days = dh.num_days
         self.delta = delta_cooper(self.day_of_year, self.daily_meas)
-        self.omega = calculate_omega(self.data_sampling, self.num_days, self.longitude_precalculate, self.day_of_year,
+        self.omega = calculate_omega(self.data_sampling, self.num_days, self.longitude, self.day_of_year,
                                      self.gmt_offset)
 
-        self.latitude, self.tilt, self.azimuth = self._cal_orientation_helper()
+        self.tilt, self.azimuth = self._cal_orientation_helper()
+
+    def estimate_all(self, day_interval=None, x1=0.9, x2=0.9):
+
+        self.tilt = None
+        self.azimuth = None
+        self.day_interval = day_interval
+        self.x1 = x1
+        self.x2 = x2
+        dh = self.data_handler
+        self.data_matrix = dh.filled_data_matrix
+        self.days = dh.daily_flags.clear
+        self.num_days = dh.num_days
+        self.delta = delta_cooper(self.day_of_year, self.daily_meas)
+        est_lon = ConfigurationEstimator(self.data_handler, self.gmt_offset)
+        est_lon.estimate_longitude()
+        self.longitude = est_lon.longitude
+        est_lat = ConfigurationEstimator(self.data_handler, self.gmt_offset)
+        est_lat.estimate_latitude()
+        self.latitude = est_lat.latitude
+        self.omega = calculate_omega(self.data_sampling, self.num_days, self.longitude, self.day_of_year,
+                                     self.gmt_offset)
+
+        self.tilt, self.azimuth = self._cal_orientation_helper()
 
     def _cal_orientation_helper(self):
         if self.day_interval is not None:
@@ -195,10 +230,10 @@ class ConfigurationEstimator():
 
         lat_initial, tilt_initial, azim_initial = random_initial_values(1)
 
-        func_customized, bounds = select_function(self.latitude_precalculate, self.tilt_precalculate,
-                                                  self.azimuth_precalculate)
-        dict_keys = determine_keys(latitude=self.latitude_precalculate, tilt=self.tilt_precalculate,
-                                   azimuth=self.azimuth_precalculate)
+        func_customized, bounds = select_function(self.latitude, self.tilt,
+                                                  self.azimuth)
+        dict_keys = determine_keys(latitude=self.latitude, tilt=self.tilt,
+                                   azimuth=self.azimuth)
 
         init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
         init_values, ivr = select_init_values(init_values_dict, dict_keys)
@@ -215,10 +250,10 @@ class ConfigurationEstimator():
             if estimate == 'azimuth_estimate':
                 azimuth_estimate = estimates[i]
 
-        if 'latitude_estimate' not in dict_keys:
-            lat_estimate = None
         if 'tilt_estimate' not in dict_keys:
             tilt_estimate = None
         if 'azimuth_estimate' not in dict_keys:
             azimuth_estimate = None
-        return lat_estimate, tilt_estimate, azimuth_estimate
+        return tilt_estimate, azimuth_estimate
+
+
