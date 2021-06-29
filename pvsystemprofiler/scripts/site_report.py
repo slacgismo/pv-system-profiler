@@ -1,22 +1,23 @@
 import sys
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from time import time
-
-sys.path.append('/home/ubuntu/github/pv-system-profiler/')
+filepath = Path(__file__).resolve().parents[1]
+sys.path.append(str(filepath))
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
-from modules.script_functions import run_failsafe_pipeline
-from modules.script_functions import resume_run
-from modules.script_functions import load_generic_data
-from modules.script_functions import enumerate_files
-from modules.script_functions import get_checked_sites
-from modules.script_functions import get_s3_bucket_and_prefix
-from modules.script_functions import create_json_dict
-from modules.script_functions import string_to_boolean
-from modules.script_functions import log_file_versions
-from modules.script_functions import filename_to_siteid
-from modules.script_functions import extract_sys_parameters
+from scripts.modules.script_functions import run_failsafe_pipeline
+from scripts.modules.script_functions import resume_run
+from scripts.modules.script_functions import load_generic_data
+from scripts.modules.script_functions import enumerate_files
+from scripts.modules.script_functions import get_checked_sites
+from scripts.modules.script_functions import get_s3_bucket_and_prefix
+from scripts.modules.script_functions import create_json_dict
+from scripts.modules.script_functions import string_to_boolean
+from scripts.modules.script_functions import log_file_versions
+from scripts.modules.script_functions import filename_to_siteid
+from scripts.modules.script_functions import extract_sys_parameters
 
 
 def load_ground_data(df_loc):
@@ -176,8 +177,8 @@ if __name__ == '__main__':
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
 
     if file_label == 'None':
         file_label = ''

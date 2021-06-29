@@ -1,16 +1,19 @@
 import sys
 import os
+from pathlib import Path
 import boto3
 import time
 import glob
 import numpy as np
 import pandas as pd
-from modules.config_partitions import get_config
-from modules.create_partition import create_partition
-from modules.script_functions import enumerate_files
-from modules.script_functions import get_s3_bucket_and_prefix
-from modules.script_functions import copy_to_s3
-from modules.script_functions import remote_execute
+filepath = Path(__file__).resolve().parents[1]
+sys.path.append(str(filepath))
+from scripts.modules.config_partitions import get_config
+from scripts.modules.create_partition import create_partition
+from scripts.modules.script_functions import enumerate_files
+from scripts.modules.script_functions import get_s3_bucket_and_prefix
+from scripts.modules.script_functions import copy_to_s3
+from scripts.modules.script_functions import remote_execute
 
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):

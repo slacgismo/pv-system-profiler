@@ -1,4 +1,8 @@
-from modules.script_functions import remote_execute
+import sys
+from pathlib import Path
+filepath = Path(__file__).resolve().parents[1]
+sys.path.append(str(filepath))
+from scripts.modules.script_functions import remote_execute
 
 
 def create_partition(partition):
