@@ -3,21 +3,21 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from time import time
-filepath = Path(__file__).resolve().parents[1]
+filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
-from scripts.modules.script_functions import run_failsafe_pipeline
-from scripts.modules.script_functions import resume_run
-from scripts.modules.script_functions import load_generic_data
-from scripts.modules.script_functions import enumerate_files
-from scripts.modules.script_functions import get_checked_sites
-from scripts.modules.script_functions import get_s3_bucket_and_prefix
-from scripts.modules.script_functions import create_json_dict
-from scripts.modules.script_functions import string_to_boolean
-from scripts.modules.script_functions import log_file_versions
-from scripts.modules.script_functions import filename_to_siteid
-from scripts.modules.script_functions import extract_sys_parameters
+from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_pipeline
+from pvsystemprofiler.scripts.modules.script_functions import resume_run
+from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
+from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
+from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
+from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
+from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
+from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
+from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
+from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
+from pvsystemprofiler.scripts.modules.script_functions import extract_sys_parameters
 
 
 def load_ground_data(df_loc):

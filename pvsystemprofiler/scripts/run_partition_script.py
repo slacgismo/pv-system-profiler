@@ -6,14 +6,14 @@ import time
 import glob
 import numpy as np
 import pandas as pd
-filepath = Path(__file__).resolve().parents[1]
+filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
-from scripts.modules.config_partitions import get_config
-from scripts.modules.create_partition import create_partition
-from scripts.modules.script_functions import enumerate_files
-from scripts.modules.script_functions import get_s3_bucket_and_prefix
-from scripts.modules.script_functions import copy_to_s3
-from scripts.modules.script_functions import remote_execute
+from pvsystemprofiler.scripts.modules.config_partitions import get_config
+from pvsystemprofiler.scripts.modules.create_partition import create_partition
+from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
+from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
+from pvsystemprofiler.scripts.modules.script_functions import copy_to_s3
+from pvsystemprofiler.scripts.modules.script_functions import remote_execute
 
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):

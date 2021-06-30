@@ -4,21 +4,21 @@ import pandas as pd
 import numpy as np
 from time import time
 
-filepath = Path(__file__).resolve().parents[1]
+filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
-from scripts.modules.script_functions import run_failsafe_pipeline
-from scripts.modules.script_functions import resume_run
-from scripts.modules.script_functions import load_generic_data
-from scripts.modules.script_functions import enumerate_files
-from scripts.modules.script_functions import get_checked_sites
-from scripts.modules.script_functions import get_s3_bucket_and_prefix
-from scripts.modules.script_functions import create_json_dict
-from scripts.modules.script_functions import string_to_boolean
-from scripts.modules.script_functions import log_file_versions
+from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_pipeline
+from pvsystemprofiler.scripts.modules.script_functions import resume_run
+from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
+from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
+from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
+from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
+from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
+from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
+from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.tilt_azimuth_study import TiltAzimuthStudy
-from scripts.modules.script_functions import filename_to_siteid
+from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 
 
 def run_failsafe_ta_estimation(dh, nrandom, threshold, lon_p, lat_p, tilt_p, azim_p, real_lat, real_tilt, real_azim,
@@ -202,8 +202,8 @@ if __name__ == '__main__':
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
    
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
     # threshold values
     cp = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
     tq = cp

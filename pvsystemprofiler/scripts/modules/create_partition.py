@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 filepath = Path(__file__).resolve().parents[1]
 sys.path.append(str(filepath))
-from scripts.modules.script_functions import remote_execute
+from pvsystemprofiler.scripts.modules.script_functions import remote_execute
 
 
 def create_partition(partition):
@@ -31,8 +31,8 @@ def create_partition(partition):
 
     python_command = '/home/ubuntu/miniconda3/envs/' + conda_env + '/bin/python'
 
-    # commands = ['rm estimation* -rf']
-    # output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    commands = ['rm estimation* -rf']
+    output = remote_execute(ssh_username, instance, ssh_key_file, commands)
 
     commands = ['ls' + ' ' + local_working_folder]
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
