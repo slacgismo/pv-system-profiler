@@ -3,21 +3,21 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from time import time
-filepath = Path(__file__).resolve().parents[1]
+filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
-from scripts.modules.script_functions import run_failsafe_pipeline
-from scripts.modules.script_functions import resume_run
-from scripts.modules.script_functions import load_generic_data
-from scripts.modules.script_functions import enumerate_files
-from scripts.modules.script_functions import get_checked_sites
-from scripts.modules.script_functions import get_s3_bucket_and_prefix
-from scripts.modules.script_functions import create_json_dict
-from scripts.modules.script_functions import string_to_boolean
-from scripts.modules.script_functions import log_file_versions
+from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_pipeline
+from pvsystemprofiler.scripts.modules.script_functions import resume_run
+from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
+from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
+from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
+from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
+from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
+from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
+from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.longitude_study import LongitudeStudy
-from scripts.modules.script_functions import filename_to_siteid
+from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 
 
 def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
@@ -133,7 +133,7 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, json_file_dict)
+                                      fix_time_shifts, time_zone_correction)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -178,8 +178,8 @@ if __name__ == '__main__':
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
 
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
     if file_label == 'None':
         file_label = ''
 
