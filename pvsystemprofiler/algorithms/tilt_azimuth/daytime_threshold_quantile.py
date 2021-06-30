@@ -12,6 +12,7 @@ def find_boolean_daytime(data_matrix, daytime_threshold, x1, x2):
         boolean_daytime = find_daytime(data_matrix, daytime_threshold)
     return boolean_daytime
 
+
 def find_daytime_threshold_quantile_seasonality(data_matrix, p1, p2):
     m = cvx.Parameter(nonneg=True, value=10 ** 6)
     # setting local quantile for 10% of the data
@@ -31,4 +32,3 @@ def find_daytime_threshold_quantile_seasonality(data_matrix, p1, p2):
     prob = cvx.Problem(objective, constraints=constraints)
     prob.solve(solver='MOSEK')
     return x2.value
-
