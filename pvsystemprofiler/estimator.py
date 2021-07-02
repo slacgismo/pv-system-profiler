@@ -35,10 +35,6 @@ class ConfigurationEstimator():
         self.latitude = None
         self.tilt = None
         self.azimuth = None
-        self.longitude_precalculate = None
-        self.latitude_precalculate = None
-        self.tilt_precalculate = None
-        self.azimuth_precalculate = None
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
         self.hours_daylight = None
