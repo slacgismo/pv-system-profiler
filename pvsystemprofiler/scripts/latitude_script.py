@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from time import time
+# TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
 from solardatatools import DataHandler

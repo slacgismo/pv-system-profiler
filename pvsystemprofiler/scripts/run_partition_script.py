@@ -6,6 +6,7 @@ import time
 import glob
 import numpy as np
 import pandas as pd
+# TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
 from pvsystemprofiler.scripts.modules.config_partitions import get_config
