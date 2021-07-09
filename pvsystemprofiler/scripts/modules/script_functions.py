@@ -237,56 +237,6 @@ def get_io_file_locations(text_file):
         print('Error reading input file')
     return file_dict['results_file'], file_dict['site_list_file']
 
-
-def get_lon_from_list(df, sys_id):
-    longitude = float(df.loc[df['system'] == sys_id, 'longitude'])
-    return longitude
-
-
-def get_lon_from_report(df, site_id, sys_id):
-    mask1 = df['site'] == site_id
-    mask2 = df['system'] == sys_id
-    mask3 = mask1 & mask2
-    return float(df.loc[mask3, 'longitude'])
-
-
-def get_lat_from_list(df, sys_id):
-    latitude = float(df.loc[df['system'] == sys_id, 'latitude'])
-    return latitude
-
-
-def get_lat_from_report(df, site_id, sys_id):
-    mask1 = df['site'] == site_id
-    mask2 = df['system'] == sys_id
-    mask3 = mask1 & mask2
-    return float(df.loc[mask3, 'latitude'])
-
-
-def get_orientation_from_list(df, sys_id):
-    tilt = float(df.loc[df['system'] == sys_id, 'tilt'])
-    azimuth = float(df.loc[df['system'] == sys_id, 'azimuth'])
-    return tilt, azimuth
-
-
-def get_gmt_offset_from_list(df, sys_id):
-    return float(df.loc[df['system'] == sys_id, 'gmt_offset'])
-
-
-def get_gmt_offset_from_report(df, site_id, sys_id):
-    mask1 = df['site'] == site_id
-    mask2 = df['system'] == sys_id
-    mask3 = mask1 & mask2
-    return float(df.loc[mask3, 'gmt_offset'])
-
-
-def get_tag(dh, ds, pc_id, sys_id):
-    if ds == 'constellation':
-        pc = pc_id + str(sys_id)
-    if ds == 'source_2':
-        pc = dh.data_frame.columns[sys_id]
-    return pc
-
-
 def resume_run(output_file):
     if os.path.isfile(output_file):
         df = pd.read_csv(output_file, index_col=0)
