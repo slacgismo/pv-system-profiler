@@ -20,7 +20,7 @@ from pvsystemprofiler.algorithms.performance_model_estimation import find_fit_co
 from pvsystemprofiler.algorithms.angle_of_incidence.lambda_functions import select_function
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_keys
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
-from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import find_boolean_daytime
+from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import filter_data
 from pvsystemprofiler.utilities.tools import random_initial_values
 
 
@@ -215,13 +215,13 @@ class ConfigurationEstimator():
 
         scale_factor_costheta, costheta_fit = find_fit_costheta(self.data_matrix, self.days)
 
-        boolean_daytime = find_boolean_daytime(self.data_matrix, self.daytime_threshold, self.x1, self.x2)
+        filtered_data = filter_data(self.data_matrix, self.daytime_threshold, self.x1, self.x2)
 
-        boolean_daytime_range = boolean_daytime * self.days * day_range
+        filtered_data = filtered_data * self.days * day_range
 
-        delta_f = self.delta[boolean_daytime_range]
-        omega_f = self.omega[boolean_daytime_range]
-        if ~np.any(boolean_daytime_range):
+        delta_f = self.delta[filtered_data]
+        omega_f = self.omega[filtered_data]
+        if ~np.any(filtered_data):
             print('No data made it through filters')
 
         lat_initial, tilt_initial, azim_initial = random_initial_values(1)
@@ -235,8 +235,8 @@ class ConfigurationEstimator():
         init_values, ivr = select_init_values(init_values_dict, dict_keys)
 
         estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f, omega=omega_f,
-                                  costheta=costheta_fit, boolean_daytime_range=boolean_daytime_range,
-                                  init_values=init_values, fit_bounds=bounds)
+                                  costheta=costheta_fit, input_data=filtered_data, init_values=init_values,
+                                  fit_bounds=bounds)
 
         for i, estimate in enumerate(dict_keys):
             if estimate == 'latitude_estimate':

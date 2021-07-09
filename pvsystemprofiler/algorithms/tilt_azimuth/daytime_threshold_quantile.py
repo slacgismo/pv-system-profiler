@@ -4,7 +4,7 @@ import cvxpy as cvx
 from solardatatools.daytime import find_daytime
 
 
-def find_boolean_daytime(data_matrix, daytime_threshold, x1, x2):
+def filter_data(data_matrix, daytime_threshold, x1, x2):
     if daytime_threshold is None:
         daytime_threshold_fit = find_daytime_threshold_quantile_seasonality(data_matrix, x1, x2)
         boolean_daytime = data_matrix > daytime_threshold_fit

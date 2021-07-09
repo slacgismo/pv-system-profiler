@@ -21,7 +21,7 @@ from pvsystemprofiler.utilities.angle_of_incidence_function import func_costheta
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import determine_keys
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 from pvsystemprofiler.utilities.tools import random_initial_values
-from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import find_boolean_daytime
+from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import filter_data
 
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range='full_year', init_values=None, nrandom_init_values=None,
@@ -130,7 +130,7 @@ class TiltAzimuthStudy():
             # first quantile value in signal decomposition algorithm
             for x2 in self.threshold_x2:
                 # second quantile value in signal decomposition algorithm
-                boolean_daytime = find_boolean_daytime(self.data_matrix, self.daytime_threshold, x1, x2)
+                filtered_data = filter_data(self.data_matrix, self.daytime_threshold, x1, x2)
                 for delta_id in delta_method:
                     # declination angle
                     if delta_id in ('Cooper', 'cooper'):
@@ -140,10 +140,10 @@ class TiltAzimuthStudy():
                     for day_range_id in self.day_range_dict:
                         # day range
                         day_interval = self.day_range_dict[day_range_id]
-                        boolean_daytime_range = self.get_day_range(boolean_daytime, day_interval)
-                        delta_f = delta[boolean_daytime_range]
-                        omega_f = self.omega[boolean_daytime_range]
-                        if ~np.any(boolean_daytime_range):
+                        filtered_data = self.get_day_range(filtered_data, day_interval)
+                        delta_f = delta[filtered_data]
+                        omega_f = self.omega[filtered_data]
+                        if ~np.any(filtered_data):
                             print('No data made it through filters')
                         # choose function and unknowns based on provided inputs
                         # choose range for each unknown
@@ -165,8 +165,7 @@ class TiltAzimuthStudy():
                                 # estimated
                                 estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f,
                                                           omega=omega_f, costheta=self.costheta_fit,
-                                                          boolean_daytime_range=boolean_daytime_range,
-                                                          init_values=init_values,
+                                                          input_data=filtered_data, init_values=init_values,
                                                           fit_bounds=bounds)
                             except RuntimeError:
                                 input_array = np.array([self.lat_input, self.tilt_input, self.azimuth_input])
@@ -203,9 +202,9 @@ class TiltAzimuthStudy():
             self.results['azimuth residual'] = self.azimuth_true_value - self.results['azimuth']
         return
 
-    def get_day_range(self, boolean_daytime, interval):
+    def get_day_range(self, input_data, interval):
         """
-        :param boolean_daytime: boolean array containing daytime hours
+        :param input_data: boolean array containing daytime hours
         :param interval:  day interval to be used in estimation
         :return:
         """
@@ -213,8 +212,8 @@ class TiltAzimuthStudy():
             day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
         else:
             day_range = np.ones(self.day_of_year.shape, dtype=bool)
-        boolean_daytime_range = boolean_daytime * self.clear_index * day_range
-        return boolean_daytime_range
+        output = input_data * self.clear_index * day_range
+        return output
 
     def create_results_table(self):
         cols = ['day range', 'declination method', 'cvx parameter', 'threshold quantile',  'latitude initial value',
