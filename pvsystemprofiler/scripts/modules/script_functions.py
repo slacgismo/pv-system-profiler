@@ -182,14 +182,6 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
     return df
 
-
-def create_site_label(file_id):
-    file_name = file_id.split('/')[1]
-    i = file_name.find(file_label)
-    file_id = file_name[:i]
-    return file_id
-
-
 def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
     ll = len(power_label)
@@ -227,16 +219,6 @@ def enumerate_files(s3_bucket, prefix, extension='.csv', file_size_list=False):
     else:
         return output_list
 
-
-def get_io_file_locations(text_file):
-    try:
-        with open(text_file) as f:
-            file_locations = f.read()
-            file_dict = json.loads(file_locations)
-    except FileNotFoundError:
-        print('Error reading input file')
-    return file_dict['results_file'], file_dict['site_list_file']
-
 def resume_run(output_file):
     if os.path.isfile(output_file):
         df = pd.read_csv(output_file, index_col=0)
@@ -250,42 +232,6 @@ def resume_run(output_file):
         checked_list = []
     return df, checked_list, start_index
 
-
-def resume_run_from_file_list(output_file):
-    if os.path.isfile(output_file):
-        df = pd.read_csv(output_file, index_col=0)
-        df['site'] = df['site'].apply(str)
-        df['system'] = df['system'].apply(str)
-        start_index = len(df['site'].unique()) - 1
-        checked_list = df['system'].unique().tolist()
-    else:
-        start_index = 0
-        df = pd.DataFrame()
-        checked_list = []
-    return df, checked_list, start_index
-
-
-def load_input_dataframe(list_file):
-    df = pd.read_csv(list_file, index_col=0)
-    df['site'] = df['site'].apply(str)
-    df['system'] = df['system'].apply(str)
-    return df
-
-
-def filter_sites(df):
-    cols = df.columns
-    if 'data_available_csv' in cols:
-        mask1 = df['data_available_csv'] == True
-    else:
-        mask1 = True
-    if 'data_available_json' in cols:
-        mask2 = df['data_available_json'] == True
-    else:
-        mask2 = True
-    mask3 = mask1 & mask2
-    return df[mask3]
-
-
 def create_system_dict(df):
     site_list = df['site'].unique().tolist()
     ss_dict = {}
@@ -293,15 +239,6 @@ def create_system_dict(df):
         systems_in_site = df[df['site'] == site]['system'].values.tolist()
         ss_dict[site] = systems_in_site
     return site_list, ss_dict
-
-
-def initialize_results_df():
-    p_df = pd.DataFrame(columns=['site', 'system', 'length', 'capacity_estimate', 'data_sampling', 'data quality_score',
-                                 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
-                                 'time_zone_correction', 'capacity_changes', 'normal_quality_scores',
-                                 'passes pipeline'])
-    return p_df
-
 
 def load_data(data_source, site_id):
     for file_id in file_list:
@@ -314,10 +251,6 @@ def load_data(data_source, site_id):
     if data_source == 'source_2':
         df = load_cassandra_data(file_id=site_id)
     return df
-
-
-def get_inspected_time_shift(df, sys_id):
-    return int(df.loc[df['system'] == sys_id, 'manual_time_shift'].values[0])
 
 
 def run_failsafe_pipeline(dh_in, df_in, sys_tag, fts, tzc):
