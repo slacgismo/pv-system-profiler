@@ -32,7 +32,7 @@ def copy_to_s3(input_file_name, bucket, destination_file_name):
 
 
 def log_file_versions(utility, active_conda_env=None,  output_folder_location='./',
-                      conda_location='/home/ubuntu/miniconda3/', repository_location=None):
+                      conda_location='/home/ubuntu/miniconda3/', repository_location='/home/ubuntu/github/'):
     if active_conda_env is None:
         conda = conda_location + 'bin/conda' + ' '
         conda_env = subprocess.check_output(conda + "env list", shell=True, encoding='utf-8')

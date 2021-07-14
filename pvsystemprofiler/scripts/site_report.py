@@ -61,7 +61,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                                                                'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
-                        
+
                 passes_pipeline = run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
 
                 if passes_pipeline:
@@ -175,8 +175,8 @@ if __name__ == '__main__':
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     if file_label == 'None':
         file_label = ''

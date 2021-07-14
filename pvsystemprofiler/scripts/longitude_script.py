@@ -177,8 +177,8 @@ if __name__ == '__main__':
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
 
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
     if file_label == 'None':
         file_label = ''
 
