@@ -177,8 +177,8 @@ if __name__ == '__main__':
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param system_summary_file: Full path to csv file containing latitude and gmt offset for each system. 
     '''
-    #log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    #log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     if file_label == 'None':
         file_label = ''
