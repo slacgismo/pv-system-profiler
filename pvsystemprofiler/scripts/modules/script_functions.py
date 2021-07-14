@@ -154,7 +154,7 @@ def get_s3_bucket_and_prefix(s3_location):
 
 
 def get_checked_sites(df):
-    if not df.empty:
+    if df is not None:
         checked_sites = df['site'].unique().tolist()
         checked_sites.sort()
     else:
@@ -227,13 +227,9 @@ def resume_run(output_file):
         df = pd.read_csv(output_file, index_col=0)
         df['site'] = df['site'].apply(str)
         df['system'] = df['system'].apply(str)
-        start_index = len(df['site'].unique()) - 1
-        checked_list = df['system'].unique().tolist()
     else:
-        start_index = 0
-        df = pd.DataFrame()
-        checked_list = []
-    return df, checked_list, start_index
+       df = None
+    return df
 
 def create_system_dict(df):
     site_list = df['site'].unique().tolist()

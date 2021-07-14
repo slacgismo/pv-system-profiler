@@ -119,6 +119,8 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
 
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
+    if full_df is None:
+        full_df = pd.DataFrame()
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
@@ -175,13 +177,13 @@ if __name__ == '__main__':
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param system_summary_file: Full path to csv file containing latitude and gmt offset for each system. 
     '''
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    #log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    #log_file_versions('pv-system-profiler')
 
     if file_label == 'None':
         file_label = ''
 
-    full_df, checked_systems, start_at = resume_run(output_file)
+    full_df = resume_run(output_file)
     df_ground_data = pd.read_csv(system_summary_file, index_col=0)
     df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
     df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)

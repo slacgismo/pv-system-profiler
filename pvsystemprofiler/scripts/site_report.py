@@ -32,8 +32,8 @@ def load_ground_data(df_loc):
     return df
 
 
-def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                     fix_time_shifts, time_zone_correction, json_file_dict=None):
+def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
+                     time_zone_correction, json_file_dict=None):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
@@ -120,6 +120,9 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
 
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
+    if full_df is None:
+        full_df = pd.DataFrame()
+
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
@@ -181,7 +184,7 @@ if __name__ == '__main__':
     if file_label == 'None':
         file_label = ''
 
-    full_df, checked_systems, start_at = resume_run(output_file)
+    full_df = resume_run(output_file)
     if system_summary_file is not None:
         df_ground_data = load_ground_data(system_summary_file)
 
