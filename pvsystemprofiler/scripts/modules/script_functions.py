@@ -177,22 +177,25 @@ def filename_to_siteid(sites):
     return site_list
 
 
-def load_generic_data(location, file_label, file_id, extension='.csv', parse_dates=[0]):
+def load_generic_data(location, file_label, file_id, extension='.csv', parse_dates=[0], nrows=None):
     to_read = location + file_id + file_label + extension
-    df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
+    if nrows is None:
+        df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
+    else:
+        df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates, nrows=nrows)
     return df
 
 def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
     ll = len(power_label)
-    system_list = pd.DataFrame(columns=['site', 'system'])
+    system_list = pd.DataFrame(columns=['site', 'system'], )
 
     for file_ix, file_id in enumerate(file_list):
         progress(file_ix, len(file_list), 'Generating system list', bar_length=20)
         file_name = file_id.split('/')[1]
         i = file_name.find(file_label)
         file_id = file_name[:i]
-        df = load_generic_data(location, file_label, file_id)
+        df = load_generic_data(location, file_label, file_id, nrows=2)
         cols = df.columns
         for col_label in cols:
             if col_label.find(power_label) != -1:
