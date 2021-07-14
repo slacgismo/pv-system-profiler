@@ -258,9 +258,11 @@ def load_data(data_source, site_id):
 
 def run_failsafe_pipeline(dh_in, df_in, sys_tag, fts, tzc):
     try:
-        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
+        try:
+            dh_in.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
+        except ValueError:
+            max_val = np.nanquantile(df_in[sys_tag], 0.95)
+            dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False, max_val=max_val * 3)
     except:
-        max_val = np.nanquantile(df_in[sys_tag], 0.95)
-        dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False,
-                           max_val=max_val * 3)
-    return
+        return False
+    return True

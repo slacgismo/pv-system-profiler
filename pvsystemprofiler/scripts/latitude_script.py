@@ -58,11 +58,9 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                                                                'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
-                try:
-                    run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
-                    passes_pipeline = True
-                except:
-                    passes_pipeline = False
+
+                passes_pipeline = run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
+
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
                     results_df['length'] = dh.num_days
