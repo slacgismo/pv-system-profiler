@@ -175,7 +175,7 @@ if __name__ == '__main__':
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
-    :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
+    :param system_summary_file: Full path to csv file containing latitude and gmt offset for each system. 
     '''
     # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
