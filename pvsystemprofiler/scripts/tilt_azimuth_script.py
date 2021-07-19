@@ -62,7 +62,6 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
             if system_id in df_ground_data['system'].tolist():
-                print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
                 gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
