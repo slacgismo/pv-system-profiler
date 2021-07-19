@@ -58,11 +58,9 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                                                                'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
-                try:
-                    run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
-                    passes_pipeline = True
-                except:
-                    passes_pipeline = False
+
+                passes_pipeline = run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
+
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
                     results_df['length'] = dh.num_days
@@ -121,6 +119,8 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
 
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
+    if full_df is None:
+        full_df = pd.DataFrame()
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
@@ -175,15 +175,15 @@ if __name__ == '__main__':
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
-    :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
+    :param system_summary_file: Full path to csv file containing latitude and gmt offset for each system. 
     '''
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     if file_label == 'None':
         file_label = ''
 
-    full_df, checked_systems, start_at = resume_run(output_file)
+    full_df = resume_run(output_file)
     df_ground_data = pd.read_csv(system_summary_file, index_col=0)
     df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
     df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)

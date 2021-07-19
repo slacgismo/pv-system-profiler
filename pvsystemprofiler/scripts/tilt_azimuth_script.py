@@ -21,32 +21,32 @@ from pvsystemprofiler.tilt_azimuth_study import TiltAzimuthStudy
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 
 
-def run_failsafe_ta_estimation(dh, nrandom, threshold, lon_p, lat_p, tilt_p, azim_p, real_lat, real_tilt, real_azim,
-                               gmt_offset, cp, tq):
+def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim, gmt_offset,
+                               cp, tq):
+
     try:
         runs_ta_estimation = True
         ta_study = TiltAzimuthStudy(data_handler=dh, nrandom_init_values=nrandom, daytime_threshold=threshold,
-                                    lon_precalculate=lon_p, lat_precalculate=lat_p, tilt_precalculate=tilt_p,
-                                    azimuth_precalculate=azim_p, lat_true_value=real_lat, tilt_true_value=real_tilt,
-                                    azimuth_true_value=real_azim, gmt_offset=gmt_offset,  cvx_parameter=cp,
-                                    threshold_quantile=tq)
+                                    lon_input=lon, lat_input=lat, tilt_input=tilt, azimuth_input=azim,
+                                    lat_true_value=real_lat, tilt_true_value=real_tilt, azimuth_true_value=real_azim,
+                                    gmt_offset=gmt_offset,  cvx_parameter=cp, threshold_quantile=tq)
         ta_study.run()
         p_df = ta_study.results.sort_index().copy()
     except:
         runs_ta_estimation = False
         cols = ['day range', 'declination method', 'latitude initial value', 'tilt initial value',
                 'azimuth initial value']
-        if lat_p is not None:
+        if lat is not None:
             cols.append('latitude')
-        if tilt_p is not None:
+        if tilt is not None:
             cols.append('tilt')
-        if azim_p is not None:
+        if azim is not None:
             cols.append('azimuth')
-        if lat_p is not None:
+        if lat is not None:
             cols.append('latitude_residual')
-        if tilt_p is not None:
+        if tilt is not None:
             cols.append('tilt_residual')
-        if azim_p is not None:
+        if azim is not None:
             cols.append('azimuth_residual')
         p_df = pd.DataFrame(columns=cols)
         p_df.loc[0, :] = np.nan
@@ -66,12 +66,12 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 i += 1
                 sys_tag = power_column_label + system_id
                 gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
-                longitude_precalculate = float(df_ground_data.loc[df_ground_data['system'] == system_id,
+                longitude_input = float(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                   'estimated_longitude'])
                 real_latitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'latitude'])
                 real_tilt = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'tilt'])
                 real_azimuth = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'azimuth'])
-                latitude_precalculate = float(df_ground_data.loc[df_ground_data['system'] == system_id,
+                latitude_input = float(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                  'estimated_latitude'])
                 dh = DataHandler(df)
                 if time_shift_inspection:
@@ -79,15 +79,12 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                                                                'time_shift_manual'].values[0])
                     if manual_time_shift == 1:
                         dh.fix_dst()
-                try:
-                    run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
-                    passes_pipeline = True
-                except:
-                    passes_pipeline = False
+                passes_pipeline = run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
+
                 if passes_pipeline:
 
-                    results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_precalculate,
-                                                                               latitude_precalculate, None, None,
+                    results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
+                                                                               latitude_input, None, None,
                                                                                real_latitude, real_tilt, real_azimuth,
                                                                                gmt_offset, cp, tq)
                     results_df['length'] = dh.num_days
@@ -146,6 +143,8 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
 
     if n_files != 'all':
         file_list = file_list[:int(n_files)]
+    if full_df is None:
+        full_df = pd.DataFrame()
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
@@ -202,15 +201,15 @@ if __name__ == '__main__':
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
    
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler', repository_location='/home/ubuntu/github/')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
     # threshold values
     cp = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
     tq = cp
     if file_label == 'None':
         file_label = ''
 
-    full_df, checked_systems, start_at = resume_run(output_file)
+    full_df = resume_run(output_file)
     df_ground_data = pd.read_csv(system_summary_file, index_col=0)
     df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
     df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)

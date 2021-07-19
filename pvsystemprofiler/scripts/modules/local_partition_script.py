@@ -39,8 +39,7 @@ arguments = local_input_file + ' '  \
             + supplementary_file
 full_command = command + ' ' + arguments + '>out &'
 file1 = open(local_working_folder + 'run_local_partition.sh', "w")
-print('local input file', local_input_file)
-print('file1', file1)
+print('Running local script')
 file1.write('#!/bin/sh\n')
 file1.write(full_command)
 file1.close()
