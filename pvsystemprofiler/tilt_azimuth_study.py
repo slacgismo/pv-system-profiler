@@ -140,10 +140,10 @@ class TiltAzimuthStudy():
                     for day_range_id in self.day_range_dict:
                         # day range
                         day_interval = self.day_range_dict[day_range_id]
-                        filtered_data = self.get_day_range(filtered_data, day_interval)
-                        delta_f = delta[filtered_data]
-                        omega_f = self.omega[filtered_data]
-                        if ~np.any(filtered_data):
+                        boolean_filter = self.get_day_range(filtered_data, day_interval)
+                        delta_f = delta[boolean_filter]
+                        omega_f = self.omega[boolean_filter]
+                        if ~np.any(boolean_filter):
                             print('No data made it through filters')
                         # choose function and unknowns based on provided inputs
                         # choose range for each unknown
@@ -165,7 +165,7 @@ class TiltAzimuthStudy():
                                 # estimated
                                 estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f,
                                                           omega=omega_f, costheta=self.costheta_fit,
-                                                          input_data=filtered_data, init_values=init_values,
+                                                          boolean_filter=boolean_filter, init_values=init_values,
                                                           fit_bounds=bounds)
                             except RuntimeError:
                                 input_array = np.array([self.lat_input, self.tilt_input, self.azimuth_input])

@@ -23,6 +23,7 @@ from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 
 def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim, gmt_offset,
                                cp, tq):
+
     try:
         runs_ta_estimation = True
         ta_study = TiltAzimuthStudy(data_handler=dh, nrandom_init_values=nrandom, daytime_threshold=threshold,
@@ -35,17 +36,17 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
         runs_ta_estimation = False
         cols = ['day range', 'declination method', 'latitude initial value', 'tilt initial value',
                 'azimuth initial value']
-        if lat_p is not None:
+        if lat is not None:
             cols.append('latitude')
-        if tilt_p is not None:
+        if tilt is not None:
             cols.append('tilt')
-        if azim_p is not None:
+        if azim is not None:
             cols.append('azimuth')
-        if lat_p is not None:
+        if lat is not None:
             cols.append('latitude_residual')
-        if tilt_p is not None:
+        if tilt is not None:
             cols.append('tilt_residual')
-        if azim_p is not None:
+        if azim is not None:
             cols.append('azimuth_residual')
         p_df = pd.DataFrame(columns=cols)
         p_df.loc[0, :] = np.nan

@@ -215,13 +215,13 @@ class ConfigurationEstimator():
 
         scale_factor_costheta, costheta_fit = find_fit_costheta(self.data_matrix, self.days)
 
-        filtered_data = filter_data(self.data_matrix, self.daytime_threshold, self.x1, self.x2)
+        boolean_filter = filter_data(self.data_matrix, self.daytime_threshold, self.x1, self.x2)
 
-        filtered_data = filtered_data * self.days * day_range
+        boolean_filter = boolean_filter * self.days * day_range
 
-        delta_f = self.delta[filtered_data]
-        omega_f = self.omega[filtered_data]
-        if ~np.any(filtered_data):
+        delta_f = self.delta[boolean_filter]
+        omega_f = self.omega[boolean_filter]
+        if ~np.any(boolean_filter):
             print('No data made it through filters')
 
         lat_initial, tilt_initial, azim_initial = random_initial_values(1)
@@ -235,7 +235,7 @@ class ConfigurationEstimator():
         init_values, ivr = select_init_values(init_values_dict, dict_keys)
 
         estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f, omega=omega_f,
-                                  costheta=costheta_fit, input_data=filtered_data, init_values=init_values,
+                                  costheta=costheta_fit, boolean_filter=boolean_filter, init_values=init_values,
                                   fit_bounds=bounds)
 
         for i, estimate in enumerate(dict_keys):
