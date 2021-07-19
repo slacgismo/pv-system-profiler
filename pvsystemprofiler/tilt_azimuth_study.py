@@ -204,6 +204,8 @@ class TiltAzimuthStudy():
 
     def get_day_range(self, input_data, interval):
         """
+        This method was intended to evaluate different day ranges for the estimation of tilt and  azimuth. However, no
+        gain was seen from using day ranges instead of the full year.
         :param input_data: boolean array containing daytime hours
         :param interval:  day interval to be used in estimation
         :return:
