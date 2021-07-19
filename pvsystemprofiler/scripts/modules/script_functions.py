@@ -188,7 +188,7 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
 def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
     ll = len(power_label)
-    system_list = pd.DataFrame(columns=['site', 'system'], )
+    system_list = pd.DataFrame(columns=['site', 'system'])
 
     for file_ix, file_id in enumerate(file_list):
         progress(file_ix, len(file_list), 'Generating system list', bar_length=20)
