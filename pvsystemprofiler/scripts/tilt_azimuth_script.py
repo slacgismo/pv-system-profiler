@@ -1,8 +1,15 @@
+""" Tilt and azimuth run script
+This run script allows to run the tilt_azimuth_study for multiple sites. The site ids to be evaluated can be provided in
+ a csv file. Alternatively, the path to a folder containing the power signals of the sites in separate csv files can be
+ provided. The most common use of this script is to estimate tilt and azimuth provided input values of longitude and
+ latitude. In this case a csv system_summary_file containing values of longitude and latitude need to be provided.
+"""
 import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
 from time import time
+
 # TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
@@ -23,13 +30,12 @@ from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 
 def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim, gmt_offset,
                                cp, tq):
-
     try:
         runs_ta_estimation = True
         ta_study = TiltAzimuthStudy(data_handler=dh, nrandom_init_values=nrandom, daytime_threshold=threshold,
                                     lon_input=lon, lat_input=lat, tilt_input=tilt, azimuth_input=azim,
                                     lat_true_value=real_lat, tilt_true_value=real_tilt, azimuth_true_value=real_azim,
-                                    gmt_offset=gmt_offset,  cvx_parameter=cp, threshold_quantile=tq)
+                                    gmt_offset=gmt_offset, cvx_parameter=cp, threshold_quantile=tq)
         ta_study.run()
         p_df = ta_study.results.sort_index().copy()
     except:
@@ -67,12 +73,12 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 sys_tag = power_column_label + system_id
                 gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
                 longitude_input = float(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                                  'estimated_longitude'])
+                                                           'estimated_longitude'])
                 real_latitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'latitude'])
                 real_tilt = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'tilt'])
                 real_azimuth = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'azimuth'])
                 latitude_input = float(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                                 'estimated_latitude'])
+                                                          'estimated_latitude'])
                 dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
@@ -113,7 +119,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
 
 
 def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, ext='.csv'):
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
@@ -200,7 +206,7 @@ if __name__ == '__main__':
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
-   
+
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
     # threshold values
