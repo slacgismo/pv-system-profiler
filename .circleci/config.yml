@@ -1,0 +1,65 @@
+version: 2
+
+368_config: &368_config
+  docker:
+    - image: circleci/python:3.7
+
+jobs:
+  build:
+    <<: *368_config
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo pip install -r requirements.txt
+            sudo pip install awscli coverage
+      - run:
+          name: Setup Mosek License File
+          command: |
+            sudo mkdir /root/mosek
+            mkdir $HOME/mosek
+            aws s3 cp s3://slac.gismo.ci.artifacts/mosek.license/mosek.lic $HOME/mosek/mosek.lic
+            sudo cp $HOME/mosek/mosek.lic /root/mosek/mosek.lic
+
+  deploy-pypi:
+    <<: *368_config
+    steps:
+      - checkout
+      - run:
+          name: Install twine
+          command: sudo pip install twine
+
+      - run:
+          name: Create the distribution
+          command: sudo python setup.py sdist bdist_wheel
+
+      - run:
+          name: Push to PyPI
+          command: sudo twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/*
+
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - deploy-pypi:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - deploy-conda:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
