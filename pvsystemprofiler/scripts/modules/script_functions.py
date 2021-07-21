@@ -50,6 +50,16 @@ def copy_to_s3(input_file_name, input_file_location):
 
 def log_file_versions(utility, active_conda_env=None, output_folder_location='./',
                       conda_location='/home/ubuntu/miniconda3/', repository_location='/home/ubuntu/github/'):
+    """
+    Writes a text file with the utility version as well as other available package information. This utility may have
+    been installed in conda using pip or may be in a local GitHub repository.
+    :param utility: name of the utility to be logged. Examples are `solar-data-tools' and 'pv-system-profiler'
+    :param active_conda_env: optional. Name of the conda environment being used. Examples are pvi-user and `pvi-dev`
+    :param output_folder_location: location of the output log files
+    :param conda_location: optional. Full path to the local conda folder location.
+    :param repository_location: optional. Location of the GitHub repository.
+    :return:
+    """
     if active_conda_env is None:
         conda = conda_location + 'bin/conda' + ' '
         conda_env = subprocess.check_output(conda + "env list", shell=True, encoding='utf-8')
