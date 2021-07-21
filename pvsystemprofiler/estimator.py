@@ -41,6 +41,7 @@ class ConfigurationEstimator():
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
         self.hours_daylight = None
+        self.solarnoon = None
         self.days = None
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.daytime_threshold = None
