@@ -119,7 +119,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
 
 
 def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp):
+         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq):
     site_run_time = 0
     total_time = 0
     s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
