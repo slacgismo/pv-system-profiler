@@ -1,8 +1,8 @@
 """ Tilt and azimuth run script
 This run script allows to run the tilt_azimuth_study for multiple sites. The site ids to be evaluated can be provided in
- a csv file. Alternatively, the path to a folder containing the power signals of the sites in separate csv files can be
+ a csv file. Alternatively, the path to a folder containing the input signals of the sites in separate csv files can be
  provided. The most common use of this script is to estimate tilt and azimuth provided input values of longitude and
- latitude. In this case a csv system_summary_file containing values of longitude and latitude need to be provided.
+ latitude. In this case, a csv system_summary_file containing values of longitude and latitude need to be provided.
 """
 import sys
 from pathlib import Path

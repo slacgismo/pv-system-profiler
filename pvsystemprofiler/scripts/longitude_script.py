@@ -1,3 +1,9 @@
+""" Longitude run script
+This run script allows to run the longitude_study for multiple sites. The site ids to be evaluated can be provided in
+ a csv file. Alternatively, the path to a folder containing the input signals of the sites in separate csv files can be
+ provided.  The script provides the option to provided the full path to csv file containing latitude and gmt offset for
+ each system for comparison.
+"""
 import sys
 from pathlib import Path
 import pandas as pd

@@ -1,7 +1,10 @@
 """
-
+This module contains a class for estimating longitude, latitude, tilt and azimuth from an input signal. This code
+accepts an input signal data in the form of a `solar-data-tools` `DataHandler` object, which is used to standardize
+and pre-process the data. The provided class will then estimate  longitude, latitude, tilt and azimuth using the
+ 'estimate_longitude', 'estimate_latitude' and 'estimate_orientation' methods, respectively. Alternatively, all four
+ parameters can be estimated at once using the 'estimate_all' method.
 """
-
 # Standard Imports
 import numpy as np
 import cvxpy as cvx
