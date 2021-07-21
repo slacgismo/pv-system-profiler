@@ -11,6 +11,14 @@ from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
 def remote_execute(user, instance_id, key, shell_commands, verbose=True):
+    """
+    :param user: AWS instance user name, i.e. `ubuntu`.
+    :param instance_id: AWS public ip address of instance.
+    :param key: AWS key. Usually a *pem file located in the .aws folder.
+    :param shell_commands: list of shell commands to be executed remotely.
+    :param verbose: provides the output to each remote command execution.
+    """
+
     k = paramiko.RSAKey.from_private_key_file(key)
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -26,6 +34,14 @@ def remote_execute(user, instance_id, key, shell_commands, verbose=True):
 
 
 def copy_to_s3(input_file_name, bucket, destination_file_name):
+    """
+
+    :param input_file_name:
+    :param bucket:
+    :param destination_file_name:
+    :return:
+    """
+
     content = open(input_file_name, 'rb')
     s3 = boto3.client('s3')
     s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)

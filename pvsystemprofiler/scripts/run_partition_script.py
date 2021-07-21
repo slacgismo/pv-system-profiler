@@ -126,7 +126,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
         part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=site_input_file,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
-                          scripts_location=script_location, conda_env= conda_environment, pcid=power_column_id,
+                          scripts_location=script_location, conda_env=conda_environment, pcid=power_column_id,
                           tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
                           fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
                           check_json=check_json, sup_file=supplementary_file)
