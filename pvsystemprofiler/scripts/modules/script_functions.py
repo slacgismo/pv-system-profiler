@@ -330,9 +330,14 @@ def enumerate_files(s3_location, extension='.csv', file_size_list=False):
         return output_list
 
 
-def resume_run(output_file):
-    if os.path.isfile(output_file):
-        df = pd.read_csv(output_file, index_col=0)
+def resume_run(results_file):
+    """
+    Loads the output dataFrame from an incomplete run provided the results csv file name
+    :param results_file: full path to csv file containing partial results.
+    :return: df dataFrame containing partial results, None if there are no partial results.
+    """
+    if os.path.isfile(results_file):
+        df = pd.read_csv(results_file, index_col=0)
         df['site'] = df['site'].apply(str)
         df['system'] = df['system'].apply(str)
     else:
