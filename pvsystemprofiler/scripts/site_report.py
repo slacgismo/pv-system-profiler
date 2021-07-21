@@ -20,7 +20,6 @@ from pvsystemprofiler.scripts.modules.script_functions import resume_run
 from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
-from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
 from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
@@ -69,7 +68,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                     if manual_time_shift == 1:
                         dh.fix_dst()
 
-                passes_pipeline = run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
+                passes_pipeline = run_failsafe_pipeline(df, dh, sys_tag, fix_time_shifts, time_zone_correction)
 
                 if passes_pipeline:
                     results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
@@ -107,7 +106,7 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
 
     if check_json:
-        json_files = enumerate_files(s3_bucket, prefix, extension='.json')
+        json_files = enumerate_files(s3_location, extension='.json')
         print('Generating system list from json files')
         json_file_dict = create_json_dict(json_files, s3_location)
         print('List generation completed')
