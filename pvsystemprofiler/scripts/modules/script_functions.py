@@ -256,7 +256,18 @@ def filename_to_siteid(sites):
 
 
 def load_generic_data(location, file_label, file_id, extension='.csv', parse_dates=[0], nrows=None):
+    """
+    Loads csv file containing input signals for a given site.
+    :param location: String. absolute path to csv file containing input signals.
+    :param file_label: String. Repeating portion of data files label. If 'None', no file label is used.
+    :param file_id: String. Individual identifier of a site csv file
+    :param extension: String, optional. Extension of file containing input signal.
+    :param parse_dates: Optional. 'read_csv' kwarg.
+    :param nrows: number of rows from input signal file to be read.
+    :return: Dataframe containing input signals for `file_id`.
+    """
     to_read = location + file_id + file_label + extension
+
     if nrows is None:
         df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
     else:
@@ -264,9 +275,18 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     return df
 
 
-def create_system_list(file_label, power_label, location, s3_bucket, prefix):
-    file_list = enumerate_files(s3_bucket, prefix)
-    ll = len(power_label)
+def create_system_list(file_label, signal_label, s3_location):
+    """
+    returns a list of systems present in a `s3_bucket`.
+    :param file_label: String. Repeating part of label of files containing input data. For the site list
+    ['1_signal.csv', '2_signal.csv'] with `file_label`='_signal'.
+    :param signal_label: String. Label of the input signal, i.e. `ac_power_inv_` and `dc_current_inv`.
+    :param s3_location: full path to AWS s3 bucket containing csv files with site input signals.
+    :return: List containing ids for systems in s3_location.
+    """
+    bucket, prefix = get_s3_bucket_and_prefix(s3_location)
+    file_list = enumerate_files(bucket, prefix)
+    ll = len(signal_label)
     system_list = pd.DataFrame(columns=['site', 'system'])
 
     for file_ix, file_id in enumerate(file_list):
@@ -274,10 +294,10 @@ def create_system_list(file_label, power_label, location, s3_bucket, prefix):
         file_name = file_id.split('/')[1]
         i = file_name.find(file_label)
         file_id = file_name[:i]
-        df = load_generic_data(location, file_label, file_id, nrows=2)
+        df = load_generic_data(s3_location, file_label, file_id, nrows=2)
         cols = df.columns
         for col_label in cols:
-            if col_label.find(power_label) != -1:
+            if col_label.find(signal_label) != -1:
                 system_id = col_label[ll:]
                 system_list.loc[len(system_list)] = file_id, system_id
     progress(len(file_list), len(file_list), 'Generating system list', bar_length=20)
