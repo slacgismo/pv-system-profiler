@@ -121,9 +121,15 @@ def log_file_versions(utility, active_conda_env=None, output_folder_location='./
 
 
 def string_to_boolean(value):
-    if value == 'True':
+    """
+    Intended to be used when getting values from a terminal using `sys.argv`. Transforms `True` and `False` strings into
+    boolean attributes
+    :param value:
+    :return: boolean equivalent of string
+    """
+    if value in ['True', 'true']:
         return True
-    elif value == 'False':
+    elif value in ['False', 'false']:
         return False
 
 
