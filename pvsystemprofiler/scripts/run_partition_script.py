@@ -12,7 +12,6 @@ sys.path.append(str(filepath))
 from pvsystemprofiler.scripts.modules.config_partitions import get_config
 from pvsystemprofiler.scripts.modules.create_partition import create_partition
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
-from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
 from pvsystemprofiler.scripts.modules.script_functions import copy_to_s3
 from pvsystemprofiler.scripts.modules.script_functions import remote_execute
 
@@ -36,10 +35,10 @@ def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/repo
 
 def get_remote_output_files(partitions, username, destination_dict):
     """
-    Collects partition results once estimation is finished
-    :param partitions: list containing aws partition addresses
-    :param username:  aws user name
-    :param destination_dict: folder where results are saved
+    Collects partition results once estimation is finished.
+    :param partitions: String. List containing aws partition addresses.
+    :param username:  String. aws user name.
+    :param destination_dict: String. Folder where results are saved.
     """
     os.system('mkdir' + ' ' + destination_dict)
     for part_id in partitions:

@@ -19,7 +19,6 @@ from pvsystemprofiler.scripts.modules.script_functions import resume_run
 from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
-from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
 from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
