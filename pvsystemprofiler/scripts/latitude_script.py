@@ -41,8 +41,8 @@ def run_failsafe_lat_estimation(dh_in, real_latitude):
     return p_df, runs_lat_estimation
 
 
-def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                     fix_time_shifts, time_zone_correction, json_file_dict=None):
+def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
+                     time_zone_correction):
     ll = len(power_column_label)
     cols = df.columns
     i = 0
@@ -139,7 +139,7 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, json_file_dict)
+                                      fix_time_shifts, time_zone_correction)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
