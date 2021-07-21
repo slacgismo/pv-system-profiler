@@ -98,9 +98,8 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json):
     site_run_time = 0
     total_time = 0
-    s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
 
-    full_site_list = enumerate_files(s3_bucket, prefix)
+    full_site_list = enumerate_files(s3_location)
     full_site_list = filename_to_siteid(full_site_list)
 
     previously_checked_site_list = get_checked_sites(full_df)

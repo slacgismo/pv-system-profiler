@@ -304,7 +304,15 @@ def create_system_list(file_label, signal_label, s3_location):
     return system_list
 
 
-def enumerate_files(s3_bucket, prefix, extension='.csv', file_size_list=False):
+def enumerate_files(s3_location, extension='.csv', file_size_list=False):
+    """
+    Returns a list with the file names with a given extension located in a AWS s3 bucket.
+    :param s3_location: String. Full path to s3 bucket from which a list of files is to be generated.
+    :param extension: String. Extension of the files to be included in `output_list`.
+    :param file_size_list: Boolean, generate a list with the size of each file with `extension`.
+    :return: `output_list' with file names and (optional) list with site of files in `output list'.
+    """
+    s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
     s3 = boto3.client('s3')
     output_list = []
     size_list = []
