@@ -24,8 +24,7 @@ def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/repo
     :param input_file_location: s3 bucket location of report files
     :return:
     """
-    bucket, prefix = get_s3_bucket_and_prefix(s3_location)
-    site_list, size_list = enumerate_files(bucket, prefix, file_size_list=True)
+    site_list, size_list = enumerate_files(s3_location, file_size_list=True)
     site_df = pd.DataFrame()
     site_df['site'] = site_list
     site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
