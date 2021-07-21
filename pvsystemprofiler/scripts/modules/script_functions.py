@@ -10,15 +10,16 @@ from solardatatools.dataio import load_constellation_data
 from solardatatools.dataio import load_cassandra_data
 from solardatatools.utilities import progress
 
+
 def remote_execute(user, instance_id, key, shell_commands, verbose=True):
     """
+    Executes a list of bash commands remotely on Amazon Web Services (AWS) instances from another computer.
     :param user: AWS instance user name, i.e. `ubuntu`.
     :param instance_id: AWS public ip address of instance.
-    :param key: AWS key. Usually a *pem file located in the .aws folder.
+    :param key: AWS key. Usually a *.pem file located in the .aws folder.
     :param shell_commands: list of shell commands to be executed remotely.
     :param verbose: provides the output to each remote command execution.
     """
-
     k = paramiko.RSAKey.from_private_key_file(key)
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -33,21 +34,21 @@ def remote_execute(user, instance_id, key, shell_commands, verbose=True):
     return command_dict
 
 
-def copy_to_s3(input_file_name, bucket, destination_file_name):
+def copy_to_s3(input_file_name, input_file_location):
     """
-
-    :param input_file_name:
-    :param bucket:
-    :param destination_file_name:
-    :return:
+    Copies a local file to a Amazon Web Services (AWS) s3 bucket.
+    :param input_file_name: name of the file to be copied to the AWS s3 bucket
+    :param input_file_location: full path to the destination AWS s3 bucket
     """
+    bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
+    destination_file_name = prefix + '/generated_site_list.csv'
 
     content = open(input_file_name, 'rb')
     s3 = boto3.client('s3')
     s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)
 
 
-def log_file_versions(utility, active_conda_env=None,  output_folder_location='./',
+def log_file_versions(utility, active_conda_env=None, output_folder_location='./',
                       conda_location='/home/ubuntu/miniconda3/', repository_location='/home/ubuntu/github/'):
     if active_conda_env is None:
         conda = conda_location + 'bin/conda' + ' '
@@ -63,7 +64,7 @@ def log_file_versions(utility, active_conda_env=None,  output_folder_location='.
     pip = conda_location + 'envs/' + active_conda_environment + '/bin/pip'
     try:
         pip_list = subprocess.check_output(pip + ' ' + 'show' + ' ' + utility, shell=True, encoding='utf-8')
-    
+
         for line in pip_list.splitlines():
             if 'Location' in line:
                 i = line.find(':')
@@ -107,6 +108,7 @@ def log_file_versions(utility, active_conda_env=None,  output_folder_location='.
     output_file.write(output_string)
     output_file.close()
     return
+
 
 def string_to_boolean(value):
     if value == 'True':
@@ -185,6 +187,7 @@ def siteid_to_filename(sites, file_label, ext):
         checked_sites.append(file_name)
     return checked_sites
 
+
 def filename_to_siteid(sites):
     site_list = []
     for site_id in sites:
@@ -200,6 +203,7 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     else:
         df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates, nrows=nrows)
     return df
+
 
 def create_system_list(file_label, power_label, location, s3_bucket, prefix):
     file_list = enumerate_files(s3_bucket, prefix)
@@ -238,14 +242,16 @@ def enumerate_files(s3_bucket, prefix, extension='.csv', file_size_list=False):
     else:
         return output_list
 
+
 def resume_run(output_file):
     if os.path.isfile(output_file):
         df = pd.read_csv(output_file, index_col=0)
         df['site'] = df['site'].apply(str)
         df['system'] = df['system'].apply(str)
     else:
-       df = None
+        df = None
     return df
+
 
 def create_system_dict(df):
     site_list = df['site'].unique().tolist()
@@ -254,6 +260,7 @@ def create_system_dict(df):
         systems_in_site = df[df['site'] == site]['system'].values.tolist()
         ss_dict[site] = systems_in_site
     return site_list, ss_dict
+
 
 def load_data(data_source, site_id):
     for file_id in file_list:

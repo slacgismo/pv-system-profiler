@@ -31,8 +31,7 @@ def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/repo
     site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
     site_df['file_size'] = size_list
     site_df.to_csv('./generated_site_list.csv')
-    bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
-    copy_to_s3('./generated_site_list.csv', bucket, prefix + '/generated_site_list.csv')
+    copy_to_s3('./generated_site_list.csv', input_file_location)
     return site_df
 
 
