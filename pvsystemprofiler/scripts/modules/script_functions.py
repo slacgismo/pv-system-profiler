@@ -224,7 +224,7 @@ def get_checked_sites(df):
 def siteid_to_filename(sites, file_label, ext='csv'):
     """
     Given a list of site ids returns a list of strings corresponding to the file name obtained by concatenating it to
-    the 'file_label` string.  For `sites` in ['1', '2'] with `file_label`='_signal'. This method will return the list
+    the 'file_label` string.  For `sites` in ['1', '2'] with `file_label`='_signal', this method will return the list
     ['1_signal.csv', '2_signal.csv'].
     :param sites: List of strings containing the file id, i.e. non-repeating part of the input signal csv file names.
     :param file_label: String. Repeating part of the input signal csv file name.
@@ -239,6 +239,15 @@ def siteid_to_filename(sites, file_label, ext='csv'):
 
 
 def filename_to_siteid(sites):
+    """
+    Given a list of file names containing input signals returns a list of strings with the site ids only. For the list
+    of file ids `sites` in ['1_signal.csv', '2_signal.csv'] with `file_label`='_signal', this method will return a list
+    with the site ids ['1', '2'].
+    .
+    :param sites: List of strings containing the full name of csv files containing input signals.
+    :param file_label: String. Repeating part of the input signal csv file name.
+    :return: list of site ids.
+    """
     site_list = []
     for site_id in sites:
         site_id = site_id.split('.')[0]
