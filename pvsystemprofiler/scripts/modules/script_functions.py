@@ -159,7 +159,7 @@ def extract_sys_parameters(file_name, system, location):
     :param file_name: String. Name of the json file containing site information.
     :param system: String. system id for which information is to be retrieved from json file
     :param location: String. Full path to folder containing site json file.
-    :return:
+    :return: list with system zip code, inverter id, longitude, latitude, tilt and azimuth
     """
     for line in smart_open(location + file_name, 'rb'):
         file_json = json.loads(line)
@@ -193,6 +193,11 @@ def extract_sys_parameters(file_name, system, location):
 
 
 def get_s3_bucket_and_prefix(s3_location):
+    """
+    Splits absolute s3 location into parameters used to copy and execute commands remotely.
+    :param s3_location: full path to s3 bucket location.
+    :return: s3 bucket and prefix.
+    """
     if s3_location[-1] != '/':
         s3_location += '/'
     i = s3_location.find('//') + 2
@@ -203,6 +208,11 @@ def get_s3_bucket_and_prefix(s3_location):
 
 
 def get_checked_sites(df):
+    """
+    Returns list of sites that have already been analyzed
+    :param df: pandas dataframe containing results from reports or parameter study.
+    :return:  List with sites that have already been analyzed.
+    """
     if df is not None:
         checked_sites = df['site'].unique().tolist()
         checked_sites.sort()
