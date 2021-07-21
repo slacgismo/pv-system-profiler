@@ -1,3 +1,10 @@
+""" Site report script
+This run script is used to generate a report of sites based on csv files containing input power or current signals of
+the systems. The script looks for csv files containing input signals located in a 's3_location'. If json files with
+additional data ae provided, the script is able to read this information and include it in the report. The file
+'system_summary_file' containing site id, system id and 'time_shift_manual' may also be provided. The parameter
+'input_site_file' allows to provide a csv file with the ids of the files to be evaluated by the report script.
+"""
 import sys
 from pathlib import Path
 import pandas as pd
