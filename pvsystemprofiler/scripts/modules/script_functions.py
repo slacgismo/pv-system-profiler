@@ -37,8 +37,8 @@ def remote_execute(user, instance_id, key, shell_commands, verbose=True):
 def copy_to_s3(input_file_name, input_file_location):
     """
     Copies a local file to a Amazon Web Services (AWS) s3 bucket.
-    :param input_file_name: name of the file to be copied to the AWS s3 bucket
-    :param input_file_location: full path to the destination AWS s3 bucket
+    :param input_file_name: name of the file to be copied to the AWS s3 bucket.
+    :param input_file_location: full path to the destination AWS s3 bucket.
     """
     bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
     destination_file_name = prefix + '/generated_site_list.csv'
@@ -55,7 +55,7 @@ def log_file_versions(utility, active_conda_env=None, output_folder_location='./
     been installed in conda using pip or may be in a local GitHub repository.
     :param utility: name of the utility to be logged. Examples are `solar-data-tools' and 'pv-system-profiler'
     :param active_conda_env: optional. Name of the conda environment being used. Examples are pvi-user and `pvi-dev`
-    :param output_folder_location: location of the output log files
+    :param output_folder_location: location of the output log files.
     :param conda_location: optional. Full path to the local conda folder location.
     :param repository_location: optional. Location of the GitHub repository.
     :return:
@@ -124,7 +124,7 @@ def string_to_boolean(value):
     """
     Intended to be used when getting values from a terminal using `sys.argv`. Transforms `True` and `False` strings into
     boolean attributes
-    :param value:
+    :param value: string, `True` or `False`.
     :return: boolean equivalent of string
     """
     if value in ['True', 'true']:
@@ -134,6 +134,12 @@ def string_to_boolean(value):
 
 
 def create_json_dict(json_list, location):
+    """
+    returns a dictionary containing the system ids given a location containing json files with site information.
+    :param json_list: list of json files containing site information.
+    :param location: absolute path to folder containing json files with site information.
+    :return: dictionary containing system ids as keys and site ids as values.
+    """
     system_dict = {}
     for file in json_list:
         for line in smart_open(location + file, 'rb'):
@@ -146,6 +152,15 @@ def create_json_dict(json_list, location):
 
 
 def extract_sys_parameters(file_name, system, location):
+    """
+    Retrieves a list with zip code, inverter id, longitude, latitude, tilt and azimuth for a given system from
+    a json file containing site information.
+    site.
+    :param file_name: String. Name of the json file containing site information.
+    :param system: String. system id for which information is to be retrieved from json file
+    :param location: String. Full path to folder containing site json file.
+    :return:
+    """
     for line in smart_open(location + file_name, 'rb'):
         file_json = json.loads(line)
         parameters = []
