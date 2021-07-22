@@ -346,6 +346,12 @@ def resume_run(results_file):
 
 
 def create_system_dict(df):
+    """
+    Reads a pandas dataFrame and creates a dictionary where the keys are the site ids and the values are a the list of
+    systems for each site.
+    :param df: pandas dataFrame with site and system information a `site` and a `system` column.
+    :return: dictionary with systems associated to each site.
+    """
     site_list = df['site'].unique().tolist()
     ss_dict = {}
     for site in site_list:
