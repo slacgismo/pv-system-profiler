@@ -360,19 +360,6 @@ def create_system_dict(df):
     return site_list, ss_dict
 
 
-def load_data(data_source, site_id):
-    for file_id in file_list:
-        file_name = file_id.split('/')[1]
-        loc = location + file_name
-        df = pd.read_csv(str(loc), index_col=0)
-
-    if data_source == 'constellation':
-        df = load_constellation_data(file_id=site_id)
-    if data_source == 'source_2':
-        df = load_cassandra_data(file_id=site_id)
-    return df
-
-
 def run_failsafe_pipeline(df_in, dh_in, sys_tag, fts, tzc):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
