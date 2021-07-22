@@ -46,6 +46,128 @@ def copy_to_s3(input_file_name, input_file_location):
     s3.put_object(Bucket=bucket, Key=destination_file_name, Body=content)
 
 
+def get_s3_bucket_and_prefix(s3_location):
+    """
+    Splits absolute s3 location into parameters used to copy and execute commands remotely.
+    :param s3_location: full path to s3 bucket location.
+    :return: s3 bucket and prefix.
+    """
+    if s3_location[-1] != '/':
+        s3_location += '/'
+    i = s3_location.find('//') + 2
+    j = s3_location.find('/', i)
+    bucket = s3_location[i:j]
+    prefix = s3_location[j + 1:-1]
+    return bucket, prefix
+
+
+def load_generic_data(location, file_label, file_id, extension='.csv', parse_dates=[0], nrows=None):
+    """
+    Loads csv file containing input signals for a given site.
+    :param location: String. absolute path to csv file containing input signals.
+    :param file_label: String. Repeating portion of data files label. If 'None', no file label is used.
+    :param file_id: String. Individual identifier of a site csv file
+    :param extension: String, optional. Extension of file containing input signal.
+    :param parse_dates: Optional. 'read_csv' kwarg.
+    :param nrows: number of rows from input signal file to be read.
+    :return: Dataframe containing input signals for `file_id`.
+    """
+    to_read = location + file_id + file_label + extension
+
+    if nrows is None:
+        df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
+    else:
+        df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates, nrows=nrows)
+    return df
+
+
+def get_checked_sites(df):
+    """
+    Returns list of sites that have already been analyzed
+    :param df: pandas dataframe containing results from reports or parameter study.
+    :return:  List with sites that have already been analyzed.
+    """
+    if df is not None:
+        checked_sites = df['site'].unique().tolist()
+        checked_sites.sort()
+    else:
+        checked_sites = []
+    return checked_sites
+
+
+def resume_run(results_file):
+    """
+    Loads the output dataFrame from an incomplete run provided the results csv file name
+    :param results_file: full path to csv file containing partial results.
+    :return: df dataFrame containing partial results, None if there are no partial results.
+    """
+    if os.path.isfile(results_file):
+        df = pd.read_csv(results_file, index_col=0)
+        df['site'] = df['site'].apply(str)
+        df['system'] = df['system'].apply(str)
+    else:
+        df = None
+    return df
+
+def enumerate_files(s3_location, extension='.csv', file_size_list=False):
+    """
+    Returns a list with the file names with a given extension located in a AWS s3 bucket.
+    :param s3_location: String. Full path to s3 bucket from which a list of files is to be generated.
+    :param extension: String. Extension of the files to be included in `output_list`.
+    :param file_size_list: Boolean, generate a list with the size of each file with `extension`.
+    :return: `output_list' with file names and (optional) list with site of files in `output list'.
+    """
+    s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
+    s3 = boto3.client('s3')
+    output_list = []
+    size_list = []
+    for obj in s3.list_objects_v2(Bucket=s3_bucket, Prefix=prefix)['Contents']:
+        if (obj['Key']).find(extension) != -1:
+            file_name = obj['Key']
+            file_size = obj['Size']
+            i = file_name.rfind('/')
+            file_name = file_name[i + 1:]
+            output_list.append(file_name)
+            size_list.append(file_size)
+    if file_size_list:
+        return output_list, size_list
+    else:
+        return output_list
+
+
+def create_system_dict(df):
+    """
+    Reads a pandas dataFrame and creates a dictionary where the keys are the site ids and the values are a the list of
+    systems for each site.
+    :param df: pandas dataFrame with site and system information a `site` and a `system` column.
+    :return: dictionary with systems associated to each site.
+    """
+    site_list = df['site'].unique().tolist()
+    ss_dict = {}
+    for site in site_list:
+        systems_in_site = df[df['site'] == site]['system'].values.tolist()
+        ss_dict[site] = systems_in_site
+    return site_list, ss_dict
+
+
+def create_json_dict(json_list, location):
+    """
+    returns a dictionary containing the system ids given a location containing json files with site information.
+    :param json_list: list of json files containing site information.
+    :param location: absolute path to folder containing json files with site information.
+    :return: dictionary containing system ids as keys and site ids as values.
+    """
+    system_dict = {}
+    for file in json_list:
+        for line in smart_open(location + file, 'rb'):
+            file_json = json.loads(line)
+            if len(file_json['Inverters']) != 0:
+                for inv_id in file_json['Inverters']:
+                    system = file_json['Inverters'][inv_id]['inverter_id']
+                    system_dict[system] = file
+    return system_dict
+
+
 def log_file_versions(utility, active_conda_env=None, output_folder_location='./',
                       conda_location='/home/ubuntu/miniconda3/', repository_location='/home/ubuntu/github/'):
     """
@@ -118,35 +240,33 @@ def log_file_versions(utility, active_conda_env=None, output_folder_location='./
     return
 
 
-def string_to_boolean(value):
+def create_system_list(file_label, signal_label, s3_location):
     """
-    Intended to be used when getting values from a terminal using `sys.argv`. Transforms `True` and `False` strings into
-    boolean attributes
-    :param value: string, `True` or `False`.
-    :return: boolean equivalent of string
+    returns a list of systems present in a `s3_bucket`.
+    :param file_label: String. Repeating part of label of files containing input data. For the site list
+    ['1_signal.csv', '2_signal.csv'] with `file_label`='_signal'.
+    :param signal_label: String. Label of the input signal, i.e. `ac_power_inv_` and `dc_current_inv`.
+    :param s3_location: full path to AWS s3 bucket containing csv files with site input signals.
+    :return: List containing ids for systems in s3_location.
     """
-    if value in ['True', 'true']:
-        return True
-    elif value in ['False', 'false']:
-        return False
+    bucket, prefix = get_s3_bucket_and_prefix(s3_location)
+    file_list = enumerate_files(bucket, prefix)
+    ll = len(signal_label)
+    system_list = pd.DataFrame(columns=['site', 'system'])
 
-
-def create_json_dict(json_list, location):
-    """
-    returns a dictionary containing the system ids given a location containing json files with site information.
-    :param json_list: list of json files containing site information.
-    :param location: absolute path to folder containing json files with site information.
-    :return: dictionary containing system ids as keys and site ids as values.
-    """
-    system_dict = {}
-    for file in json_list:
-        for line in smart_open(location + file, 'rb'):
-            file_json = json.loads(line)
-            if len(file_json['Inverters']) != 0:
-                for inv_id in file_json['Inverters']:
-                    system = file_json['Inverters'][inv_id]['inverter_id']
-                    system_dict[system] = file
-    return system_dict
+    for file_ix, file_id in enumerate(file_list):
+        progress(file_ix, len(file_list), 'Generating system list', bar_length=20)
+        file_name = file_id.split('/')[1]
+        i = file_name.find(file_label)
+        file_id = file_name[:i]
+        df = load_generic_data(s3_location, file_label, file_id, nrows=2)
+        cols = df.columns
+        for col_label in cols:
+            if col_label.find(signal_label) != -1:
+                system_id = col_label[ll:]
+                system_list.loc[len(system_list)] = file_id, system_id
+    progress(len(file_list), len(file_list), 'Generating system list', bar_length=20)
+    return system_list
 
 
 def extract_sys_parameters(file_name, system, location):
@@ -190,35 +310,6 @@ def extract_sys_parameters(file_name, system, location):
         return parameters
 
 
-def get_s3_bucket_and_prefix(s3_location):
-    """
-    Splits absolute s3 location into parameters used to copy and execute commands remotely.
-    :param s3_location: full path to s3 bucket location.
-    :return: s3 bucket and prefix.
-    """
-    if s3_location[-1] != '/':
-        s3_location += '/'
-    i = s3_location.find('//') + 2
-    j = s3_location.find('/', i)
-    bucket = s3_location[i:j]
-    prefix = s3_location[j + 1:-1]
-    return bucket, prefix
-
-
-def get_checked_sites(df):
-    """
-    Returns list of sites that have already been analyzed
-    :param df: pandas dataframe containing results from reports or parameter study.
-    :return:  List with sites that have already been analyzed.
-    """
-    if df is not None:
-        checked_sites = df['site'].unique().tolist()
-        checked_sites.sort()
-    else:
-        checked_sites = []
-    return checked_sites
-
-
 def siteid_to_filename(sites, file_label, ext='csv'):
     """
     Given a list of site ids returns a list of strings corresponding to the file name obtained by concatenating it to
@@ -253,109 +344,17 @@ def filename_to_siteid(sites):
     return site_list
 
 
-def load_generic_data(location, file_label, file_id, extension='.csv', parse_dates=[0], nrows=None):
+def string_to_boolean(value):
     """
-    Loads csv file containing input signals for a given site.
-    :param location: String. absolute path to csv file containing input signals.
-    :param file_label: String. Repeating portion of data files label. If 'None', no file label is used.
-    :param file_id: String. Individual identifier of a site csv file
-    :param extension: String, optional. Extension of file containing input signal.
-    :param parse_dates: Optional. 'read_csv' kwarg.
-    :param nrows: number of rows from input signal file to be read.
-    :return: Dataframe containing input signals for `file_id`.
+    Intended to be used when getting values from a terminal using `sys.argv`. Transforms `True` and `False` strings into
+    boolean attributes
+    :param value: string, `True` or `False`.
+    :return: boolean equivalent of string
     """
-    to_read = location + file_id + file_label + extension
-
-    if nrows is None:
-        df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
-    else:
-        df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates, nrows=nrows)
-    return df
-
-
-def create_system_list(file_label, signal_label, s3_location):
-    """
-    returns a list of systems present in a `s3_bucket`.
-    :param file_label: String. Repeating part of label of files containing input data. For the site list
-    ['1_signal.csv', '2_signal.csv'] with `file_label`='_signal'.
-    :param signal_label: String. Label of the input signal, i.e. `ac_power_inv_` and `dc_current_inv`.
-    :param s3_location: full path to AWS s3 bucket containing csv files with site input signals.
-    :return: List containing ids for systems in s3_location.
-    """
-    bucket, prefix = get_s3_bucket_and_prefix(s3_location)
-    file_list = enumerate_files(bucket, prefix)
-    ll = len(signal_label)
-    system_list = pd.DataFrame(columns=['site', 'system'])
-
-    for file_ix, file_id in enumerate(file_list):
-        progress(file_ix, len(file_list), 'Generating system list', bar_length=20)
-        file_name = file_id.split('/')[1]
-        i = file_name.find(file_label)
-        file_id = file_name[:i]
-        df = load_generic_data(s3_location, file_label, file_id, nrows=2)
-        cols = df.columns
-        for col_label in cols:
-            if col_label.find(signal_label) != -1:
-                system_id = col_label[ll:]
-                system_list.loc[len(system_list)] = file_id, system_id
-    progress(len(file_list), len(file_list), 'Generating system list', bar_length=20)
-    return system_list
-
-
-def enumerate_files(s3_location, extension='.csv', file_size_list=False):
-    """
-    Returns a list with the file names with a given extension located in a AWS s3 bucket.
-    :param s3_location: String. Full path to s3 bucket from which a list of files is to be generated.
-    :param extension: String. Extension of the files to be included in `output_list`.
-    :param file_size_list: Boolean, generate a list with the size of each file with `extension`.
-    :return: `output_list' with file names and (optional) list with site of files in `output list'.
-    """
-    s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
-    s3 = boto3.client('s3')
-    output_list = []
-    size_list = []
-    for obj in s3.list_objects_v2(Bucket=s3_bucket, Prefix=prefix)['Contents']:
-        if (obj['Key']).find(extension) != -1:
-            file_name = obj['Key']
-            file_size = obj['Size']
-            i = file_name.rfind('/')
-            file_name = file_name[i + 1:]
-            output_list.append(file_name)
-            size_list.append(file_size)
-    if file_size_list:
-        return output_list, size_list
-    else:
-        return output_list
-
-
-def resume_run(results_file):
-    """
-    Loads the output dataFrame from an incomplete run provided the results csv file name
-    :param results_file: full path to csv file containing partial results.
-    :return: df dataFrame containing partial results, None if there are no partial results.
-    """
-    if os.path.isfile(results_file):
-        df = pd.read_csv(results_file, index_col=0)
-        df['site'] = df['site'].apply(str)
-        df['system'] = df['system'].apply(str)
-    else:
-        df = None
-    return df
-
-
-def create_system_dict(df):
-    """
-    Reads a pandas dataFrame and creates a dictionary where the keys are the site ids and the values are a the list of
-    systems for each site.
-    :param df: pandas dataFrame with site and system information a `site` and a `system` column.
-    :return: dictionary with systems associated to each site.
-    """
-    site_list = df['site'].unique().tolist()
-    ss_dict = {}
-    for site in site_list:
-        systems_in_site = df[df['site'] == site]['system'].values.tolist()
-        ss_dict[site] = systems_in_site
-    return site_list, ss_dict
+    if value in ['True', 'true']:
+        return True
+    elif value in ['False', 'false']:
+        return False
 
 
 def run_failsafe_pipeline(df_in, dh_in, sys_tag, fts, tzc):
