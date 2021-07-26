@@ -9,6 +9,25 @@ import pandas as pd
 from solardatatools.utilities import progress
 
 
+def get_address(tag_name, region, client):
+    """
+    Collects the addresses of the aws instances being used for the estimation
+    :param tag_name: aws 'Name' tag of the instances
+    :param region: aws region
+    :param client: aws client
+    :return: list with aws instance addresses
+    """
+    ec2 = boto3.Session(profile_name='default', region_name=region).client(client)
+    target_instances = ec2.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [tag_name]}])
+
+    ec2_instances = []
+    for each_instance in target_instances['Reservations']:
+        for found_instance in each_instance['Instances']:
+            if found_instance['PublicDnsName'] != '':
+                ec2_instances.append(found_instance['PublicDnsName'])
+    return ec2_instances
+
+
 def remote_execute(user, instance_id, key, shell_commands, verbose=True):
     """
     Executes a list of bash commands remotely on Amazon Web Services (AWS) instances from another computer.
@@ -108,6 +127,7 @@ def resume_run(results_file):
     else:
         df = None
     return df
+
 
 def enumerate_files(s3_location, extension='.csv', file_size_list=False):
     """

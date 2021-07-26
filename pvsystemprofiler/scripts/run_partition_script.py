@@ -1,11 +1,12 @@
 import sys
 import os
-from pathlib import Path
-import boto3
-import time
-import glob
 import numpy as np
 import pandas as pd
+import time
+import glob
+from pathlib import Path
+import boto3
+
 # TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
@@ -14,6 +15,7 @@ from pvsystemprofiler.scripts.modules.create_partition import create_partition
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import copy_to_s3
 from pvsystemprofiler.scripts.modules.script_functions import remote_execute
+from pvsystemprofiler.scripts.modules.script_functions import get_address
 
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):
@@ -76,25 +78,6 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
         return True
     else:
         return False
-
-
-def get_address(tag_name, region, client):
-    """
-    Collects the addresses of the aws instances being used for the estimation
-    :param tag_name: aws 'Name' tag of the instances
-    :param region: aws region
-    :param client: aws client
-    :return: list with aws instance addresses
-    """
-    ec2 = boto3.Session(profile_name='default', region_name=region).client(client)
-    target_instances = ec2.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [tag_name]}])
-
-    ec2_instances = []
-    for each_instance in target_instances['Reservations']:
-        for found_instance in each_instance['Instances']:
-            if found_instance['PublicDnsName'] != '':
-                ec2_instances.append(found_instance['PublicDnsName'])
-    return ec2_instances
 
 
 def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,

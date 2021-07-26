@@ -5,7 +5,7 @@ import cvxpy as cvx
 def filter_data(data_matrix, daytime_threshold=None, x1=None, x2=None):
     """
     :param data_matrix: Pandas DataFrame data matrix with input signal.
-    :param daytime_threshold: Optional. Daytime thresold signal value separating day from night.
+    :param daytime_threshold: Optional. Daytime threshold signal value separating day from night.
     :param x1: Float. Parameter for signal decomposition threshold quantile seasonality calculation.
     :param x2: Float. Parameter for signal decomposition threshold quantile seasonality calculation.
     :return: Boolean DataFrame with daylight hours.
