@@ -7,6 +7,11 @@ from pvsystemprofiler.scripts.modules.script_functions import remote_execute
 
 
 def create_partition(partition):
+    """
+    Creates remote partition from `run_partition_script`
+    :param partition: object containing information about each individual partition
+    :return:
+    """
     start_index = partition.ix_0
     end_index = partition.ix_n
     global_input_file = partition.input_file_location
@@ -30,14 +35,19 @@ def create_partition(partition):
     check_json = partition.check_json
     supplementary_file = partition.supplementary_file
 
+    # prepare python command to run local partition
     python_command = '/home/ubuntu/miniconda3/envs/' + conda_env + '/bin/python'
 
-    commands = ['rm estimation* -rf']
-    output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    #delete existing remote partitions
+    #commands = ['rm estimation* -rf']
+    #output = remote_execute(ssh_username, instance, ssh_key_file, commands)
 
+    # check for previous remote folders.
     commands = ['ls' + ' ' + local_working_folder]
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    # create remote partition if does not exist
     if str(output[commands[0]][1]).find('No such file or directory') != -1:
+        # prepare commands to create partition
         commands = ['rm estimation* -rf',
                     'mkdir' + ' ' + local_working_folder,
                     python_command + ' ' + local_script + ' '
@@ -60,6 +70,7 @@ def create_partition(partition):
                     + python_command
                     ]
     else:
+        # if remote partition exist from previous run, resume run
         commands = [local_working_folder + 'run_local_partition.sh']
-
+    # execute remote partition script
     remote_execute(ssh_username, instance, ssh_key_file, commands)
