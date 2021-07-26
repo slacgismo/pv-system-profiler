@@ -1,10 +1,10 @@
-''' Latitude Study Module
+""" Latitude Study Module
 This module contains a class for conducting a study
 to estimating latitude from solar power data. This code accepts solar power
 data in the form of a `solar-data-tools` `DataHandler` object, which is used
 to standardize and pre-process the data. The provided class will then estimate
 the latitude of the site that produced the data, using the `run` method.
-'''
+"""
 import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
@@ -17,11 +17,10 @@ from solardatatools.algorithms import SunriseSunset
 
 class LatitudeStudy():
     def __init__(self, data_handler, lat_true_value=None):
-        '''
+        """
         :param data_handler: `DataHandler` class instance loaded with a solar power data set.
-
-        :param lat_true_value: (optional) the ground truth value for the system's latitude. (Degrees).
-        '''
+        :param lat_true_value: Optional. The ground truth value for the system's latitude. (Degrees).
+        """
 
         self.data_handler = data_handler
         self.latitude_true_value = lat_true_value
@@ -59,14 +58,14 @@ class LatitudeStudy():
             daylight_method=('raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'),
             delta_method=('cooper', 'spencer'), day_selection_method=('all', 'clear', 'cloudy'),
             threshold=None):
-        '''
+        """
         :param data_matrix: 'raw', 'filled'.
         :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'.
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'.
         :param day_selection_method: 'all', 'clear', 'cloudy'.
         :return:
-        '''
+        """
         data_matrix = np.atleast_1d(data_matrix)
         daylight_method = np.atleast_1d(daylight_method)
         delta_method = np.atleast_1d(delta_method)

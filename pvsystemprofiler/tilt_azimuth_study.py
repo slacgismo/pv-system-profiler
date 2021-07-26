@@ -20,6 +20,7 @@ from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions impo
 from pvsystemprofiler.utilities.tools import random_initial_values
 from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import filter_data
 
+
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range='full_year', init_values=None, nrandom_init_values=None,
                  daytime_threshold=None, lon_input=None, lat_input=None, tilt_input=None,
@@ -215,7 +216,7 @@ class TiltAzimuthStudy():
         return output
 
     def create_results_table(self):
-        cols = ['day range', 'declination method', 'cvx parameter', 'threshold quantile',  'latitude initial value',
+        cols = ['day range', 'declination method', 'cvx parameter', 'threshold quantile', 'latitude initial value',
                 'tilt initial value', 'azimuth initial value']
         if self.lat_input is None:
             cols.append('latitude')
@@ -224,4 +225,3 @@ class TiltAzimuthStudy():
         if self.azimuth_input is None:
             cols.append('azimuth')
         self.results = pd.DataFrame(columns=cols)
-
