@@ -1,1 +1,12 @@
+urllib3
+numpy==1.19.2
+cvxpy>=1.1.0
+pykml
+pandas
+haversine
+matplotlib
+scipy
+scikit-learn
+jupyter
+boto3
 solar-data-tools
