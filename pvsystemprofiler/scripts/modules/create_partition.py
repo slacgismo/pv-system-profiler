@@ -36,7 +36,16 @@ def create_partition(partition):
     supplementary_file = partition.supplementary_file
 
     # prepare python command to run local partition
-    python_command = '/home/ubuntu/miniconda3/envs/' + conda_env + '/bin/python'
+
+    grep_conda = "grep '__conda_setup=' .bashrc"
+    commands = [grep_conda]
+    output = remote_execute(aws_username, instance, ssh_key_file, commands)
+    conda_location = output[grep_conda][0]
+    conda_location = conda_location.decode('utf-8')
+    i = conda_location.find("('")
+    j = conda_location.find("bin", i + 2)
+    conda_location = conda_location[i + 2: j]
+    python_command = conda_location + 'envs/' + conda_env + '/bin/python'
 
     #delete existing remote partitions
     #commands = ['rm estimation* -rf']
