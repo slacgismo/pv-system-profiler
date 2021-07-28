@@ -36,10 +36,9 @@ def create_partition(partition):
     supplementary_file = partition.supplementary_file
 
     # prepare python command to run local partition
-
     grep_conda = "grep '__conda_setup=' .bashrc"
     commands = [grep_conda]
-    output = remote_execute(aws_username, instance, ssh_key_file, commands)
+    output = remote_execute(ssh_username, instance, ssh_key_file, commands)
     conda_location = output[grep_conda][0]
     conda_location = conda_location.decode('utf-8')
     i = conda_location.find("('")
