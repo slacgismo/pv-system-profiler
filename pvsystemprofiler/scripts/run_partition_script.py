@@ -5,7 +5,6 @@ import pandas as pd
 import time
 import glob
 from pathlib import Path
-import boto3
 
 # TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
