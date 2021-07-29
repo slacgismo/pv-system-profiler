@@ -1,8 +1,7 @@
 """ Latitude Study Module
-This module contains a class for conducting a study to estime longitude, latitude, tilt and azimuth from solar power
-data. This code accepts solar power data in the form of a `solar-data-tools` `DataHandler` object, which is used to
-standardize and pre-process the data. The provided class will then estimate the latitude of the site that produced the
-data, using the `run` method.
+This module contains a class for conducting a study to estimate latitude from solar data. This code accepts solar data
+in the form of a `solar-data-tools` `DataHandler` object, which is used to standardize and pre-process the data. The
+provided class will then estimate the latitude of the site that produced the data, using the `run` method.
 """
 import numpy as np
 import pandas as pd
