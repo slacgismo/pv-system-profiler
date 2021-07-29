@@ -4,6 +4,7 @@ latitude based on daylight hours and the declination angle.
 """
 import numpy as np
 
+
 def calc_lat(hours_daylight, delta):
     """
     Latitude is estimated from equation (1.6.11) in:

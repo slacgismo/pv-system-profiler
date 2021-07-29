@@ -1,5 +1,6 @@
 import sys
 
+
 def progress(count, total, status='', bar_length=60):
     """
     Python command line progress bar in less than 10 lines of code. · GitHub

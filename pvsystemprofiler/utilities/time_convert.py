@@ -1,10 +1,10 @@
-''' Time Conversion Module
+""" Time Conversion Module
 Convert between solar time and clock time, given a known longitude. This is the
 definition of solar time and standard time, given in equation (1.5.2) in [1].
 
     [1] Duffie, John A., and William A. Beckman. Solar engineering of thermal
         processes. New York: Wiley, 1991.
-'''
+"""
 
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 
