@@ -19,10 +19,10 @@ from pvsystemprofiler.scripts.modules.script_functions import get_address
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):
     """
-    Builds a csv input file by looking at the contents of the s3 bucket containing csv files with power signals.
+    Builds a csv input file by looking at the contents of the s3 bucket containing csv files with signals.
     :param s3_location: aws s3 bucket location of csv files containing signals
     :param input_file_location: s3 bucket location of report files
-    :return:
+    :return: DataFrame with signals in a given folder
     """
     site_list, size_list = enumerate_files(s3_location, file_size_list=True)
     site_df = pd.DataFrame()
