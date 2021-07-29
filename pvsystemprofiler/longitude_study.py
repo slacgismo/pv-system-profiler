@@ -1,19 +1,17 @@
 ''' Longitude Study Module
-This module contains a class for conducting a study of different approaches
-to estimating longitude from solar power data. This code accepts solar power
-data in the form of a `solar-data-tools` `DataHandler` object, which is used
-to standardize and pre-process the data. The provided class will then estimate
-the longitude of the site that produced the data, using configurations that can
-be set in the `run` method. The basic concept is to estimate solar noon for
-each day based on the measured data, and then use the relationship between
-standard time, solar time, and the equation of time to estimate the longitude.
+This module contains a class for conducting a study of different approaches to estimating longitude from solar data.
+This code accepts solar power data in the form of a `solar-data-tools` `DataHandler` object, which is used to
+standardize and pre-process the data. The provided class will then estimate the longitude of the site that produced the
+ data, using configurations that can be set in the `run` method. The basic concept is to estimate solar noon for each
+ day based on the measured data, and then use the relationship between standard time, solar time, and the equation of
+ time to estimate the longitude.
 The following configurations can be run:
 
  - Equation of time (EoT) estimator: Duffie or Da Rosa
  - Estimation algorithm: calculation from EoT definition, curve fitting with
    L2 loss, curve fitting with L1 loss, or curve fitting with Huber loss
- - Method for solar noon estimation: average of sunrise and sunset or the
-   energy center of mass
+ - Method for solar noon estimation: average of sunrise and sunset, the energy center of mass, optimized estimates ,
+   optimized measurements.
  - Method for day selection: all days, sunny/clear days, cloudy days
 
 '''
@@ -26,12 +24,12 @@ from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
 from solardatatools.algorithms import SunriseSunset
 
+
 class LongitudeStudy():
     def __init__(self, data_handler, gmt_offset=-8, true_value=None):
         """
         Default value for GMT offset is -8 which corresponds to Pacific
         Standard Time, or systems located in California.
-
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param gmt_offset: The offset in hours between the local timezone and GMT/UTC
         :param true_value: (optional) the ground truth value for the system's longitude
@@ -189,7 +187,6 @@ class LongitudeStudy():
         estimates = calc_lon(sn, eot, gmt)
         return np.nanmedian(estimates)
 
-
     def fit_longitude(self, loss='l2', eot_ref='duffie'):
         lon = cvx.Variable()
         if loss == 'l2':
@@ -228,4 +225,3 @@ class LongitudeStudy():
                 self.measurements_sunrise_filled = ss.sunrise_measurements
                 self.measurements_sunset_filled = ss.sunset_measurements
         return
-
