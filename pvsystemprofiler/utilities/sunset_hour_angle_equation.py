@@ -1,21 +1,22 @@
-
-
 import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.time_convert import solar_to_clock
+
 
 def sunset_hour_angle(doy, lat):
     b = np.deg2rad((360 / 365) * (doy - 1))
     delta = (0.006918 - 0.399912 * np.cos(b) + 0.070257 * np.sin(b) -
              0.006758 * np.cos(2 * b) + 0.000907 * np.sin(2 * b) -
-             0.002697 * np.cos(3 * b) + 0.00148  * np.sin(3 * b))
+             0.002697 * np.cos(3 * b) + 0.00148 * np.sin(3 * b))
     sunset_hour_angle = np.arccos(
         -np.tan(np.deg2rad(lat)) * np.tan(delta)
     )
     return np.rad2deg(sunset_hour_angle)
 
+
 def num_daylight_hours(doy, lat):
-    return (2/15) * sunset_hour_angle(doy, lat)
+    return (2 / 15) * sunset_hour_angle(doy, lat)
+
 
 def sunrise_sunset_times(lat, lon, doy, gmt_offset, eot='duffie'):
     ss_ha = sunset_hour_angle(doy, lat)
