@@ -1,9 +1,8 @@
 """ Latitude Study Module
-This module contains a class for conducting a study
-to estimating latitude from solar power data. This code accepts solar power
-data in the form of a `solar-data-tools` `DataHandler` object, which is used
-to standardize and pre-process the data. The provided class will then estimate
-the latitude of the site that produced the data, using the `run` method.
+This module contains a class for conducting a study to estime longitude, latitude, tilt and azimuth from solar power
+data. This code accepts solar power data in the form of a `solar-data-tools` `DataHandler` object, which is used to
+standardize and pre-process the data. The provided class will then estimate the latitude of the site that produced the
+data, using the `run` method.
 """
 import numpy as np
 import pandas as pd
@@ -64,7 +63,6 @@ class LatitudeStudy():
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'.
         :param day_selection_method: 'all', 'clear', 'cloudy'.
-        :return:
         """
         data_matrix = np.atleast_1d(data_matrix)
         daylight_method = np.atleast_1d(daylight_method)
@@ -123,8 +121,7 @@ class LatitudeStudy():
                           delta_method=('cooper', 'spencer')):
         """"
         Latitude is estimated from equation (1.6.11) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991.
+        Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
         """
 
         if matrix_id == 'raw':
