@@ -64,7 +64,7 @@ def combine_results(partitions, destination_dict):
 
 def check_completion(ssh_username, instance_id, ssh_key_file):
     """
-    Checks for estiamation estimation in partitions
+    Checks for estimation estimation in partitions
     :param ssh_username: aws username
     :param instance_id: id of the aws instance
     :param ssh_key_file: full path to key file of aws_username
