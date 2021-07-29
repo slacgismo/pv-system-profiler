@@ -11,7 +11,6 @@ from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 
 def solar_to_clock(solar_time, lon, doy, gmt_offset, eot='duffie'):
     """
-
     :param solar_time: solar time in minutes since midnight (float or array)
     :param lon: longitude (float)
     :param doy: day of year (float or array)
