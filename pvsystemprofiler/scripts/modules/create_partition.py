@@ -10,7 +10,6 @@ def create_partition(partition):
     """
     Creates remote partition from `run_partition_script`
     :param partition: object containing information about each individual partition
-    :return:
     """
     start_index = partition.ix_0
     end_index = partition.ix_n
@@ -36,6 +35,7 @@ def create_partition(partition):
     supplementary_file = partition.supplementary_file
 
     # prepare python command to run local partition
+    # extract conda installation folder from local .bashrc
     grep_conda = "grep '__conda_setup=' .bashrc"
     commands = [grep_conda]
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
@@ -50,7 +50,7 @@ def create_partition(partition):
     #commands = ['rm estimation* -rf']
     #output = remote_execute(ssh_username, instance, ssh_key_file, commands)
 
-    # check for previous remote folders.
+    # check for previously created remote folders
     commands = ['ls' + ' ' + local_working_folder]
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
     # create remote partition if does not exist
