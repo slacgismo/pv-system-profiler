@@ -128,7 +128,7 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
 
     if check_json:
-        json_files = enumerate_files(s3_bucket, prefix, extension='.json')
+        json_files = enumerate_files(s3_location, extension='.json')
         print('Generating system list from json files')
         json_file_dict = create_json_dict(json_files, s3_location)
         print('List generation completed')
