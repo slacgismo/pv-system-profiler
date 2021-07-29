@@ -232,10 +232,8 @@ class ConfigurationEstimator():
 
         lat_initial, tilt_initial, azim_initial = random_initial_values(1)
 
-        func_customized, bounds = select_function(self.latitude, self.tilt,
-                                                  self.azimuth)
-        dict_keys = determine_keys(latitude=self.latitude, tilt=self.tilt,
-                                   azimuth=self.azimuth)
+        func_customized, bounds = select_function(self.latitude, self.tilt, self.azimuth)
+        dict_keys = determine_keys(latitude=self.latitude, tilt=self.tilt, azimuth=self.azimuth)
 
         init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
         init_values, ivr = select_init_values(init_values_dict, dict_keys)
