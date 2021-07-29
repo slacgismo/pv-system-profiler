@@ -15,12 +15,12 @@ import numpy as np
 
 
 def select_function(lat_precalc=None, tilt_precalc=None, azim_precalc=None):
-    '''
+    """
     :param lat_precalc: (optional) Latitude precalculate in Degrees.
     :param tilt_precalc: (optional) Tilt precalculate in Degrees.
     :param azim_precalc: (optional) Azimuth precalculate in Degrees.
     :return: Customized function 'func' and 'bounds' tuple.
-    '''
+    """
 
     if lat_precalc is None and tilt_precalc is None and azim_precalc is None:
         func = lambda x, phi, beta, gamma: func_costheta(x, phi, beta, gamma)
