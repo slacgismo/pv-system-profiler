@@ -73,7 +73,7 @@ def get_s3_bucket_and_prefix(s3_location):
     """
     if s3_location[-1] != '/':
         s3_location += '/'
-    i = s3_location.find('//') + 2
+    i = 5
     j = s3_location.find('/', i)
     bucket = s3_location[i:j]
     prefix = s3_location[j + 1:-1]
