@@ -57,6 +57,7 @@ class ConfigurationEstimator():
         self.delta = None
         self.omega = None
 
+    # estimate longitude
     def estimate_longitude(self, estimator='fit_l1',
                            eot_calculation='duffie',
                            solar_noon_method='optimized_estimates',
@@ -74,8 +75,7 @@ class ConfigurationEstimator():
         elif solar_noon_method == 'optimized_estimates':
             ss = SunriseSunset()
             ss.run_optimizer(data=data_in)
-            self.solarnoon = np.nanmean(
-                [ss.sunrise_estimates, ss.sunset_estimates], axis=0)
+            self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
         if day_selection_method == 'all':
             self.days = dh.daily_flags.no_errors
         elif day_selection_method == 'clear':
@@ -83,7 +83,7 @@ class ConfigurationEstimator():
         elif day_selection_method == 'cloudy':
             self.days = dh.daily_flags.cloudy
         if estimator == 'calculated':
-            self.longitude_estimate = self._cal_lon_helper(eot_ref=eot_calculation)
+            self.longitude = self._cal_lon_helper(eot_ref=eot_calculation)
         else:
             loss = estimator.split('_')[-1]
             self.longitude = self._fit_lon_helper(loss=loss, eot_ref=eot_calculation)
@@ -120,6 +120,7 @@ class ConfigurationEstimator():
         problem.solve()
         return lon.value.item()
 
+    # estimate latitude
     def estimate_latitude(self, daytime_threshold=0.001, data_matrix='filled', daylight_method='optimized_estimates',
                           day_selection_method='all'):
 
@@ -157,6 +158,7 @@ class ConfigurationEstimator():
         latitude = calc_lat(self.hours_daylight, self.delta)
         return np.nanmedian(latitude)
 
+    # estimate tilt and azimuth with or without longitude and latitude input values
     def estimate_orientation(self, longitude=None, latitude=None, tilt=None, azimuth=None, day_interval=None, x1=0.9,
                              x2=0.9):
 
@@ -187,7 +189,7 @@ class ConfigurationEstimator():
                                      self.gmt_offset)
 
         self.tilt, self.azimuth = self._cal_orientation_helper()
-
+    # estimate longitude, latitude, tilt and azimuth all at once
     def estimate_all(self, day_interval=None, x1=0.9, x2=0.9):
 
         self.tilt = None
