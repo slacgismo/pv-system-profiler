@@ -19,10 +19,11 @@ import numpy as np
 import pandas as pd
 import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
+from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
-from solardatatools.algorithms import SunriseSunset
+
 
 
 class LongitudeStudy():
