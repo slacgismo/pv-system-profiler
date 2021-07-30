@@ -22,7 +22,7 @@ from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
 from pvsystemprofiler.algorithms.longitude.estimation import estimate_longitude
-
+from pvsystemprofiler.algorithms.optimized_sunrise_sunset import get_optimized_sunrise_sunset
 
 class LongitudeStudy():
     def __init__(self, data_handler, gmt_offset=-8, true_value=None):
@@ -40,6 +40,8 @@ class LongitudeStudy():
         self.data_matrix = self.data_handler.filled_data_matrix
         self.raw_data_matrix = self.data_handler.raw_data_matrix
         self.true_value = true_value
+        self.opt_threshold_raw = None
+        self.opt_threshold_filled = None
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
@@ -103,7 +105,19 @@ class LongitudeStudy():
         day_selection_method = np.atleast_1d(day_selection_method)
         data_matrix = np.atleast_1d(data_matrix)
 
-        self.get_optimized_sunrise_sunset(data_matrix)
+        if 'raw' in data_matrix:
+            rdm = self.raw_data_matrix
+        else:
+            rdm = None
+        if 'filled' in data_matrix:
+            fdm = self.data_matrix
+        else:
+            fdm = None
+        opt_dict = get_optimized_sunrise_sunset(fdm, rdm)
+        self.estimates_sunrise_raw, self.estimates_sunset_raw, self.measurements_sunrise_raw, \
+        self.measurements_sunset_raw, self.opt_threshold_raw, \
+        self.estimates_sunrise_filled, self.estimates_sunset_filled, self.measurements_sunrise_filled, \
+        self.measurements_sunset_filled, self.opt_threshold_filled = opt_dict.values()
 
         total = (len(estimator) * len(eot_calculation) * len(solar_noon_method)
                  * len(day_selection_method) * len(data_matrix))
@@ -173,21 +187,4 @@ class LongitudeStudy():
             best_loc = results['residual'].apply(lambda x: np.abs(x)).argmin()
             self.best_result = results.loc[best_loc]
             self.results = results.loc[np.argsort(np.abs(results['residual']).values)]
-        return
-
-    def get_optimized_sunrise_sunset(self, data_matrix):
-        for matrix in data_matrix:
-            ss = SunriseSunset()
-            if matrix == 'raw':
-                ss.run_optimizer(data=self.raw_data_matrix)
-                self.estimates_sunrise_raw = ss.sunrise_estimates
-                self.estimates_sunset_raw = ss.sunset_estimates
-                self.measurements_sunrise_raw = ss.sunrise_measurements
-                self.measurements_sunset_raw = ss.sunset_measurements
-            if matrix == 'filled':
-                ss.run_optimizer(data=self.data_matrix)
-                self.estimates_sunrise_filled = ss.sunrise_estimates
-                self.estimates_sunset_filled = ss.sunset_estimates
-                self.measurements_sunrise_filled = ss.sunrise_measurements
-                self.measurements_sunset_filled = ss.sunset_measurements
         return
