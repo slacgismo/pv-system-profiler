@@ -25,7 +25,6 @@ from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
 
 
-
 class LongitudeStudy():
     def __init__(self, data_handler, gmt_offset=-8, true_value=None):
         """
