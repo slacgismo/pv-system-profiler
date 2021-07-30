@@ -10,7 +10,8 @@ from pvsystemprofiler.utilities.declination_equation import delta_cooper
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight_raw
-from solardatatools.algorithms import SunriseSunset
+from pvsystemprofiler.algorithms.optimized_sunrise_sunset import get_optimized_sunrise_sunset
+
 
 
 class LatitudeStudy():
@@ -76,7 +77,21 @@ class LatitudeStudy():
 
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
-        self.get_optimized_sunrise_sunset(data_matrix)
+
+        if 'raw' in data_matrix:
+            rdm = self.raw_data_matrix
+        else:
+            rdm = None
+        if 'filled' in data_matrix:
+            fdm = self.data_matrix
+        else:
+            fdm = None
+
+        opt_dict = get_optimized_sunrise_sunset(fdm, rdm)
+        self.estimates_sunrise_raw, self.estimates_sunset_raw, self.measurements_sunrise_raw, \
+        self.measurements_sunset_raw, self.opt_threshold_raw, \
+        self.estimates_sunrise_filled, self.estimates_sunset_filled, self.measurements_sunrise_filled, \
+        self.measurements_sunset_filled, self.opt_threshold_filled = opt_dict.values()
 
         results = pd.DataFrame(columns=['declination_method', 'daylight_calculation', 'data_matrix', 'threshold',
                                         'day_selection_method', 'latitude'])
@@ -162,21 +177,3 @@ class LatitudeStudy():
         latitude_estimate = calc_lat(self.hours_daylight, delta)
         return np.nanmedian(latitude_estimate)
 
-    def get_optimized_sunrise_sunset(self, data_matrix):
-        for matrix in data_matrix:
-            ss = SunriseSunset()
-            if matrix == 'raw':
-                ss.run_optimizer(data=self.raw_data_matrix)
-                self.estimates_sunrise_raw = ss.sunrise_estimates
-                self.estimates_sunset_raw = ss.sunset_estimates
-                self.measurements_sunrise_raw = ss.sunrise_measurements
-                self.measurements_sunset_raw = ss.sunset_measurements
-                self.opt_threshold_filled = ss.threshold
-            if matrix == 'filled':
-                ss.run_optimizer(data=self.data_matrix)
-                self.estimates_sunrise_filled = ss.sunrise_estimates
-                self.estimates_sunset_filled = ss.sunset_estimates
-                self.measurements_sunrise_filled = ss.sunrise_measurements
-                self.measurements_sunset_filled = ss.sunset_measurements
-                self.opt_threshold_raw = ss.threshold
-        return
