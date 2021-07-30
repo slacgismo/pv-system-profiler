@@ -189,6 +189,7 @@ class ConfigurationEstimator():
                                      self.gmt_offset)
 
         self.tilt, self.azimuth = self._cal_orientation_helper()
+
     # estimate longitude, latitude, tilt and azimuth all at once
     def estimate_all(self, day_interval=None, x1=0.9, x2=0.9):
 
@@ -255,5 +256,3 @@ class ConfigurationEstimator():
         if 'azimuth_estimate' not in dict_keys:
             azimuth_estimate = None
         return tilt_estimate, azimuth_estimate
-
-

@@ -3,7 +3,7 @@ This module is used to set the hour_angle_equation in terms of the unknowns. The
 declination (delta), the hour angle (omega) , latitude (phi), tilt (beta) and azimuth (gamma). The declination and the
 hour angle are treated as input parameters for all cases. Latitude, tilt and azimuth can be given as input parameters
  or left as unknowns (`None`). In total, seven different combinations arise from having these three parameters
-as an inputs or as a unknowns. The seven conditionals below correspond to those combinations. The output function "func"
+as an inputs or as a unknowns. The seven conditionals below correspond to those combinations. The output function `func`
 is used as one of the inputs to run_curve_fit which in turn is used to fit the unknowns. The function other outputs is
 the 'bounds' tuple containing the bounds for the variables. Bounds for latitude are -90 to 90. Bounds for tilt are 0 to
 90. Bounds for azimuth  are -180 to 180. It is noted that, theoretically, bounds for tilt are 0 to 180 (Duffie, John A.,
