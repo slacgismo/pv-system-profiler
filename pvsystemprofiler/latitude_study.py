@@ -7,11 +7,10 @@ import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
-from pvsystemprofiler.algorithms.latitude.calculation import calc_lat
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight_raw
 from pvsystemprofiler.algorithms.optimized_sunrise_sunset import get_optimized_sunrise_sunset
-
+from pvsystemprofiler.algorithms.latitude.estimation import estimate_latitude
 
 
 class LatitudeStudy():
@@ -34,6 +33,7 @@ class LatitudeStudy():
         self.data_sampling = self.data_handler.data_sampling
         self.boolean_daytime = None
         self.hours_daylight = None
+        self.delta = None
         self.delta_cooper = None
         self.delta_spencer = None
         self.residual = None
@@ -116,8 +116,9 @@ class LatitudeStudy():
                         tm = data_matrix[matrix_ix]
                         dm = delta_id
 
-                        lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
-                                                         delta_method=delta_id)
+                        self.prepare_estimation(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
+                                                delta_method=delta_id)
+                        lat_est = estimate_latitude(self.hours_daylight, self.delta)
 
                         if daylight_method_id in ['optimized_estimates', 'optimized_measurements']:
                             dtt = self.opt_threshold
@@ -130,9 +131,9 @@ class LatitudeStudy():
 
         self.results = results
 
-    def estimate_latitude(self, matrix_id=None, daytime_threshold=0.001,
-                          daylight_method=('sunrise-sunset', 'raw daylight'),
-                          delta_method=('cooper', 'spencer')):
+    def prepare_estimation(self, matrix_id=None, daytime_threshold=0.001,
+                           daylight_method=('sunrise-sunset', 'raw daylight'),
+                           delta_method=('cooper', 'spencer')):
         """"
         Latitude is estimated from equation (1.6.11) in:
         Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
@@ -148,7 +149,7 @@ class LatitudeStudy():
             hours_daylight_all = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
         elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
             if matrix_id == 'filled':
-                hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunset_filled
+                hours_daylight_all = self.estimates_sunset_filled - self.estimates_sunrise_filled
                 self.opt_threshold = self.opt_threshold_raw
             if matrix_id == 'raw':
                 hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunrise_raw
@@ -161,19 +162,16 @@ class LatitudeStudy():
                 hours_daylight_all = self.measurements_sunset_raw - self.measurements_sunrise_raw
                 self.opt_threshold = self.opt_threshold_raw
         if delta_method in ('Cooper', 'cooper'):
-            delta = self.delta_cooper
+            self.delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
-            delta = self.delta_spencer
+            self.delta = self.delta_spencer
 
         if np.any(np.isnan(hours_daylight_all)):
             hours_mask = np.isnan(hours_daylight_all)
             full_mask = ~hours_mask & self.days
             self.hours_daylight = hours_daylight_all[full_mask]
-            delta = delta[:, full_mask]
+            self.delta = self.delta[:, full_mask]
         else:
             self.hours_daylight = hours_daylight_all[self.days]
-            delta = delta[:, self.days]
-
-        latitude_estimate = calc_lat(self.hours_daylight, delta)
-        return np.nanmedian(latitude_estimate)
-
+            self.delta = self.delta[:, self.days]
+        return
