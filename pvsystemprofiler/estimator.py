@@ -11,7 +11,7 @@ import cvxpy as cvx
 # Solar Data Tools Imports
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 # Module Imports
-from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
+from pvsystemprofiler.algorithms.longitude.calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.algorithms import SunriseSunset
@@ -129,16 +129,16 @@ class ConfigurationEstimator():
         if np.any(np.isnan(self.hours_daylight)):
             hours_mask = np.isnan(self.hours_daylight)
             full_mask = ~hours_mask & self.days
-            self.hours_daylight = self.hours_daylight[full_mask]
+            hours_daylight_filtered = self.hours_daylight[full_mask]
             self.delta = self.delta[:, full_mask]
         else:
-            self.hours_daylight = self.hours_daylight[self.days]
+            hours_daylight_filtered = self.hours_daylight[self.days]
             self.delta = self.delta[:, self.days]
 
-        self.latitude = self._cal_lat_helper()
+        self.latitude = self._cal_lat_helper(hours_daylight_filtered)
 
-    def _cal_lat_helper(self):
-        latitude = calc_lat(self.hours_daylight, self.delta)
+    def _cal_lat_helper(self, hours_daylight):
+        latitude = calc_lat(hours_daylight, self.delta)
         return np.nanmedian(latitude)
 
     # estimate tilt and azimuth with or without longitude and latitude input values
