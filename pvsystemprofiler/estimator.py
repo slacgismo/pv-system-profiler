@@ -28,11 +28,15 @@ from pvsystemprofiler.utilities.tools import random_initial_values
 
 
 class ConfigurationEstimator():
-    def __init__(self, data_handler, gmt_offset):
+    def __init__(self, data_handler, gmt_offset, day_selection_method='all',  solar_noon_method='optimized_estimates',
+                 daylight_method='optimized_estimates', data_matrix='filled', daytime_threshold=0.001):
         if not data_handler._ran_pipeline:
             data_handler.run_pipeline()
         self.data_handler = data_handler
-        self.data_matrix = None
+        if data_matrix == 'raw':
+            self.data_matrix = data_handler.raw_data_matrix
+        elif data_matrix == 'filled':
+            self.data_matrix = data_handler.filled_data_matrix
         # Parameters to be estimated
         self.longitude = None
         self.latitude = None
@@ -41,8 +45,6 @@ class ConfigurationEstimator():
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
         self.hours_daylight = None
-        self.solarnoon = None
-        self.days = None
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.daytime_threshold = None
         self.day_interval = None
@@ -56,32 +58,33 @@ class ConfigurationEstimator():
         self.eot_da_rosa = eot_da_rosa(self.day_of_year)
         self.delta = None
         self.omega = None
+        if day_selection_method == 'all':
+            self.days = self.data_handler.daily_flags.no_errors
+        elif day_selection_method == 'clear':
+            self.days = self.days.daily_flags.clear
+        elif day_selection_method == 'cloudy':
+            self.days = self.data_handler.daily_flags.cloudy
+
+        if solar_noon_method == 'optimized_estimates' or daylight_method == 'optimized_estimates':
+            ss = SunriseSunset()
+
+        if solar_noon_method == 'rise_set_average':
+            self.solarnoon = avg_sunrise_sunset(self.data_matrix)
+        elif solar_noon_method == 'energy_com':
+            self.solarnoon = energy_com(self.data_matrix)
+        if solar_noon_method == 'optimized_estimates':
+            ss.run_optimizer(data=self.data_matrix)
+            self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
+
+        if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
+            self.hours_daylight = calculate_hours_daylight(self.data_matrix, daytime_threshold)
+        elif daylight_method == 'optimized_estimates':
+            self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
 
     # estimate longitude
     def estimate_longitude(self, estimator='fit_l1',
                            eot_calculation='duffie',
-                           solar_noon_method='optimized_estimates',
-                           data_matrix='filled',
                            day_selection_method='all'):
-        dh = self.data_handler
-        if data_matrix == 'raw':
-            data_in = dh.raw_data_matrix
-        elif data_matrix == 'filled':
-            data_in = dh.filled_data_matrix
-        if solar_noon_method == 'rise_set_average':
-            self.solarnoon = avg_sunrise_sunset(data_in)
-        elif solar_noon_method == 'energy_com':
-            self.solarnoon = energy_com(data_in)
-        elif solar_noon_method == 'optimized_estimates':
-            ss = SunriseSunset()
-            ss.run_optimizer(data=data_in)
-            self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
-        if day_selection_method == 'all':
-            self.days = dh.daily_flags.no_errors
-        elif day_selection_method == 'clear':
-            self.days = dh.daily_flags.clear
-        elif day_selection_method == 'cloudy':
-            self.days = dh.daily_flags.cloudy
         if estimator == 'calculated':
             self.longitude = self._cal_lon_helper(eot_ref=eot_calculation)
         else:
@@ -121,35 +124,15 @@ class ConfigurationEstimator():
         return lon.value.item()
 
     # estimate latitude
-    def estimate_latitude(self, daytime_threshold=0.001, data_matrix='filled', daylight_method='optimized_estimates',
-                          day_selection_method='all'):
-
-        dh = self.data_handler
+    def estimate_latitude(self):
         self.delta = delta_cooper(self.day_of_year, self.daily_meas)
-        if data_matrix == 'raw':
-            data_in = dh.raw_data_matrix
-        elif data_matrix == 'filled':
-            data_in = dh.filled_data_matrix
-        if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
-            hours_daylight_all = calculate_hours_daylight(data_in, daytime_threshold)
-        elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
-            ss = SunriseSunset()
-            ss.run_optimizer(data=data_in)
-            hours_daylight_all = ss.sunset_estimates - ss.sunrise_estimates
-        if day_selection_method == 'all':
-            self.days = dh.daily_flags.no_errors
-        elif day_selection_method == 'clear':
-            self.days = dh.daily_flags.clear
-        elif day_selection_method == 'cloudy':
-            self.days = dh.daily_flags.cloudy
-
-        if np.any(np.isnan(hours_daylight_all)):
-            hours_mask = np.isnan(hours_daylight_all)
+        if np.any(np.isnan(self.hours_daylight)):
+            hours_mask = np.isnan(self.hours_daylight)
             full_mask = ~hours_mask & self.days
-            self.hours_daylight = hours_daylight_all[full_mask]
+            self.hours_daylight = self.hours_daylight[full_mask]
             self.delta = self.delta[:, full_mask]
         else:
-            self.hours_daylight = hours_daylight_all[self.days]
+            self.hours_daylight = self.hours_daylight[self.days]
             self.delta = self.delta[:, self.days]
 
         self.latitude = self._cal_lat_helper()
