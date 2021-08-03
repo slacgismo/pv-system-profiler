@@ -13,7 +13,7 @@ from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 # Module Imports
 from pvsystemprofiler.algorithms.longitude.calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
-from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
+from pvsystemprofiler.algorithms.latitude.calculation import calc_lat
 from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
 from pvsystemprofiler.utilities.hour_angle_equation import calculate_omega

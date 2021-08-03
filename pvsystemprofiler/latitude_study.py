@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
-from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
+from pvsystemprofiler.algorithms.latitude.calculation import calc_lat
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight_raw
 from pvsystemprofiler.algorithms.optimized_sunrise_sunset import get_optimized_sunrise_sunset
