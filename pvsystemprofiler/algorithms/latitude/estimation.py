@@ -1,8 +1,7 @@
-import numpy as np
-from pvsystemprofiler.algorithms.latitude.calculation import calc_lat
+from pvsystemprofiler.algorithms.latitude.calculation import calculate_latitude
 
 
 def estimate_latitude(hours_daylight, delta):
-    latitude_estimate = calc_lat(hours_daylight, delta)
-    return np.nanmedian(latitude_estimate)
+    latitude_estimate = calculate_latitude(hours_daylight, delta)
+    return latitude_estimate
 

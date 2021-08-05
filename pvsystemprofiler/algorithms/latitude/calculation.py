@@ -5,6 +5,11 @@ latitude based on daylight hours and the declination angle.
 import numpy as np
 
 
+def calculate_latitude(hours_daylight, delta):
+    estimates = calc_lat(hours_daylight, delta)
+    return np.nanmedian(estimates)
+
+
 def calc_lat(hours_daylight, delta):
     """
     Latitude is estimated from equation (1.6.11) in:
@@ -15,7 +20,5 @@ def calc_lat(hours_daylight, delta):
     :param delta: declination as calculated from declination_equations in Degrees.
     :return: the latitude for the given values
     """
-
     lat = np.degrees(np.arctan(- np.cos(np.radians(15 / 2 * hours_daylight)) / (np.tan(np.deg2rad(delta[0])))))
-
     return lat
