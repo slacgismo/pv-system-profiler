@@ -25,7 +25,7 @@ from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions impo
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import filter_data
 from pvsystemprofiler.utilities.tools import random_initial_values
-
+from pvsystemprofiler.algorithms.longitude.estimation import estimate_longitude
 
 class ConfigurationEstimator():
     def __init__(self, data_handler, gmt_offset, day_selection_method='all',  solar_noon_method='optimized_estimates',
@@ -82,46 +82,15 @@ class ConfigurationEstimator():
             self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
 
     # estimate longitude
-    def estimate_longitude(self, estimator='fit_l1',
-                           eot_calculation='duffie',
-                           day_selection_method='all'):
-        if estimator == 'calculated':
-            self.longitude = self._cal_lon_helper(eot_ref=eot_calculation)
-        else:
-            loss = estimator.split('_')[-1]
-            self.longitude = self._fit_lon_helper(loss=loss, eot_ref=eot_calculation)
-
-    def _cal_lon_helper(self, eot_ref='duffie'):
-        sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
-        if eot_ref in ('duffie', 'd', 'duf'):
-            eot = self.eot_duffie[self.days]
-        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
-            eot = self.eot_da_rosa[self.days]
-        gmt = self.gmt_offset
-        estimates = calc_lon(sn, eot, gmt)
-        return np.nanmedian(estimates)
-
-    def _fit_lon_helper(self, loss='l2', eot_ref='duffie'):
-        lon = cvx.Variable()
-        if loss == 'l2':
-            cost_func = cvx.norm
-        elif loss == 'l1':
-            cost_func = cvx.norm1
-        elif loss == 'huber':
-            cost_func = lambda x: cvx.sum(cvx.huber(x))
-        if eot_ref in ('duffie', 'd', 'duf'):
+    def estimate_longitude(self, estimator='fit_l1', eot_calculation='duffie'):
+        if eot_calculation in ('duffie', 'd', 'duf') or eot is None:
             eot = self.eot_duffie
-        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
+        elif eot_calculation in ('da_rosa', 'dr', 'rosa'):
             eot = self.eot_da_rosa
-        sn_m = 720 - eot + 4 * (15 * self.gmt_offset - lon)
-        sn_h = sn_m / 60
-        nan_mask = np.isnan(self.solarnoon)
-        use_days = np.logical_and(self.days, ~nan_mask)
-        cost = cost_func(sn_h[use_days] - self.solarnoon[use_days])
-        objective = cvx.Minimize(cost)
-        problem = cvx.Problem(objective)
-        problem.solve()
-        return lon.value.item()
+        print(estimator)
+        self.longitude = estimate_longitude(estimator, eot, self.solarnoon, self.days, self.gmt_offset)
+        return
+
 
     # estimate latitude
     def estimate_latitude(self):
