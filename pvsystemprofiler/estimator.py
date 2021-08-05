@@ -7,13 +7,10 @@ and pre-process the data. The provided class will then estimate  longitude, lati
 """
 # Standard Imports
 import numpy as np
-import cvxpy as cvx
 # Solar Data Tools Imports
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 # Module Imports
-from pvsystemprofiler.algorithms.longitude.calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
-from pvsystemprofiler.algorithms.latitude.calculation import calc_lat
 from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
 from pvsystemprofiler.utilities.hour_angle_equation import calculate_omega
