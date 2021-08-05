@@ -166,8 +166,6 @@ class LongitudeStudy():
                                     eot_ref = self.eot_duffie
                                 elif eot in ('da_rosa', 'dr', 'rosa'):
                                     eot_ref = self.eot_da_rosa
-                                self.est = est
-                                self.eot_ref = eot_ref
                                 lon = estimate_longitude(est, eot_ref, self.solarnoon, self.days, self.gmt_offset)
 
                             except ValueError:
