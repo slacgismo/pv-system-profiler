@@ -81,6 +81,11 @@ class ConfigurationEstimator():
             self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
 
     def estimate_longitude(self, estimator='fit_l1', eot_calculation='duffie'):
+        """
+        :param estimator: 'calculated', 'fit_l1', 'fit_l2' or 'fit_huber'
+        :param eot_calculation: 'rise_set_average', 'energy_com', 'optimized_estimates',
+        or 'optimized_measurements'
+        """
         if eot_calculation in ('duffie', 'd', 'duf'):
             eot = self.eot_duffie
         elif eot_calculation in ('da_rosa', 'dr', 'rosa'):
@@ -107,6 +112,21 @@ class ConfigurationEstimator():
     # estimate tilt and azimuth with or without longitude and latitude input values
     def estimate_orientation(self, longitude=None, latitude=None, tilt=None, azimuth=None, day_interval=None, x1=0.9,
                              x2=0.9):
+        """
+        Estimates tilt and azimuth. The intended use is to estimate tilt and azimuth given longitude and latitude.
+        However, the algorithm will estimate any of longitude, latitude, tilt and azimuth depending on the input values.
+        If a parameter is not provided as an input value, it will be estimated. Any other use than the stated above as
+        the intended use was found to yield inaccurate results.
+
+        :param longitude: optional. Longitude value to be used in parameter estimation.
+        :param latitude: optional. Latitude value to be used in parameter estimation.
+        :param tilt: optional. Tilt value to be used in parameter estimation.
+        :param azimuth: optional. Azimuth value to be used in parameter estimation.
+        :param day_interval: 'all', 'clear' or 'cloudy'.
+        :param x1: cvx parameter. Factor used in signal decomposition for estimation of daytime threshold.
+        :param x2: Quantile of data used in estimation of daytime threshold.
+        :return:
+        """
 
         if longitude is None:
             est_lon = ConfigurationEstimator(self.data_handler, self.gmt_offset)
@@ -136,8 +156,13 @@ class ConfigurationEstimator():
 
         self.tilt, self.azimuth = self._cal_orientation_helper()
 
-    # estimate longitude, latitude, tilt and azimuth all at once
     def estimate_all(self, day_interval=None, x1=0.9, x2=0.9):
+        """
+        Estimate latitude, longitude, tilt and azimuth all at once.
+        :param day_interval: 'all', 'clear', 'cloudy'.
+        :param x1: cvx parameter. Factor used in signal decomposition for estimation of daytime threshold.
+        :param x2: Quantile of data used in estimation of daytime threshold.
+        """
 
         self.tilt = None
         self.azimuth = None
