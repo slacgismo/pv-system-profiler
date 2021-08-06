@@ -116,7 +116,7 @@ class LatitudeStudy():
                         tm = data_matrix[matrix_ix]
                         dm = delta_id
 
-                        self.prepare_estimation(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
+                        self.prepare_input_data(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
                                                 delta_method=delta_id)
                         lat_est = estimate_latitude(self.hours_daylight, self.delta)
 
@@ -131,7 +131,7 @@ class LatitudeStudy():
 
         self.results = results
 
-    def prepare_estimation(self, matrix_id=None, daytime_threshold=0.001,
+    def prepare_input_data(self, matrix_id=None, daytime_threshold=0.001,
                            daylight_method=('sunrise-sunset', 'raw daylight'),
                            delta_method=('cooper', 'spencer')):
         """"
