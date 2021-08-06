@@ -7,6 +7,7 @@ from smart_open import smart_open
 import numpy as np
 import pandas as pd
 from solardatatools.utilities import progress
+from solardatatools import DataHandler
 
 
 def get_address(tag_name, region, client):
@@ -377,22 +378,25 @@ def string_to_boolean(value):
         return False
 
 
-def run_failsafe_pipeline(df_in, dh_in, sys_tag, fts, tzc):
+def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
+    :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
     :param df_in: Dataframe containing site input power signal.
-    :param dh_in: Dataframe object obtained from instancing the dataHandler class from solarDataTools.
     :param sys_tag: Dataframe column label identifying an input signal, i.e. ac_power_01 ar dc_current_02.
     :param fts: Boolean. Fix time shift parameter in `run_pipeline`
     :param tzc: Boolean. Time zone correction parameter in `run_pipeline`
     :return: Boolean. True if passes pipeline, otherwise False.
     """
+    dh = DataHandler(df_in)
+    if manual_time_shift == 1:
+        dh.fix_dst()
     try:
         try:
-            dh_in.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
+            dh.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
         except ValueError:
             max_val = np.nanquantile(df_in[sys_tag], 0.95)
-            dh_in.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False, max_val=max_val * 3)
+            dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False, max_val=max_val * 3)
     except:
         return False
     return True

@@ -64,7 +64,8 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                     if manual_time_shift == 1:
                         dh.fix_dst()
 
-                passes_pipeline = run_failsafe_pipeline(df, dh, sys_tag, fix_time_shifts, time_zone_correction)
+                passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
+                                                        time_zone_correction)
 
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
