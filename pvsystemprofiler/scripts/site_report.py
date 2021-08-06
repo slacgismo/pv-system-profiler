@@ -61,14 +61,12 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
             if system_id in df_ground_data['system'].tolist() or df_ground_data is None:
                 sys_tag = power_column_label + system_id
 
-                dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
-                    if manual_time_shift == 1:
-                        dh.fix_dst()
-
-                passes_pipeline = run_failsafe_pipeline(df, dh, sys_tag, fix_time_shifts, time_zone_correction)
+                    
+                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
+                                                            time_zone_correction)
 
                 if passes_pipeline:
                     results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
