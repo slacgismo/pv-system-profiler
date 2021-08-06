@@ -398,5 +398,5 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc):
             max_val = np.nanquantile(df_in[sys_tag], 0.95)
             dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False, max_val=max_val * 3)
     except:
-        return False
-    return True
+        return dh, False
+    return dh, True

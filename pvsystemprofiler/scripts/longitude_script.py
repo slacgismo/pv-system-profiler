@@ -58,15 +58,11 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
                 gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
 
-                dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
-                    if manual_time_shift == 1:
-                        dh.fix_dst()
-
-                passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
-                                                        time_zone_correction)
+                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
+                                                            time_zone_correction)
 
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
