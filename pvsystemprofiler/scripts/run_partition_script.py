@@ -170,7 +170,7 @@ if __name__ == '__main__':
     :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
         when running the pipeline.
     :param fix_time_shifts: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
-        param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
+    :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
         running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
         running the pipeline.
@@ -179,6 +179,7 @@ if __name__ == '__main__':
     :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     """
+
     # Default input variables
     if input_site_file == 'None':
         build_input_file(s3_location)

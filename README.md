@@ -10,7 +10,7 @@ None all s3://"s3 bucket location with csv signals"/ None power_inv /"output fol
 True False False False None
 ```
 where the individual value of each kwarg are defined in site_report.py. In this example, the folder with the csv input 
-signals is located in an Amazon Web Services bucket. It can also be located in a local folder. Results are written to
+signals is located in an Amazon Web Services (AWS) bucket. It can also be located in a local folder. Results are written to
 the file results.csv in a local directory
 Similar kwargs are entered for the longitude_script, latitude_script and the tilt_azimuth script. Here is an example:
 ```shell

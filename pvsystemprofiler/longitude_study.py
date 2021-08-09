@@ -25,6 +25,7 @@ from pvsystemprofiler.utilities.progress import progress
 from pvsystemprofiler.algorithms.longitude.estimation import estimate_longitude
 from pvsystemprofiler.algorithms.optimized_sunrise_sunset import get_optimized_sunrise_sunset
 
+
 class LongitudeStudy():
     def __init__(self, data_handler, gmt_offset=-8, true_value=None):
         """

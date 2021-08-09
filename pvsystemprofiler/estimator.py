@@ -85,6 +85,7 @@ class ConfigurationEstimator():
         :param estimator: 'calculated', 'fit_l1', 'fit_l2' or 'fit_huber'
         :param eot_calculation: 'rise_set_average', 'energy_com', 'optimized_estimates',
         or 'optimized_measurements'
+        :return: None
         """
         if eot_calculation in ('duffie', 'd', 'duf'):
             eot = self.eot_duffie
@@ -125,7 +126,7 @@ class ConfigurationEstimator():
         :param day_interval: 'all', 'clear' or 'cloudy'.
         :param x1: cvx parameter. Factor used in signal decomposition for estimation of daytime threshold.
         :param x2: Quantile of data used in estimation of daytime threshold.
-        :return:
+        :return: None
         """
 
         if longitude is None:
