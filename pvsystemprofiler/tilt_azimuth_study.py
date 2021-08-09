@@ -4,7 +4,11 @@ accepts an input signal data in the form of a `solar-data-tools` `DataHandler` o
 and pre-process the data. The provided class will then estimate the Tilt and Azimuth of the site that produced the data,
 using the `run` method. Tilt and Azimuth are estimated via numerical fit using equation (1.6.2) in:
 Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
-"""
+
+The following configurations can be run:
+ - Day range: 'full_year' or customized day range
+ - Declination equation: 'cooper', 'spencer'.
+ """
 import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.hour_angle_equation import calculate_omega
@@ -99,6 +103,26 @@ class TiltAzimuthStudy():
         self.results = None
 
     def run(self, delta_method=('cooper', 'spencer')):
+        """
+        Run a study with the given configuration of options. Defaults to
+        running all available options. Any kwarg can be constrained by
+        providing a subset of acceptable keys. For example the default keys
+        for the declination method estimator kwarg are:
+
+        ('cooper', 'spencer')
+
+        Additionally, any of the following would be acceptable for this kwarg:
+
+        ('cooper')
+        'cooper'
+        'spencer'
+
+        This method sets the `results` attribute to be a pandas data frame
+        containing the results of the study.
+
+        :param delta_method: 'cooper', 'spencer'.
+        :return: None.
+        """
 
         delta_method = np.atleast_1d(delta_method)
         # calculate hour angle

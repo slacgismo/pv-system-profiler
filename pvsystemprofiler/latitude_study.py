@@ -6,9 +6,9 @@ provided class will then estimate the latitude of the site that produced the dat
 The following configurations can be run:
 
  - Input data matrix: 'raw', 'filled'
- - Daylight estimation method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'.
- - Declination equation: 'cooper', 'spencer'.
- - Day selection method: 'all', 'clear', 'cloudy'.
+ - Daylight estimation method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'
+ - Declination equation: 'cooper', 'spencer'
+ - Day selection method: 'all', 'clear', 'cloudy'
 
 """
 import numpy as np
@@ -87,6 +87,7 @@ class LatitudeStudy():
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'.
         :param day_selection_method: 'all', 'clear', 'cloudy'.
+        :return: None.
         """
         data_matrix = np.atleast_1d(data_matrix)
         daylight_method = np.atleast_1d(daylight_method)
