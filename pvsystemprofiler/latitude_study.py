@@ -2,6 +2,14 @@
 This module contains a class for conducting a study to estimate latitude from solar data. This code accepts solar data
 in the form of a `solar-data-tools` `DataHandler` object, which is used to standardize and pre-process the data. The
 provided class will then estimate the latitude of the site that produced the data, using the `run` method.
+
+The following configurations can be run:
+
+ - Input data matrix: 'raw', 'filled'
+ - Daylight estimation method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'.
+ - Declination equation: 'cooper', 'spencer'.
+ - Day selection method: 'all', 'clear', 'cloudy'.
+
 """
 import numpy as np
 import pandas as pd
@@ -58,6 +66,22 @@ class LatitudeStudy():
             delta_method=('cooper', 'spencer'), day_selection_method=('all', 'clear', 'cloudy'),
             threshold=None):
         """
+        Run a study with the given configuration of options. Defaults to
+        running all available options. Any kwarg can be constrained by
+        providing a subset of acceptable keys. For example the default keys
+        for daylight method kwarg are:
+
+            ('raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements')
+
+        Additionally, any of the following would be acceptable for this kwarg:
+
+            ('raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements')
+            ('raw daylight', 'sunrise-sunset', 'optimized_estimates')
+            ('raw daylight', 'sunrise-sunset')
+            ('raw daylight')
+
+        This method sets the `results` attribute to be a pandas data frame
+        containing the results of the study.
         :param data_matrix: 'raw', 'filled'.
         :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'.
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.

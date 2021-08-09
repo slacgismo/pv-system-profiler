@@ -1,4 +1,5 @@
-''' Longitude Study Module
+"""
+Longitude Study Module
 This module contains a class for conducting a study of different approaches to estimating longitude from solar data.
 This code accepts solar power data in the form of a `solar-data-tools` `DataHandler` object, which is used to
 standardize and pre-process the data. The provided class will then estimate the longitude of the site that produced the
@@ -7,14 +8,15 @@ standardize and pre-process the data. The provided class will then estimate the 
  time to estimate the longitude.
 The following configurations can be run:
 
+ - Input data matrix: 'raw', 'filled'
  - Equation of time (EoT) estimator: Duffie or Da Rosa
  - Estimation algorithm: calculation from EoT definition, curve fitting with
    L2 loss, curve fitting with L1 loss, or curve fitting with Huber loss
- - Method for solar noon estimation: average of sunrise and sunset, the energy center of mass, optimized estimates ,
+ - Method for solar noon estimation: average of sunrise and sunset, the energy center of mass, optimized estimates,
    optimized measurements.
  - Method for day selection: all days, sunny/clear days, cloudy days
 
-'''
+"""
 import numpy as np
 import pandas as pd
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
