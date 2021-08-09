@@ -4,6 +4,8 @@ import cvxpy as cvx
 """
 Calculates the angle incidence for a system based on its power matrix using signal decomposition.
 """
+
+
 def find_fit_costheta(data_matrix, clear_index):
     """
     :param data_matrix: power matrix.

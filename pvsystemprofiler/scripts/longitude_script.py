@@ -1,3 +1,9 @@
+""" Longitude run script
+This run script allows to run the longitude_study for multiple sites. The site ids to be evaluated can be provided in
+ a csv file. Alternatively, the path to a folder containing the input signals of the sites in separate csv files can be
+ provided.  The script provides the option to provided the full path to csv file containing latitude and gmt offset for
+ each system for comparison.
+"""
 import sys
 from pathlib import Path
 import pandas as pd
@@ -7,13 +13,11 @@ from time import time
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
 from solardatatools import DataHandler
-from solardatatools.utilities import progress
 from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_pipeline
 from pvsystemprofiler.scripts.modules.script_functions import resume_run
 from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
-from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
 from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
@@ -53,14 +57,11 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
                 gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
 
-                dh = DataHandler(df)
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
-                    if manual_time_shift == 1:
-                        dh.fix_dst()
-
-                passes_pipeline = run_failsafe_pipeline(dh, df, sys_tag, fix_time_shifts, time_zone_correction)
+                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
+                                                            time_zone_correction)
 
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
@@ -93,16 +94,15 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json):
     site_run_time = 0
     total_time = 0
-    s3_bucket, prefix = get_s3_bucket_and_prefix(s3_location)
 
-    full_site_list = enumerate_files(s3_bucket, prefix)
+    full_site_list = enumerate_files(s3_location)
     full_site_list = filename_to_siteid(full_site_list)
 
     previously_checked_site_list = get_checked_sites(full_df)
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
 
     if check_json:
-        json_files = enumerate_files(s3_bucket, prefix, extension='.json')
+        json_files = enumerate_files(s3_location, extension='.json')
         print('Generating system list from json files')
         json_file_dict = create_json_dict(json_files, s3_location)
         print('List generation completed')

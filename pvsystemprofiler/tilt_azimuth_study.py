@@ -1,13 +1,14 @@
 """ Tilt and Azimuth Study Module
-This module contains a class for conducting a study
-to estimating Tilt and Azimuth from solar power data. This code accepts solar power
-data in the form of a `solar-data-tools` `DataHandler` object, which is used
-to standardize and pre-process the data. The provided class will then estimate
-the Tilt and Azimuth of the site that produced the data, using the `run` method.
-Tilt and Azimuth are estimated via numerical fit using equation (1.6.2) in:
-    Duffie, John A., and William A. Beckman. Solar engineering of thermal
-    processes. New York: Wiley, 1991.
-"""
+This module contains a class for conducting a study to estimating Tilt and Azimuth from an input signal. This code
+accepts an input signal data in the form of a `solar-data-tools` `DataHandler` object, which is used to standardize
+and pre-process the data. The provided class will then estimate the Tilt and Azimuth of the site that produced the data,
+using the `run` method. Tilt and Azimuth are estimated via numerical fit using equation (1.6.2) in:
+Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
+
+The following configurations can be run:
+ - Day range: 'full_year' or customized day range
+ - Declination equation: 'cooper', 'spencer'.
+ """
 import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.hour_angle_equation import calculate_omega
@@ -22,6 +23,7 @@ from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions impo
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 from pvsystemprofiler.utilities.tools import random_initial_values
 from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import filter_data
+
 
 class TiltAzimuthStudy():
     def __init__(self, data_handler, day_range='full_year', init_values=None, nrandom_init_values=None,
@@ -101,6 +103,26 @@ class TiltAzimuthStudy():
         self.results = None
 
     def run(self, delta_method=('cooper', 'spencer')):
+        """
+        Run a study with the given configuration of options. Defaults to
+        running all available options. Any kwarg can be constrained by
+        providing a subset of acceptable keys. For example the default keys
+        for the declination method estimator kwarg are:
+
+        ('cooper', 'spencer')
+
+        Additionally, any of the following would be acceptable for this kwarg:
+
+        ('cooper')
+        'cooper'
+        'spencer'
+
+        This method sets the `results` attribute to be a pandas data frame
+        containing the results of the study.
+
+        :param delta_method: 'cooper', 'spencer'.
+        :return: None.
+        """
 
         delta_method = np.atleast_1d(delta_method)
         # calculate hour angle
@@ -183,7 +205,7 @@ class TiltAzimuthStudy():
                             self.costheta_estimated = calculate_costheta(func=func_costheta, delta=delta,
                                                                          omega=self.omega, lat=lat, tilt=tilt,
                                                                          azim=azim)
-
+                            # calculate cos theta from analytical equation in case ground truth values are provided
                             if None not in (self.lat_true_value, self.tilt_true_value, self.azimuth_true_value):
                                 self.costheta_ground_truth = calculate_costheta(func=func_costheta, delta=delta,
                                                                                 omega=self.omega,
@@ -205,10 +227,11 @@ class TiltAzimuthStudy():
     def get_day_range(self, input_data, interval):
         """
         This method was intended to evaluate different day ranges for the estimation of tilt and  azimuth. However, no
-        gain was seen from using day ranges instead of the full year.
+        gain was seen from using day ranges instead of the full year. Therefore, the study is usually run with
+        `interval=None'
         :param input_data: boolean array containing daytime hours
         :param interval:  day interval to be used in estimation
-        :return:
+        :return: Boolean DataFrame with day selection
         """
         if interval is not None:
             day_range = (self.day_of_year > interval[0]) & (self.day_of_year < interval[1])
@@ -218,7 +241,7 @@ class TiltAzimuthStudy():
         return output
 
     def create_results_table(self):
-        cols = ['day range', 'declination method', 'cvx parameter', 'threshold quantile',  'latitude initial value',
+        cols = ['day range', 'declination method', 'cvx parameter', 'threshold quantile', 'latitude initial value',
                 'tilt initial value', 'azimuth initial value']
         if self.lat_input is None:
             cols.append('latitude')
@@ -227,4 +250,3 @@ class TiltAzimuthStudy():
         if self.azimuth_input is None:
             cols.append('azimuth')
         self.results = pd.DataFrame(columns=cols)
-

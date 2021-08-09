@@ -1,47 +1,45 @@
 import sys
 import os
-from pathlib import Path
-import boto3
-import time
-import glob
 import numpy as np
 import pandas as pd
+import time
+import glob
+from pathlib import Path
+
 # TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
 from pvsystemprofiler.scripts.modules.config_partitions import get_config
 from pvsystemprofiler.scripts.modules.create_partition import create_partition
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
-from pvsystemprofiler.scripts.modules.script_functions import get_s3_bucket_and_prefix
 from pvsystemprofiler.scripts.modules.script_functions import copy_to_s3
 from pvsystemprofiler.scripts.modules.script_functions import remote_execute
+from pvsystemprofiler.scripts.modules.script_functions import get_address
 
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):
     """
-    Builds a csv input file by looking at the contents of the s3 bucket containing csv files with power signals.
+    Builds a csv input file by looking at the contents of the s3 bucket containing csv files with signals.
     :param s3_location: aws s3 bucket location of csv files containing signals
     :param input_file_location: s3 bucket location of report files
-    :return:
+    :return: DataFrame with signals in a given folder
     """
-    bucket, prefix = get_s3_bucket_and_prefix(s3_location)
-    site_list, size_list = enumerate_files(bucket, prefix, file_size_list=True)
+    site_list, size_list = enumerate_files(s3_location, file_size_list=True)
     site_df = pd.DataFrame()
     site_df['site'] = site_list
     site_df['site'] = site_df['site'].apply(lambda x: x.split('.')[0])
     site_df['file_size'] = size_list
     site_df.to_csv('./generated_site_list.csv')
-    bucket, prefix = get_s3_bucket_and_prefix(input_file_location)
-    copy_to_s3('./generated_site_list.csv', bucket, prefix + '/generated_site_list.csv')
+    copy_to_s3('./generated_site_list.csv', input_file_location)
     return site_df
 
 
 def get_remote_output_files(partitions, username, destination_dict):
     """
-    Collects partition results once estimation is finished
-    :param partitions: list containing aws partition addresses
-    :param username:  aws user name
-    :param destination_dict: folder where results are saved
+    Collects partition results once estimation is finished.
+    :param partitions: String. List containing aws partition addresses.
+    :param username:  String. aws user name.
+    :param destination_dict: String. Folder where results are saved.
     """
     os.system('mkdir' + ' ' + destination_dict)
     for part_id in partitions:
@@ -66,7 +64,7 @@ def combine_results(partitions, destination_dict):
 
 def check_completion(ssh_username, instance_id, ssh_key_file):
     """
-    Checks for estiamation estimation in partitions
+    Checks for estimation estimation in partitions
     :param ssh_username: aws username
     :param instance_id: id of the aws instance
     :param ssh_key_file: full path to key file of aws_username
@@ -79,25 +77,6 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
         return True
     else:
         return False
-
-
-def get_address(tag_name, region, client):
-    """
-    Collects the addresses of the aws instances being used for the estimation
-    :param tag_name: aws 'Name' tag of the instances
-    :param region: aws region
-    :param client: aws client
-    :return: list with aws instance addresses
-    """
-    ec2 = boto3.Session(profile_name='default', region_name=region).client(client)
-    target_instances = ec2.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [tag_name]}])
-
-    ec2_instances = []
-    for each_instance in target_instances['Reservations']:
-        for found_instance in each_instance['Instances']:
-            if found_instance['PublicDnsName'] != '':
-                ec2_instances.append(found_instance['PublicDnsName'])
-    return ec2_instances
 
 
 def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
@@ -126,7 +105,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
         part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=site_input_file,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
-                          scripts_location=script_location, conda_env= conda_environment, pcid=power_column_id,
+                          scripts_location=script_location, conda_env=conda_environment, pcid=power_column_id,
                           tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
                           fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
                           check_json=check_json, sup_file=supplementary_file)
@@ -191,7 +170,7 @@ if __name__ == '__main__':
     :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
         when running the pipeline.
     :param fix_time_shifts: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
-        param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
+    :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
         running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
         running the pipeline.
@@ -200,6 +179,7 @@ if __name__ == '__main__':
     :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     """
+
     # Default input variables
     if input_site_file == 'None':
         build_input_file(s3_location)

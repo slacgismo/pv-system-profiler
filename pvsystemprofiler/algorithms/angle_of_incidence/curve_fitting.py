@@ -24,8 +24,7 @@ def run_curve_fit(func, keys,  delta, omega, costheta, boolean_filter, init_valu
     costheta_fit = costheta[boolean_filter]
     x = np.array([np.deg2rad(delta), np.deg2rad(omega)])
 
-    popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values),
-                           bounds=fit_bounds)
+    popt, pcov = curve_fit(func, x, costheta_fit, p0=np.deg2rad(init_values), bounds=fit_bounds)
 
     if 'azimuth_estimate' in keys:
         popt[-1] -= np.rint(popt[-1] / 2 / np.pi) * 2 * np.pi

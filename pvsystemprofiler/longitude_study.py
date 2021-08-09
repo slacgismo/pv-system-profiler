@@ -1,37 +1,36 @@
-''' Longitude Study Module
-This module contains a class for conducting a study of different approaches
-to estimating longitude from solar power data. This code accepts solar power
-data in the form of a `solar-data-tools` `DataHandler` object, which is used
-to standardize and pre-process the data. The provided class will then estimate
-the longitude of the site that produced the data, using configurations that can
-be set in the `run` method. The basic concept is to estimate solar noon for
-each day based on the measured data, and then use the relationship between
-standard time, solar time, and the equation of time to estimate the longitude.
+"""
+Longitude Study Module
+This module contains a class for conducting a study of different approaches to estimating longitude from solar data.
+This code accepts solar power data in the form of a `solar-data-tools` `DataHandler` object, which is used to
+standardize and pre-process the data. The provided class will then estimate the longitude of the site that produced the
+ data, using configurations that can be set in the `run` method. The basic concept is to estimate solar noon for each
+ day based on the measured data, and then use the relationship between standard time, solar time, and the equation of
+ time to estimate the longitude.
 The following configurations can be run:
 
+ - Input data matrix: 'raw', 'filled'
  - Equation of time (EoT) estimator: Duffie or Da Rosa
  - Estimation algorithm: calculation from EoT definition, curve fitting with
    L2 loss, curve fitting with L1 loss, or curve fitting with Huber loss
- - Method for solar noon estimation: average of sunrise and sunset or the
-   energy center of mass
+ - Method for solar noon estimation: average of sunrise and sunset, the energy center of mass, optimized estimates,
+   optimized measurements.
  - Method for day selection: all days, sunny/clear days, cloudy days
 
-'''
+"""
 import numpy as np
 import pandas as pd
-import cvxpy as cvx
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
-from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
 from pvsystemprofiler.utilities.progress import progress
-from solardatatools.algorithms import SunriseSunset
+from pvsystemprofiler.algorithms.longitude.estimation import estimate_longitude
+from pvsystemprofiler.algorithms.optimized_sunrise_sunset import get_optimized_sunrise_sunset
+
 
 class LongitudeStudy():
     def __init__(self, data_handler, gmt_offset=-8, true_value=None):
         """
         Default value for GMT offset is -8 which corresponds to Pacific
         Standard Time, or systems located in California.
-
         :param data_handler: `DataHandler` class instance loaded with a solar power data set
         :param gmt_offset: The offset in hours between the local timezone and GMT/UTC
         :param true_value: (optional) the ground truth value for the system's longitude
@@ -43,6 +42,8 @@ class LongitudeStudy():
         self.data_matrix = self.data_handler.filled_data_matrix
         self.raw_data_matrix = self.data_handler.raw_data_matrix
         self.true_value = true_value
+        self.opt_threshold_raw = None
+        self.opt_threshold_filled = None
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
         self.day_of_year = self.data_handler.day_index.dayofyear
@@ -106,7 +107,19 @@ class LongitudeStudy():
         day_selection_method = np.atleast_1d(day_selection_method)
         data_matrix = np.atleast_1d(data_matrix)
 
-        self.get_optimized_sunrise_sunset(data_matrix)
+        if 'raw' in data_matrix:
+            rdm = self.raw_data_matrix
+        else:
+            rdm = None
+        if 'filled' in data_matrix:
+            fdm = self.data_matrix
+        else:
+            fdm = None
+        opt_dict = get_optimized_sunrise_sunset(fdm, rdm)
+        self.estimates_sunrise_raw, self.estimates_sunset_raw, self.measurements_sunrise_raw, \
+        self.measurements_sunset_raw, self.opt_threshold_raw, \
+        self.estimates_sunrise_filled, self.estimates_sunset_filled, self.measurements_sunrise_filled, \
+        self.measurements_sunset_filled, self.opt_threshold_filled = opt_dict.values()
 
         total = (len(estimator) * len(eot_calculation) * len(solar_noon_method)
                  * len(day_selection_method) * len(data_matrix))
@@ -152,7 +165,12 @@ class LongitudeStudy():
                                 progress(counter, total)
 
                             try:
-                                lon = self.estimate_longitude(est, eot)
+                                if eot in ('duffie', 'd', 'duf') or eot is None:
+                                    eot_ref = self.eot_duffie
+                                elif eot in ('da_rosa', 'dr', 'rosa'):
+                                    eot_ref = self.eot_da_rosa
+                                lon = estimate_longitude(est, eot_ref, self.solarnoon, self.days, self.gmt_offset)
+
                             except ValueError:
                                 lon = np.nan
 
@@ -171,61 +189,3 @@ class LongitudeStudy():
             self.best_result = results.loc[best_loc]
             self.results = results.loc[np.argsort(np.abs(results['residual']).values)]
         return
-
-    def estimate_longitude(self, estimator, eot_calculation):
-        if estimator == 'calculated':
-            return self.calculate_longitude(eot_ref=eot_calculation)
-        else:
-            loss = estimator.split('_')[-1]
-            return self.fit_longitude(loss=loss, eot_ref=eot_calculation)
-
-    def calculate_longitude(self, eot_ref='duffie'):
-        sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
-        if eot_ref in ('duffie', 'd', 'duf'):
-            eot = self.eot_duffie[self.days]
-        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
-            eot = self.eot_da_rosa[self.days]
-        gmt = self.gmt_offset
-        estimates = calc_lon(sn, eot, gmt)
-        return np.nanmedian(estimates)
-
-
-    def fit_longitude(self, loss='l2', eot_ref='duffie'):
-        lon = cvx.Variable()
-        if loss == 'l2':
-            cost_func = cvx.norm
-        elif loss == 'l1':
-            cost_func = cvx.norm1
-        elif loss == 'huber':
-            cost_func = lambda x: cvx.sum(cvx.huber(x))
-        if eot_ref in ('duffie', 'd', 'duf'):
-            eot = self.eot_duffie
-        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
-            eot = self.eot_da_rosa
-        sn_m = 720 - eot + 4 * (15 * self.gmt_offset - lon)
-        sn_h = sn_m / 60
-        nan_mask = np.isnan(self.solarnoon)
-        use_days = np.logical_and(self.days, ~nan_mask)
-        cost = cost_func(sn_h[use_days] - self.solarnoon[use_days])
-        objective = cvx.Minimize(cost)
-        problem = cvx.Problem(objective)
-        problem.solve()
-        return lon.value.item()
-
-    def get_optimized_sunrise_sunset(self, data_matrix):
-        for matrix in data_matrix:
-            ss = SunriseSunset()
-            if matrix == 'raw':
-                ss.run_optimizer(data=self.raw_data_matrix)
-                self.estimates_sunrise_raw = ss.sunrise_estimates
-                self.estimates_sunset_raw = ss.sunset_estimates
-                self.measurements_sunrise_raw = ss.sunrise_measurements
-                self.measurements_sunset_raw = ss.sunset_measurements
-            if matrix == 'filled':
-                ss.run_optimizer(data=self.data_matrix)
-                self.estimates_sunrise_filled = ss.sunrise_estimates
-                self.estimates_sunset_filled = ss.sunset_estimates
-                self.measurements_sunrise_filled = ss.sunrise_measurements
-                self.measurements_sunset_filled = ss.sunset_measurements
-        return
-

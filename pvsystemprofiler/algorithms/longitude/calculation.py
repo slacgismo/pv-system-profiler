@@ -1,3 +1,4 @@
+import numpy as np
 """ Longitude Direct Calculation Module
 This module contains the function for the direct calculation of system
 longitude based on estimated local solar noon and timezone offset from UTC.
@@ -5,6 +6,13 @@ The same exact equation is used for "Hadghdadi" and "Duffie" approaches. See
 `pvsystemprofiler.utilities.equation_of_time` for equation of time (EoT)
 calculations.
 """
+
+
+def calculate_longitude(eot, solarnoon, days, gmt_offset):
+    sn = 60 * solarnoon[days]  # convert hours to minutes
+    eot_days = eot[days]
+    estimates = calc_lon(sn, eot_days, gmt_offset)
+    return np.nanmedian(estimates)
 
 
 def calc_lon(solar_noon, eot, gmt_offset):
