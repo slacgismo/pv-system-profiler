@@ -120,12 +120,21 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
 
     if input_site_list != 'None':
         input_site_list_df = pd.read_csv(input_site_list, index_col=0)
+        print(input_site_list_df.head())
         site_list = input_site_list_df['site'].apply(str)
         site_list = site_list.tolist()
-        file_list = list(set(site_list) & set(file_list))
+        # print('in', file_list)
+        # print('in', site_list)
+        if file_list:
+            file_list = list(set(site_list) & set(file_list))
+        else:
+            file_list = list(set(site_list))
+        # print('out', file_list)
+        # print('out', site_list)
         if time_shift_inspection:
             manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
             file_list = list(set(file_list) & set(manually_checked_sites))
+        print('out', file_list)
     file_list.sort()
 
     if n_files != 'all':
@@ -172,7 +181,7 @@ if __name__ == '__main__':
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
     time_shift_inspection = True if str(sys.argv[7]) == 'True' else False
-    fix_time_shifts = True if str(sys.argv[8]) =='True' else False
+    fix_time_shifts = True if str(sys.argv[8]) == 'True' else False
     time_zone_correction = True if str(sys.argv[9]) == 'True' else False
     check_json = True if str(sys.argv[10]) == 'True' else False
     system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
