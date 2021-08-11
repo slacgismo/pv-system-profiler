@@ -24,7 +24,8 @@ from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 from pvsystemprofiler.scripts.modules.script_functions import extract_sys_parameters
-
+from solardatatools import DataHandler
+from solardatatools.dataio import load_cassandra_data
 
 def load_ground_data(df_loc):
     df = pd.read_csv(df_loc, index_col=0)
@@ -52,7 +53,13 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
         partial_df['manual_time_shift'] = np.nan
 
     ll = len(power_column_label)
-    cols = df.columns
+    try:
+        cols = df.columns
+    except:
+        cols = []
+        dh = DataHandler(df, convert_to_ts=True)
+        for el in dh.keys:
+            cols.append(el[-1])
 
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
@@ -95,9 +102,11 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
     site_run_time = 0
     total_time = 0
-
-    full_site_list = enumerate_files(s3_location)
-    full_site_list = filename_to_siteid(full_site_list)
+    if s3_location is not None:
+        full_site_list = enumerate_files(s3_location)
+        full_site_list = filename_to_siteid(full_site_list)
+    else:
+        full_site_list = []
 
     previously_checked_site_list = get_checked_sites(full_df)
     file_list = list(set(full_site_list) - set(previously_checked_site_list))
@@ -134,8 +143,11 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
             site_id = file_id[:i]
         else:
             site_id = file_id.split('.')[0]
+        try:
+            df = load_generic_data(s3_location, file_label, site_id)
+        except:
+            df = load_cassandra_data(site_id)
 
-        df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
                                       fix_time_shifts, time_zone_correction, json_file_dict)
         if not partial_df.empty:
@@ -180,15 +192,18 @@ if __name__ == '__main__':
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
 
     if file_label == 'None':
         file_label = ''
-
+    if system_summary_file == 'None':
+        system_summary_file = None
     full_df = resume_run(output_file)
+    print('ground_data', system_summary_file)
     if system_summary_file is not None:
         df_ground_data = load_ground_data(system_summary_file)
-
+    else:
+        df_ground_data = None
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
