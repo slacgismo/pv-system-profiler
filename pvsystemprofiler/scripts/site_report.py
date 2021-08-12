@@ -38,7 +38,7 @@ def load_ground_data(df_loc):
 
 
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, json_file_dict=None):
+                     time_zone_correction, json_file_dict=None, data_type = 'a'):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
@@ -52,9 +52,9 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
         partial_df['manual_time_shift'] = np.nan
 
     ll = len(power_column_label)
-    try:
+    if data_type == 'a':
         cols = df.columns
-    except:
+    elif data_type == 'b':
         cols = []
         dh = DataHandler(df, convert_to_ts=True)
         for el in dh.keys:
@@ -63,12 +63,14 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            if system_id in df_ground_data['system'].tolist() or df_ground_data is None:
+            if df_ground_data is None or system_id in df_ground_data['system'].tolist():
                 sys_tag = power_column_label + system_id
 
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
+                else:
+                    manual_time_shift = None
 
                 dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
                                                             time_zone_correction)
@@ -120,21 +122,15 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
 
     if input_site_list != 'None':
         input_site_list_df = pd.read_csv(input_site_list, index_col=0)
-        print(input_site_list_df.head())
         site_list = input_site_list_df['site'].apply(str)
         site_list = site_list.tolist()
-        # print('in', file_list)
-        # print('in', site_list)
         if file_list:
             file_list = list(set(site_list) & set(file_list))
         else:
             file_list = list(set(site_list))
-        # print('out', file_list)
-        # print('out', site_list)
         if time_shift_inspection:
             manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
             file_list = list(set(file_list) & set(manually_checked_sites))
-        print('out', file_list)
     file_list.sort()
 
     if n_files != 'all':
@@ -149,15 +145,17 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
         if file_label != '':
             i = file_id.find(file_label)
             site_id = file_id[:i]
-        else:
-            site_id = file_id.split('.')[0]
+        # else:
+        site_id = file_id.split('.')[0]
         try:
             df = load_generic_data(s3_location, file_label, site_id)
-        except:
+            data_type = 'a'
+        except TypeError:
             df = load_cassandra_data(site_id)
+            data_type = 'b'
 
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, json_file_dict)
+                                      fix_time_shifts, time_zone_correction, json_file_dict, data_type)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
