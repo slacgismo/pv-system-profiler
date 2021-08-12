@@ -52,9 +52,11 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 # print(site_id, system_id)
                 i += 1
                 sys_tag = power_column_label + system_id
-
-                real_latitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'latitude'])
-
+                if df_ground_data is not None:
+                    real_latitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'latitude'])
+                else:
+                    real_latitude = None
+                    
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])

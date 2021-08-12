@@ -52,11 +52,14 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
             if system_id in df_ground_data['system'].tolist():
                 i += 1
                 sys_tag = power_column_label + system_id
+                if df_ground_data is not None:
+                    real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
+                    gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
+                else:
+                    real_longitude = None
+                    gmt_offset = None
 
-                real_longitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'longitude'])
-                gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
-
-                if time_shift_inspection:
+            if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
                 else:
