@@ -365,19 +365,6 @@ def filename_to_siteid(sites):
     return site_list
 
 
-def string_to_boolean(value):
-    """
-    Intended to be used when getting values from a terminal using `sys.argv`. Transforms `True` and `False` strings into
-    boolean attributes
-    :param value: string, `True` or `False`.
-    :return: boolean equivalent of string
-    """
-    if value in ['True', 'true']:
-        return True
-    elif value in ['False', 'false']:
-        return False
-
-
 def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_to_ts):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
