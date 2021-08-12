@@ -201,8 +201,8 @@ if __name__ == '__main__':
     :param system_summary_file: Full path to csv file containing manual time shift flag for each system, None if no file
     provided. 
     '''
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     full_df = resume_run(output_file)
 

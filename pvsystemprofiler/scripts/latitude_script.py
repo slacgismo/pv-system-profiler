@@ -19,7 +19,6 @@ from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
 from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
 from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
-from pvsystemprofiler.scripts.modules.script_functions import string_to_boolean
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.latitude_study import LatitudeStudy
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
@@ -151,17 +150,17 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
 
 
 if __name__ == '__main__':
-    input_site_file = str(sys.argv[1])
+    input_site_file = str(sys.argv[1]) if str(sys.argv[1]) != 'None' else None
     n_files = str(sys.argv[2])
-    s3_location = str(sys.argv[3])
-    file_label = str(sys.argv[4])
+    s3_location = str(sys.argv[3]) if str(sys.argv[3]) != 'None' else None
+    file_label = str(sys.argv[4]) if str(sys.argv[4]) != 'None' else ''
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
-    time_shift_inspection = str(sys.argv[7])
-    fix_time_shifts = string_to_boolean(str(sys.argv[8]))
-    time_zone_correction = string_to_boolean(str(sys.argv[9]))
-    check_json = string_to_boolean(str(sys.argv[10]))
-    system_summary_file = str(sys.argv[11])
+    time_shift_inspection = True if str(sys.argv[7]) == 'True' else False
+    fix_time_shifts = True if str(sys.argv[8]) == 'True' else False
+    time_zone_correction = True if str(sys.argv[9]) == 'True' else False
+    check_json = True if str(sys.argv[10]) == 'True' else False
+    system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
 
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
