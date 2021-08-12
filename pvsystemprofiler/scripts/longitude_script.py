@@ -184,13 +184,17 @@ if __name__ == '__main__':
         file_label = ''
 
     full_df = resume_run(output_file)
-    df_ground_data = pd.read_csv(system_summary_file, index_col=0)
-    df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
-    df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
-    df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
-    df_ground_data['site'] = df_ground_data['site'].apply(str)
-    df_ground_data['system'] = df_ground_data['system'].apply(str)
-    df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
+
+    if system_summary_file is not None:
+        df_ground_data = pd.read_csv(system_summary_file, index_col=0)
+        df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
+        df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
+        df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
+        df_ground_data['site'] = df_ground_data['site'].apply(str)
+        df_ground_data['system'] = df_ground_data['system'].apply(str)
+        df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
+    else:
+        df_ground_data = None
 
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
