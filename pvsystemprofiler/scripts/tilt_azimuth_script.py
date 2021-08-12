@@ -79,6 +79,9 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
+                else:
+                    manual_time_shift = 0
+
                 dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
                                                             time_zone_correction, convert_to_ts=False)
 
@@ -219,6 +222,6 @@ if __name__ == '__main__':
         df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
     else:
         df_ground_data = None
-        
+
     main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
          time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq)

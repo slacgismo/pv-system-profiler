@@ -58,6 +58,8 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                 if time_shift_inspection:
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
+                else:
+                    manual_time_shift = 0
 
                 dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
                                                             time_zone_correction, convert_to_ts=False)
