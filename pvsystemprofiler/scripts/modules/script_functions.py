@@ -378,7 +378,7 @@ def string_to_boolean(value):
         return False
 
 
-def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc):
+def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_to_ts):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
     :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
@@ -388,7 +388,8 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc):
     :param tzc: Boolean. Time zone correction parameter in `run_pipeline`
     :return: Boolean. True if passes pipeline, otherwise False.
     """
-    dh = DataHandler(df_in)
+
+    dh = DataHandler(df_in, convert_to_ts=convert_to_ts)
     if manual_time_shift == 1:
         dh.fix_dst()
     try:

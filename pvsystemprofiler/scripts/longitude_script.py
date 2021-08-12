@@ -12,7 +12,7 @@ from time import time
 # TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
-from solardatatools import DataHandler
+from solardatatools.utilities import progress
 from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_pipeline
 from pvsystemprofiler.scripts.modules.script_functions import resume_run
 from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
@@ -61,7 +61,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
                 dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
-                                                            time_zone_correction)
+                                                            time_zone_correction, convert_to_ts=False)
 
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)

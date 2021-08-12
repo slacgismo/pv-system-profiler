@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from time import time
+
 # TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[2]
 sys.path.append(str(filepath))
@@ -26,6 +27,7 @@ from pvsystemprofiler.scripts.modules.script_functions import extract_sys_parame
 from solardatatools import DataHandler
 from solardatatools.dataio import load_cassandra_data
 
+
 def load_ground_data(df_loc):
     df = pd.read_csv(df_loc, index_col=0)
     df = df[~df['time_shift_manual'].isnull()]
@@ -38,7 +40,7 @@ def load_ground_data(df_loc):
 
 
 def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, json_file_dict=None, data_type = 'a'):
+                     time_zone_correction, json_file_dict=None, convert_to_ts=False, data_type='a'):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
@@ -56,7 +58,7 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
         cols = df.columns
     elif data_type == 'b':
         cols = []
-        dh = DataHandler(df, convert_to_ts=True)
+        dh = DataHandler(df, convert_to_ts=convert_to_ts)
         for el in dh.keys:
             cols.append(el[-1])
 
@@ -70,10 +72,10 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
                     manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
                                                                'time_shift_manual'].values[0])
                 else:
-                    manual_time_shift = None
+                    manual_time_shift = 0
 
                 dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
-                                                            time_zone_correction)
+                                                            time_zone_correction, convert_to_ts)
 
                 if passes_pipeline:
                     results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
@@ -150,12 +152,13 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
         try:
             df = load_generic_data(s3_location, file_label, site_id)
             data_type = 'a'
+            convert_to_ts = False
         except TypeError:
             df = load_cassandra_data(site_id)
             data_type = 'b'
-
+            convert_to_ts = True
         partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, json_file_dict, data_type)
+                                      fix_time_shifts, time_zone_correction, json_file_dict, convert_to_ts, data_type)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -167,7 +170,6 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
     if len(file_list) != 0:
         progress(len(file_list), len(file_list), msg, bar_length=20)
-    print('finished')
     return
 
 
