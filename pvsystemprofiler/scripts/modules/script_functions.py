@@ -384,8 +384,9 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_t
     :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
     :param df_in: Dataframe containing site input power signal.
     :param sys_tag: Dataframe column label identifying an input signal, i.e. ac_power_01 ar dc_current_02.
-    :param fts: Boolean. Fix time shift parameter in `run_pipeline`
+    :param fts: Boolean. Fix time shift parameter in `run_pipeline`.
     :param tzc: Boolean. Time zone correction parameter in `run_pipeline`
+    :param convert_to_ts: Boolean. Convert data frame to time series.
     :return: Boolean. True if passes pipeline, otherwise False.
     """
 
