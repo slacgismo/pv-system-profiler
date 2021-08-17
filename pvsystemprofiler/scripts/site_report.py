@@ -28,7 +28,7 @@ from solardatatools import DataHandler
 from solardatatools.dataio import load_cassandra_data
 
 
-def load_ground_data(df_loc):
+def load_system_metadata(df_loc):
     df = pd.read_csv(df_loc, index_col=0)
     df = df[~df['time_shift_manual'].isnull()]
     df['time_shift_manual'] = df['time_shift_manual'].apply(int)
@@ -39,7 +39,7 @@ def load_ground_data(df_loc):
     return df
 
 
-def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
+def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
                      time_zone_correction, json_file_dict=None, convert_to_ts=False, data_type='a'):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
@@ -65,11 +65,11 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            if df_ground_data is None or system_id in df_ground_data['system'].tolist():
+            if df_system_metadata is None or system_id in df_system_metadata['system'].tolist():
                 sys_tag = power_column_label + system_id
 
                 if time_shift_inspection:
-                    manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
+                    manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
                                                                'time_shift_manual'].values[0])
                 else:
                     manual_time_shift = 0
@@ -101,8 +101,8 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     return partial_df
 
 
-def main(input_site_list, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
+def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, ext='.csv'):
     site_run_time = 0
     total_time = 0
     if s3_location is not None:
@@ -131,7 +131,7 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
         else:
             file_list = list(set(site_list))
         if time_shift_inspection:
-            manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
+            manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
             file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
 
@@ -157,7 +157,7 @@ def main(input_site_list, df_ground_data, n_files, s3_location, file_label, powe
             df = load_cassandra_data(site_id)
             data_type = 'b'
             convert_to_ts = True
-        partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
+        partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
                                       fix_time_shifts, time_zone_correction, json_file_dict, convert_to_ts, data_type)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
@@ -207,8 +207,8 @@ if __name__ == '__main__':
     full_df = resume_run(output_file)
 
     if system_summary_file is not None:
-        df_ground_data = load_ground_data(system_summary_file)
+        df_system_metadata = load_system_metadata(system_summary_file)
     else:
-        df_ground_data = None
-    main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+        df_system_metadata = None
+    main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)

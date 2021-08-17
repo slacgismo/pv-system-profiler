@@ -56,7 +56,7 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
     return p_df, runs_ta_estimation
 
 
-def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
+def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
                      time_zone_correction, cp, tq):
     ll = len(power_column_label)
     cols = df.columns
@@ -65,20 +65,20 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     for col_label in cols:
         if col_label.find(power_column_label) != -1:
             system_id = col_label[ll:]
-            if system_id in df_ground_data['system'].tolist():
+            if system_id in df_system_metadata['system'].tolist():
                 i += 1
                 sys_tag = power_column_label + system_id
-                gmt_offset = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'gmt_offset'])
-                longitude_input = float(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                           'estimated_longitude'])
-                real_latitude = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'latitude'])
-                real_tilt = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'tilt'])
-                real_azimuth = float(df_ground_data.loc[df_ground_data['system'] == system_id, 'azimuth'])
-                latitude_input = float(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                          'estimated_latitude'])
+                gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
+                longitude_input = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
+                                                               'estimated_longitude'])
+                real_latitude = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'latitude'])
+                real_tilt = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'tilt'])
+                real_azimuth = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'azimuth'])
+                latitude_input = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
+                                                              'estimated_latitude'])
                 if time_shift_inspection:
-                    manual_time_shift = int(df_ground_data.loc[df_ground_data['system'] == system_id,
-                                                               'time_shift_manual'].values[0])
+                    manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
+                                                                   'time_shift_manual'].values[0])
                 else:
                     manual_time_shift = 0
 
@@ -115,8 +115,8 @@ def evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift
     return partial_df
 
 
-def main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq):
+def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq):
     site_run_time = 0
     total_time = 0
 
@@ -138,7 +138,7 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
         input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
-        manually_checked_sites = df_ground_data['site_file'].apply(str).tolist()
+        manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
         file_list = list(set(site_list) & set(file_list) & set(manually_checked_sites))
 
     file_list.sort()
@@ -158,7 +158,7 @@ def main(input_site_file, df_ground_data, n_files, s3_location, file_label, powe
             site_id = file_id.split('.')[0]
 
         df = load_generic_data(s3_location, file_label, site_id)
-        partial_df = evaluate_systems(df, df_ground_data, power_column_label, site_id, time_shift_inspection,
+        partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
                                       fix_time_shifts, time_zone_correction, cp, tq)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
@@ -213,15 +213,15 @@ if __name__ == '__main__':
 
     full_df = resume_run(output_file)
     if system_summary_file is not None:
-        df_ground_data = pd.read_csv(system_summary_file, index_col=0)
-        df_ground_data = df_ground_data[~df_ground_data['time_shift_manual'].isnull()]
-        df_ground_data['time_shift_manual'] = df_ground_data['time_shift_manual'].apply(int)
-        df_ground_data = df_ground_data[df_ground_data['time_shift_manual'].isin([0, 1])]
-        df_ground_data['site'] = df_ground_data['site'].apply(str)
-        df_ground_data['system'] = df_ground_data['system'].apply(str)
-        df_ground_data['site_file'] = df_ground_data['site'].apply(lambda x: str(x) + '_20201006_composite')
+        df_system_metadata = pd.read_csv(system_summary_file, index_col=0)
+        df_system_metadata = df_system_metadata[~df_system_metadata['time_shift_manual'].isnull()]
+        df_system_metadata['time_shift_manual'] = df_system_metadata['time_shift_manual'].apply(int)
+        df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
+        df_system_metadata['site'] = df_system_metadata['site'].apply(str)
+        df_system_metadata['system'] = df_system_metadata['system'].apply(str)
+        df_system_metadata['site_file'] = df_system_metadata['site'].apply(lambda x: str(x) + '_20201006_composite')
     else:
-        df_ground_data = None
+        df_system_metadata = None
 
-    main(input_site_file, df_ground_data, n_files, s3_location, file_label, power_column_label, full_df, output_file,
-         time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq)
+    main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq)
