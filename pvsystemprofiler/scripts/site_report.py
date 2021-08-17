@@ -185,6 +185,7 @@ if __name__ == '__main__':
     time_zone_correction = True if str(sys.argv[9]) == 'True' else False
     check_json = True if str(sys.argv[10]) == 'True' else False
     system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
+    gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.

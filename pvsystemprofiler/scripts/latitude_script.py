@@ -1,8 +1,8 @@
 """ Latitude run script
 This run script allows to run the latitude_study for multiple sites. The site ids to be evaluated can be provided in
  a csv file. Alternatively, the path to a folder containing the input signals of the sites in separate csv files can be
- provided.  The script provides the option to provided the full path to csv file containing latitude and gmt offset for
- each system for comparison.
+ provided.  The script provides the option to provided the full path to csv file containing latitude for each system for
+ comparison.
 """
 import sys
 from pathlib import Path
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     time_zone_correction = True if str(sys.argv[9]) == 'True' else False
     check_json = True if str(sys.argv[10]) == 'True' else False
     system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
-
+    gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
-    :param system_summary_file: Full path to csv file containing latitude and gmt offset for each system. 
+    :param system_summary_file: Full path to csv file containing latitude for each system. 
     '''
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')

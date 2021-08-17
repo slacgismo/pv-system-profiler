@@ -57,7 +57,7 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
 
 
 def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, cp, tq):
+                     time_zone_correction, cp, tq, gmt):
     ll = len(power_column_label)
     cols = df.columns
     i = 0
@@ -68,7 +68,6 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
             if system_id in df_system_metadata['system'].tolist():
                 i += 1
                 sys_tag = power_column_label + system_id
-                gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
                 longitude_input = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
                                                                'estimated_longitude'])
                 real_latitude = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'latitude'])
@@ -76,6 +75,12 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
                 real_azimuth = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'azimuth'])
                 latitude_input = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
                                                               'estimated_latitude'])
+
+                if gmt_offset is not None:
+                    gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
+                else:
+                    gmt_offset = gmt
+
                 if time_shift_inspection:
                     manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
                                                                    'time_shift_manual'].values[0])
@@ -116,7 +121,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
 
 
 def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq):
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset):
     site_run_time = 0
     total_time = 0
 
@@ -159,7 +164,7 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, cp, tq)
+                                      fix_time_shifts, time_zone_correction, cp, tq, gmt_offset)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -187,6 +192,8 @@ if __name__ == '__main__':
     time_zone_correction = True if str(sys.argv[9]) == 'True' else False
     check_json = True if str(sys.argv[10]) == 'True' else False
     system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
+    gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
+
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -224,4 +231,4 @@ if __name__ == '__main__':
         df_system_metadata = None
 
     main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq)
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset)

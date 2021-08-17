@@ -41,7 +41,7 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
 
 
 def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction):
+                     time_zone_correction, gmt):
     ll = len(power_column_label)
     cols = df.columns
     i = 0
@@ -55,19 +55,22 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
                 if df_system_metadata is not None:
                     real_longitude = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
                                                                   'longitude'])
-                    gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
                 else:
                     real_longitude = None
-                    gmt_offset = None
+
+                if gmt_offset is not None:
+                    gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
+                else:
+                    gmt_offset = gmt
 
                 if time_shift_inspection:
-                        manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                                       'time_shift_manual'].values[0])
-                    else:
-                        manual_time_shift = 0
+                    manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
+                                                                   'time_shift_manual'].values[0])
+                else:
+                    manual_time_shift = 0
 
-                    dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
-                                                                time_zone_correction, convert_to_ts=False)
+                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
+                                                            time_zone_correction, convert_to_ts=False)
 
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
@@ -97,7 +100,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
 
 
 def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json):
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, gmt_offset):
     site_run_time = 0
     total_time = 0
 
@@ -140,7 +143,7 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction)
+                                      fix_time_shifts, time_zone_correction, gmt_offset)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -168,6 +171,7 @@ if __name__ == '__main__':
     time_zone_correction = True if str(sys.argv[9]) == 'True' else False
     check_json = True if str(sys.argv[10]) == 'True' else False
     system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
+    gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
 
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
@@ -204,4 +208,4 @@ if __name__ == '__main__':
         df_system_metadata = None
 
     main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json)
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, gmt_offset)
