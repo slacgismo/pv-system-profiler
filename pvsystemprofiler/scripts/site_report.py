@@ -54,9 +54,9 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
         partial_df['manual_time_shift'] = np.nan
 
     ll = len(power_column_label)
-    if data_type == 'a':
+    if data_type == 'aws':
         cols = df.columns
-    elif data_type == 'b':
+    elif data_type == 'cassandra':
         cols = []
         dh = DataHandler(df, convert_to_ts=convert_to_ts)
         for el in dh.keys:
@@ -150,14 +150,12 @@ def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, 
             site_id = file_id[:i]
         # else:
         site_id = file_id.split('.')[0]
-        try:
+
+        if data_type == :
             df = load_generic_data(s3_location, file_label, site_id)
-            data_type = 'a'
-            convert_to_ts = False
         except TypeError:
             df = load_cassandra_data(site_id)
-            data_type = 'b'
-            convert_to_ts = True
+
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
                                       fix_time_shifts, time_zone_correction, json_file_dict, convert_to_ts, data_type)
         if not partial_df.empty:
