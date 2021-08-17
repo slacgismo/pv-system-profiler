@@ -57,7 +57,7 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
 
 
 def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, cp, tq, gmt):
+                     time_zone_correction, cp, tq, gmt, convert_to_ts):
     ll = len(power_column_label)
     cols = df.columns
     i = 0
@@ -88,7 +88,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
                     manual_time_shift = 0
 
                 dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, fix_time_shifts,
-                                                            time_zone_correction, convert_to_ts=False)
+                                                            time_zone_correction, convert_to_ts=convert_to_ts)
 
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
@@ -121,7 +121,8 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
 
 
 def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset):
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset,
+         convert_to_ts):
     site_run_time = 0
     total_time = 0
 
@@ -164,7 +165,7 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, cp, tq, gmt_offset)
+                                      fix_time_shifts, time_zone_correction, cp, tq, gmt_offset, convert_to_ts)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -191,10 +192,12 @@ if __name__ == '__main__':
     fix_time_shifts = True if str(sys.argv[8]) == 'True' else False
     time_zone_correction = True if str(sys.argv[9]) == 'True' else False
     check_json = True if str(sys.argv[10]) == 'True' else False
-    system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
-    gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
+    convert_to_ts = True if str(sys.argv[11]) == 'True' else False
+    system_summary_file = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
+    gmt_offset = str(sys.argv[13]) if str(sys.argv[13]) != 'None' else None
+    data_type = str(sys.argv[14])
 
-    '''
+'''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
     :param s3_location: Absolute path to s3 location of files.
@@ -231,4 +234,5 @@ if __name__ == '__main__':
         df_system_metadata = None
 
     main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset)
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset,
+         convert_to_ts)
