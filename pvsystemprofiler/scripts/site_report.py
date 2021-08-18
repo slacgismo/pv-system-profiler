@@ -180,13 +180,12 @@ if __name__ == '__main__':
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
     time_shift_inspection = True if str(sys.argv[7]) == 'True' else False
-    fix_time_shifts = True if str(sys.argv[8]) == 'True' else False
-    time_zone_correction = True if str(sys.argv[9]) == 'True' else False
-    check_json = True if str(sys.argv[10]) == 'True' else False
-    convert_to_ts = True if str(sys.argv[11]) == 'True' else False
-    system_summary_file = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
-    gmt_offset = str(sys.argv[13]) if str(sys.argv[13]) != 'None' else None
-    data_type = str(sys.argv[14])
+    time_zone_correction = True if str(sys.argv[8]) == 'True' else False
+    check_json = True if str(sys.argv[9]) == 'True' else False
+    convert_to_ts = True if str(sys.argv[10]) == 'True' else False
+    system_summary_file = str(sys.argv[11]) if str(sys.argv[12]) != 'None' else None
+    gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
+    data_type = str(sys.argv[13])
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -196,7 +195,6 @@ if __name__ == '__main__':
     :param output_file: Absolute path to csv file containing report results.
     :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
     when running the pipeline.
-    :param fix_time_shifts: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
@@ -210,8 +208,13 @@ if __name__ == '__main__':
 
     if system_summary_file is not None:
         df_system_metadata = load_system_metadata(system_summary_file)
+        if 'time_shift_manual' in df_system_metadata.columns:
+            fix_time_shifts = True
+        else:
+            fix_time_shifts = False
     else:
         df_system_metadata = None
+
     main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, convert_to_ts,
          data_type)

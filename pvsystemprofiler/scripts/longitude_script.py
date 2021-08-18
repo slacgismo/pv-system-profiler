@@ -168,13 +168,12 @@ if __name__ == '__main__':
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
     time_shift_inspection = True if str(sys.argv[7]) == 'True' else False
-    fix_time_shifts = True if str(sys.argv[8]) == 'True' else False
-    time_zone_correction = True if str(sys.argv[9]) == 'True' else False
-    check_json = True if str(sys.argv[10]) == 'True' else False
-    convert_to_ts = True if str(sys.argv[11]) == 'True' else False
-    system_summary_file = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
-    gmt_offset = str(sys.argv[13]) if str(sys.argv[13]) != 'None' else None
-    data_type = str(sys.argv[14])
+    time_zone_correction = True if str(sys.argv[8]) == 'True' else False
+    check_json = True if str(sys.argv[9]) == 'True' else False
+    convert_to_ts = True if str(sys.argv[10]) == 'True' else False
+    system_summary_file = str(sys.argv[11]) if str(sys.argv[12]) != 'None' else None
+    gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
+    data_type = str(sys.argv[13])
 
 '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
@@ -185,7 +184,6 @@ if __name__ == '__main__':
     :param output_file: Absolute path to csv file containing report results.
     :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
     when running the pipeline.
-    :param fix_time_shifts: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
@@ -201,12 +199,16 @@ if __name__ == '__main__':
 
     if system_summary_file is not None:
         df_system_metadata = pd.read_csv(system_summary_file, index_col=0)
-        df_system_metadata = df_system_metadata[~df_system_metadata['time_shift_manual'].isnull()]
-        df_system_metadata['time_shift_manual'] = df_system_metadata['time_shift_manual'].apply(int)
-        df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
         df_system_metadata['site'] = df_system_metadata['site'].apply(str)
         df_system_metadata['system'] = df_system_metadata['system'].apply(str)
         df_system_metadata['site_file'] = df_system_metadata['site'].apply(lambda x: str(x) + '_20201006_composite')
+        if 'time_shift_manual' in df_system_metadata.columns:
+            fix_time_shifts = True
+            df_system_metadata = df_system_metadata[~df_system_metadata['time_shift_manual'].isnull()]
+            df_system_metadata['time_shift_manual'] = df_system_metadata['time_shift_manual'].apply(int)
+            df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
+        else:
+            fix_time_shifts = False
     else:
         df_system_metadata = None
 
