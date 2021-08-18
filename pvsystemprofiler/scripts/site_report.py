@@ -40,7 +40,7 @@ def load_system_metadata(df_loc):
 
 
 def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, json_file_dict=None, convert_to_ts=False, data_type='a'):
+                     time_zone_correction, json_file_dict=None, convert_to_ts=False, data_type='aws'):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
@@ -70,7 +70,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
 
                 if time_shift_inspection:
                     manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                               'time_shift_manual'].values[0])
+                                                                   'time_shift_manual'].values[0])
                 else:
                     manual_time_shift = 0
 
@@ -103,7 +103,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
 
 def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, convert_to_ts,
-         ext='.csv'):
+         data_type, ext='.csv'):
     site_run_time = 0
     total_time = 0
     if s3_location is not None:
@@ -151,9 +151,9 @@ def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, 
         # else:
         site_id = file_id.split('.')[0]
 
-        if data_type == :
+        if data_type == 'aws':
             df = load_generic_data(s3_location, file_label, site_id)
-        except TypeError:
+        if data_type == 'cassandra':
             df = load_cassandra_data(site_id)
 
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
@@ -213,4 +213,5 @@ if __name__ == '__main__':
     else:
         df_system_metadata = None
     main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, convert_to_ts)
+         output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, convert_to_ts,
+         data_type)
