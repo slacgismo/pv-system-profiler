@@ -127,7 +127,7 @@ def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, 
         input_site_list_df = pd.read_csv(input_site_list, index_col=0)
         site_list = input_site_list_df['site'].apply(str)
         site_list = site_list.tolist()
-        if file_list:
+        if len(file_list) != 0:
             file_list = list(set(site_list) & set(file_list))
         else:
             file_list = list(set(site_list))
