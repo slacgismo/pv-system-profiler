@@ -53,6 +53,6 @@ def get_config(part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=No
                                 scripts_location=scripts_location, conda_env=conda_env, pcid=pcid, cts=cts, s3l=s3l,
                                 n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
                                 time_zone_correction=time_zone_correction, check_json=check_json, sup_file=sup_file,
-                                data_type=data_type, gmt=gmt_offset)
+                                dt=data_type, gmt=gmt_offset)
     else:
         return ConfigPartitions(ifl=ifl, skf=skf, au=au, ain=ain, ar=ar, ac=ac, gof=gof, god=god)

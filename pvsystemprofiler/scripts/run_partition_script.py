@@ -108,7 +108,8 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                           scripts_location=script_location, conda_env=conda_environment, pcid=power_column_id,
                           cts=convert_to_ts, s3l=s3_location, n_files=n_files, file_label=file_label,
                           fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
-                          check_json=check_json, sup_file=supplementary_file, dt=data_type, gmt=gmt_offset)
+                          check_json=check_json, sup_file=supplementary_file, data_type=data_type,
+                          gmt_offset=gmt_offset)
         # add partition to list
         partitions.append(part)
         create_partition(part)
