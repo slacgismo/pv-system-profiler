@@ -23,7 +23,7 @@ from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.tilt_azimuth_study import TiltAzimuthStudy
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
-
+from solardatatools.dataio import load_cassandra_data
 
 def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim, gmt_offset,
                                cp, tq):
@@ -171,7 +171,11 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
         else:
             site_id = file_id.split('.')[0]
 
-        df = load_generic_data(s3_location, file_label, site_id)
+         if data_type == 'aws':
+            df = load_generic_data(s3_location, file_label, site_id)
+        if data_type == 'cassandra':
+            df = load_cassandra_data(site_id)
+
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
                                       fix_time_shifts, time_zone_correction, cp, tq, gmt_offset, convert_to_ts,
                                       data_type)
