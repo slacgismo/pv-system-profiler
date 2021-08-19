@@ -60,7 +60,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
                      time_zone_correction, cp, tq, gmt, convert_to_ts, data_type):
     ll = len(power_column_label)
 
-    cols = df.columns.  if data_type == 'aws':
+    if data_type == 'aws':
         cols = df.columns
     elif data_type == 'cassandra':
         cols = []
@@ -171,9 +171,9 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
         else:
             site_id = file_id.split('.')[0]
 
-         if data_type == 'aws':
+        if data_type == 'aws':
             df = load_generic_data(s3_location, file_label, site_id)
-        if data_type == 'cassandra':
+        elif data_type == 'cassandra':
             df = load_cassandra_data(site_id)
 
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
@@ -223,8 +223,8 @@ if __name__ == '__main__':
     :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
     '''
 
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
     # threshold values
     cp = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
     tq = cp

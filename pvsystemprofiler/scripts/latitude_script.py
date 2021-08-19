@@ -146,7 +146,7 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
             site_id = file_id.split('.')[0]
         if data_type == 'aws':
             df = load_generic_data(s3_location, file_label, site_id)
-        if data_type == 'cassandra':
+        elif data_type == 'cassandra':
             df = load_cassandra_data(site_id)
 
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
