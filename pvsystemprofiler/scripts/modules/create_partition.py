@@ -25,7 +25,7 @@ def create_partition(partition):
     ssh_username = partition.aws_username
     ssh_key_file = partition.ssh_key_file
     power_column_id = partition.power_column_id
-    time_shift_inspection = partition.time_shift_inspection
+    convert_to_ts = partition.convert_to_ts
     s3_location = partition.s3_location
     n_files = partition.n_files
     file_label = partition.file_label
@@ -33,7 +33,8 @@ def create_partition(partition):
     time_zone_correction = partition.time_zone_correction
     check_json = partition.check_json
     supplementary_file = partition.supplementary_file
-
+    data_type = partition.data_type
+    gmt_offset = partition.gmt_offset
     # prepare python command to run local partition
     # extract conda installation folder from local .bashrc
     grep_conda = "grep '__conda_setup=' .bashrc"
@@ -67,13 +68,15 @@ def create_partition(partition):
                     + local_input_file + ' '
                     + local_output_file + ' '
                     + power_column_id + ' '
-                    + time_shift_inspection + ' '
+                    + convert_to_ts + ' '
                     + s3_location + ' '
                     + n_files + ' '
                     + file_label + ' '
                     + fix_time_shifts + ' '
                     + time_zone_correction + ' '
                     + check_json + ' '
+                    + gmt_offset + ' '
+                    + data_type + ' '
                     + supplementary_file + ' '
                     + python_command
                     ]

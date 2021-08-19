@@ -179,7 +179,7 @@ if __name__ == '__main__':
     file_label = str(sys.argv[4]) if str(sys.argv[4]) != 'None' else ''
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
-    time_shift_inspection = True if str(sys.argv[7]) == 'True' else False
+    fix_time_shifts = True if str(sys.argv[7]) == 'True' else False
     time_zone_correction = True if str(sys.argv[8]) == 'True' else False
     check_json = True if str(sys.argv[9]) == 'True' else False
     convert_to_ts = True if str(sys.argv[10]) == 'True' else False
@@ -209,9 +209,9 @@ if __name__ == '__main__':
     if system_summary_file is not None:
         df_system_metadata = load_system_metadata(system_summary_file)
         if 'time_shift_manual' in df_system_metadata.columns:
-            fix_time_shifts = True
+            time_shift_inspection = True
         else:
-            fix_time_shifts = False
+            time_shift_inspection = False
     else:
         df_system_metadata = None
 

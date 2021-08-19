@@ -1,8 +1,8 @@
 class ConfigPartitions:
     def __init__(self, part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None,
                  au=None, ain=None, ar=None, ac=None, script_name=None, scripts_location=None, conda_env=None,
-                 pcid=None, gof=None, god=None, tsi=None, s3l=None, n_files=None, file_label=None, fix_time_shifts=None,
-                 time_zone_correction=None, check_json=None, sup_file=None):
+                 pcid=None, gof=None, god=None, cts=None, s3l=None, n_files=None, file_label=None, fix_time_shifts=None,
+                 time_zone_correction=None, check_json=None, sup_file=None, dt=None, gmt=None):
         self.input_file_location = ifl
         self.ssh_key_file = skf
         self.aws_username = au
@@ -27,7 +27,7 @@ class ConfigPartitions:
             self.script_name = self.scripts_location + script_name
             self.conda_environment = conda_env
             self.power_column_id = pcid
-            self.time_shift_inspection = tsi
+            self.convert_to_ts = cts
             self.public_ip_address = ip_address
             self.process_completed = False
             self.s3_location = s3l
@@ -36,6 +36,8 @@ class ConfigPartitions:
             self.fix_time_shifts = fix_time_shifts
             self.time_zone_correction = time_zone_correction
             self.check_json = check_json
+            self.data_type = dt
+            self.gmt_offset = gmt
         else:
             self.global_output_directory = god
             self.global_output_file = god + gof
@@ -43,13 +45,14 @@ class ConfigPartitions:
 
 def get_config(part_id=None, ix_0=None, ix_n=None, n_part=None, ifl=None, ofl=None, ip_address=None, skf=None, au=None,
                ain=None, ar=None, ac=None, script_name=None, scripts_location=None, conda_env=None, pcid=None, gof=None,
-               god=None, tsi=None, s3l=None, n_files=None, file_label=None, fix_time_shifts=None,
-               time_zone_correction=None, check_json=None, sup_file=None):
+               god=None, cts=None, s3l=None, n_files=None, file_label=None, fix_time_shifts=None,
+               time_zone_correction=None, check_json=None, sup_file=None, data_type=None, gmt_offset=None):
     if ix_0 is not None and ix_n is not None:
         return ConfigPartitions(part_id=part_id, ix_0=ix_0, ix_n=ix_n, n_part=n_part, ifl=ifl, ofl=ofl,
                                 ip_address=ip_address, skf=skf, au=au, ain=ain, ar=ar, ac=ac, script_name=script_name,
-                                scripts_location=scripts_location, conda_env=conda_env,  pcid=pcid, tsi=tsi, s3l=s3l,
+                                scripts_location=scripts_location, conda_env=conda_env, pcid=pcid, cts=cts, s3l=s3l,
                                 n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
-                                time_zone_correction=time_zone_correction, check_json=check_json, sup_file=sup_file)
+                                time_zone_correction=time_zone_correction, check_json=check_json, sup_file=sup_file,
+                                data_type=data_type, gmt=gmt_offset)
     else:
         return ConfigPartitions(ifl=ifl, skf=skf, au=au, ain=ain, ar=ar, ac=ac, gof=gof, god=god)

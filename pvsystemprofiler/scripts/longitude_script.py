@@ -161,13 +161,14 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
 
 
 if __name__ == '__main__':
+
     input_site_file = str(sys.argv[1]) if str(sys.argv[1]) != 'None' else None
     n_files = str(sys.argv[2])
     s3_location = str(sys.argv[3]) if str(sys.argv[3]) != 'None' else None
     file_label = str(sys.argv[4]) if str(sys.argv[4]) != 'None' else ''
     power_column_label = str(sys.argv[5])
     output_file = str(sys.argv[6])
-    time_shift_inspection = True if str(sys.argv[7]) == 'True' else False
+    fix_time_shifts = True if str(sys.argv[7]) == 'True' else False
     time_zone_correction = True if str(sys.argv[8]) == 'True' else False
     check_json = True if str(sys.argv[9]) == 'True' else False
     convert_to_ts = True if str(sys.argv[10]) == 'True' else False
@@ -203,12 +204,12 @@ if __name__ == '__main__':
         df_system_metadata['system'] = df_system_metadata['system'].apply(str)
         df_system_metadata['site_file'] = df_system_metadata['site'].apply(lambda x: str(x) + '_20201006_composite')
         if 'time_shift_manual' in df_system_metadata.columns:
-            fix_time_shifts = True
+            time_shift_inspection = True
             df_system_metadata = df_system_metadata[~df_system_metadata['time_shift_manual'].isnull()]
             df_system_metadata['time_shift_manual'] = df_system_metadata['time_shift_manual'].apply(int)
             df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
         else:
-            fix_time_shifts = False
+            time_shift_inspection = False
     else:
         df_system_metadata = None
 

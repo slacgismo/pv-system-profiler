@@ -81,8 +81,8 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
 
 def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
-         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file):
+         convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+         supplementary_file, data_type, gmt_offset):
     # number of partitions
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
@@ -106,9 +106,9 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
                           scripts_location=script_location, conda_env=conda_environment, pcid=power_column_id,
-                          tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
+                          cts=convert_to_ts, s3l=s3_location, n_files=n_files, file_label=file_label,
                           fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
-                          check_json=check_json, sup_file=supplementary_file)
+                          check_json=check_json, sup_file=supplementary_file, dt=data_type, gmt=gmt_offset)
         # add partition to list
         partitions.append(part)
         create_partition(part)
@@ -151,14 +151,15 @@ if __name__ == '__main__':
     conda_environment = str(sys.argv[4])
     file_label = str(sys.argv[5])
     power_column_id = str(sys.argv[6])
-    time_shift_inspection = str(sys.argv[7])
-    fix_time_shifts = str(sys.argv[8])
-    time_zone_correction = str(sys.argv[9])
-    check_json = str(sys.argv[10])
+    fix_time_shifts = str(sys.argv[7])
+    time_zone_correction = str(sys.argv[8])
+    check_json = str(sys.argv[9])
+    convert_to_ts = str(sys.argv[10])
     supplementary_file = str(sys.argv[11])
     aws_instance_name = str(sys.argv[12])
     s3_location = str(sys.argv[13])
-
+    gmt_offset = str(sys.argv[14])
+    data_type = str(sys.argv[15])
     """
     :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
     site file is provided.
@@ -202,10 +203,10 @@ if __name__ == '__main__':
     # create main class
     main_class = get_config(ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
-                            gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
-                            s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+                            gof=global_output_file, god=global_output_directory, cts=convert_to_ts,
+                            s3l=s3_location, n_files=n_files, file_label=file_label,
                             time_zone_correction=time_zone_correction, check_json=check_json,
-                            sup_file=supplementary_file)
+                            sup_file=supplementary_file, data_type=data_type, gmt_offset=gmt_offset)
     # collect aws instance addresses
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
     # read input site file
@@ -213,5 +214,5 @@ if __name__ == '__main__':
 
     main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
-         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file)
+         convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+         supplementary_file, data_type, gmt_offset)
