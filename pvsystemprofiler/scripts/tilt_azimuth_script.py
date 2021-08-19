@@ -57,9 +57,17 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
 
 
 def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, cp, tq, gmt, convert_to_ts):
+                     time_zone_correction, cp, tq, gmt, convert_to_ts, data_type):
     ll = len(power_column_label)
-    cols = df.columns
+
+    cols = df.columns.  if data_type == 'aws':
+        cols = df.columns
+    elif data_type == 'cassandra':
+        cols = []
+        dh = DataHandler(df, convert_to_ts=convert_to_ts)
+        for el in dh.keys:
+            cols.append(el[-1])
+
     i = 0
     partial_df = pd.DataFrame()
     for col_label in cols:
@@ -76,10 +84,10 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
                 latitude_input = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
                                                               'estimated_latitude'])
 
-                if gmt_offset is not None:
-                    gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
-                else:
+                if gmt is not None:
                     gmt_offset = gmt
+                else:
+                    gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
 
                 if time_shift_inspection:
                     manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
@@ -122,7 +130,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
 
 def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset,
-         convert_to_ts):
+         convert_to_ts, data_type):
     site_run_time = 0
     total_time = 0
 
@@ -140,7 +148,7 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
     else:
         json_file_dict = None
 
-    if input_site_file != 'None':
+    if input_site_file is not None:
         input_file_df = pd.read_csv(input_site_file, index_col=0)
         site_list = input_file_df['site'].apply(str)
         site_list = site_list.tolist()
@@ -165,7 +173,8 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
 
         df = load_generic_data(s3_location, file_label, site_id)
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
-                                      fix_time_shifts, time_zone_correction, cp, tq, gmt_offset, convert_to_ts)
+                                      fix_time_shifts, time_zone_correction, cp, tq, gmt_offset, convert_to_ts,
+                                      data_type)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -195,7 +204,7 @@ if __name__ == '__main__':
     system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
     gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
     data_type = str(sys.argv[13])
-'''
+    '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
     :param s3_location: Absolute path to s3 location of files.
@@ -215,7 +224,7 @@ if __name__ == '__main__':
     # threshold values
     cp = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
     tq = cp
-    if file_label == 'None':
+    if file_label is None:
         file_label = ''
 
     full_df = resume_run(output_file)
@@ -238,4 +247,4 @@ if __name__ == '__main__':
 
     main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset,
-         convert_to_ts)
+         convert_to_ts, data_type)
