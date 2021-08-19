@@ -192,7 +192,7 @@ if __name__ == '__main__':
     time_zone_correction = True if str(sys.argv[8]) == 'True' else False
     check_json = True if str(sys.argv[9]) == 'True' else False
     convert_to_ts = True if str(sys.argv[10]) == 'True' else False
-    system_summary_file = str(sys.argv[11]) if str(sys.argv[12]) != 'None' else None
+    system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
     gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
     data_type = str(sys.argv[13])
 '''
