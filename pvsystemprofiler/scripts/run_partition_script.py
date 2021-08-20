@@ -169,19 +169,19 @@ if __name__ == '__main__':
     :param conda environment: conda environment used to run script_to_execute.
     :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
     :param power_column_id: id given to the power column to be analyzed.
-    :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
-        when running the pipeline.
-    :param fix_time_shifts: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
-    :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
-        running the pipeline.
+    :param fix_time_shits: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
         running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
+    :param convert_to_ts: String, 'True' or 'False'.  Determines if conversion to time series is performed when 
+    running the pipeline.
     :param supplementary_file: csv file with supplementary information need to run script.
     :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
+    :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with 
+    individual gmt offsets needs to be provided.
+    :param data_type: String. Input signal data type. Options are 'aws' and 'cassandra'.
     """
-
     # Default input variables
     if input_site_file == 'None':
         build_input_file(s3_location)

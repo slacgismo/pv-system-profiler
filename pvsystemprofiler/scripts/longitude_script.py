@@ -194,16 +194,21 @@ if __name__ == '__main__':
     :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
     :param power_column_label: Repeating portion of the power column label. 
     :param output_file: Absolute path to csv file containing report results.
-    :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
-    when running the pipeline.
+    :param fix_time_shits: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
-    :param system_summary_file: Full path to csv file containing longitude and gmt offset for each system. 
+    :param convert_to_ts: String, 'True' or 'False'.  Determines if conversion to time series is performed when 
+    running the pipeline.
+    :param system_summary_file: Full path to csv file containing longitude and manual time shift flag for each system,
+    None if no file
+    provided. 
+    :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
+    gmt offsets needs to be provided.
+    :param data_type: String. Input signal data type. Options are 'aws' and 'cassandra'.
     '''
-
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
     if file_label is 'None':
         file_label = ''
 
