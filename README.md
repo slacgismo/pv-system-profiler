@@ -38,11 +38,3 @@ previously configured instance. This image needs to have all the  repositories a
 needed in a serial run. Once each partitioned run is finished, results will be automatically collected in the local folder where
 `run_script.py` was run. The kwarg `"instance_name"` corresponds to the conda environment that is to be used in the
 partitioned run.
-
-
-## Test Coverage
-
-In order to view the current test coverage metrics, run:
-```
-python -m unittest -v
-```
