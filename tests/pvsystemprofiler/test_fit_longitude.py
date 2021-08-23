@@ -32,10 +32,8 @@ class TestFitLongitude(unittest.TestCase):
 
         # Expected Longitude Output is downloaded directly from https://maps.nrel.gov/pvdaq/ PVDAQ Contributed Sites
         expected_output =  -76.6636
-
-        # actual_output = fit_longitude(eot_duffie, solarnoon, days, gmt_offset, loss='l2')
-        actual_output = -76.6636
-        np.testing.assert_almost_equal(actual_output, expected_output)
+        actual_output = fit_longitude(eot_duffie, solarnoon, days, gmt_offset, loss='l2')
+        np.testing.assert_almost_equal(actual_output, expected_output, decimal=0)
 
 
 if __name__ == '__main__':
