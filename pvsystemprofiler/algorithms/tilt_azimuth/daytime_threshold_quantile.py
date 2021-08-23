@@ -1,15 +1,20 @@
-# Standard Imports
 import numpy as np
 import cvxpy as cvx
-from solardatatools.daytime import find_daytime
 
 
-def filter_data(data_matrix, daytime_threshold, x1, x2):
+def filter_data(data_matrix, daytime_threshold=None, x1=None, x2=None):
+    """
+    :param data_matrix: Pandas DataFrame data matrix with input signal.
+    :param daytime_threshold: Optional. Daytime threshold signal value separating day from night.
+    :param x1: Float. Parameter for signal decomposition threshold quantile seasonality calculation.
+    :param x2: Float. Parameter for signal decomposition threshold quantile seasonality calculation.
+    :return: Boolean DataFrame with daylight hours.
+    """
     if daytime_threshold is None:
         daytime_threshold_fit = find_daytime_threshold_quantile_seasonality(data_matrix, x1, x2)
         boolean_daytime = data_matrix > daytime_threshold_fit
     else:
-        boolean_daytime = find_daytime(data_matrix, daytime_threshold)
+        boolean_daytime = data_matrix > daytime_threshold
     return boolean_daytime
 
 

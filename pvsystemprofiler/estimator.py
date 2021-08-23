@@ -1,16 +1,16 @@
 """
-
+This module contains a class for estimating longitude, latitude, tilt and azimuth from an input signal. This code
+accepts an input signal data in the form of a `solar-data-tools` `DataHandler` object, which is used to standardize
+and pre-process the data. The provided class will then estimate  longitude, latitude, tilt and azimuth using the
+ 'estimate_longitude', 'estimate_latitude' and 'estimate_orientation' methods, respectively. Alternatively, all four
+ parameters can be estimated at once using the 'estimate_all' method.
 """
-
 # Standard Imports
 import numpy as np
-import cvxpy as cvx
 # Solar Data Tools Imports
 from solardatatools.solar_noon import energy_com, avg_sunrise_sunset
 # Module Imports
-from pvsystemprofiler.algorithms.longitude.direct_calculation import calc_lon
 from pvsystemprofiler.utilities.equation_of_time import eot_da_rosa, eot_duffie
-from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from solardatatools.algorithms import SunriseSunset
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
 from pvsystemprofiler.utilities.hour_angle_equation import calculate_omega
@@ -22,14 +22,20 @@ from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions impo
 from pvsystemprofiler.algorithms.angle_of_incidence.dynamic_value_functions import select_init_values
 from pvsystemprofiler.algorithms.tilt_azimuth.daytime_threshold_quantile import filter_data
 from pvsystemprofiler.utilities.tools import random_initial_values
+from pvsystemprofiler.algorithms.longitude.estimation import estimate_longitude
+from pvsystemprofiler.algorithms.latitude.estimation import estimate_latitude
 
 
 class ConfigurationEstimator():
-    def __init__(self, data_handler, gmt_offset):
+    def __init__(self, data_handler, gmt_offset, day_selection_method='all', solar_noon_method='optimized_estimates',
+                 daylight_method='optimized_estimates', data_matrix='filled', daytime_threshold=0.001):
         if not data_handler._ran_pipeline:
             data_handler.run_pipeline()
         self.data_handler = data_handler
-        self.data_matrix = None
+        if data_matrix == 'raw':
+            self.data_matrix = data_handler.raw_data_matrix
+        elif data_matrix == 'filled':
+            self.data_matrix = data_handler.filled_data_matrix
         # Parameters to be estimated
         self.longitude = None
         self.latitude = None
@@ -38,7 +44,6 @@ class ConfigurationEstimator():
         # Attributes used for all calculations
         self.gmt_offset = gmt_offset
         self.hours_daylight = None
-        self.days = None
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.daytime_threshold = None
         self.day_interval = None
@@ -50,111 +55,79 @@ class ConfigurationEstimator():
         self.day_of_year = self.data_handler.day_index.dayofyear
         self.eot_duffie = eot_duffie(self.day_of_year)
         self.eot_da_rosa = eot_da_rosa(self.day_of_year)
-        self.delta = None
-        self.omega = None
-
-    def estimate_longitude(self, estimator='fit_l1',
-                           eot_calculation='duffie',
-                           solar_noon_method='optimized_estimates',
-                           data_matrix='filled',
-                           day_selection_method='all'):
-        dh = self.data_handler
-        if data_matrix == 'raw':
-            data_in = dh.raw_data_matrix
-        elif data_matrix == 'filled':
-            data_in = dh.filled_data_matrix
-        if solar_noon_method == 'rise_set_average':
-            self.solarnoon = avg_sunrise_sunset(data_in)
-        elif solar_noon_method == 'energy_com':
-            self.solarnoon = energy_com(data_in)
-        elif solar_noon_method == 'optimized_estimates':
-            ss = SunriseSunset()
-            ss.run_optimizer(data=data_in)
-            self.solarnoon = np.nanmean(
-                [ss.sunrise_estimates, ss.sunset_estimates], axis=0)
-        if day_selection_method == 'all':
-            self.days = dh.daily_flags.no_errors
-        elif day_selection_method == 'clear':
-            self.days = dh.daily_flags.clear
-        elif day_selection_method == 'cloudy':
-            self.days = dh.daily_flags.cloudy
-        if estimator == 'calculated':
-            self.longitude_estimate = self._cal_lon_helper(eot_ref=eot_calculation)
-        else:
-            loss = estimator.split('_')[-1]
-            self.longitude = self._fit_lon_helper(loss=loss, eot_ref=eot_calculation)
-
-    def _cal_lon_helper(self, eot_ref='duffie'):
-        sn = 60 * self.solarnoon[self.days]  # convert hours to minutes
-        if eot_ref in ('duffie', 'd', 'duf'):
-            eot = self.eot_duffie[self.days]
-        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
-            eot = self.eot_da_rosa[self.days]
-        gmt = self.gmt_offset
-        estimates = calc_lon(sn, eot, gmt)
-        return np.nanmedian(estimates)
-
-    def _fit_lon_helper(self, loss='l2', eot_ref='duffie'):
-        lon = cvx.Variable()
-        if loss == 'l2':
-            cost_func = cvx.norm
-        elif loss == 'l1':
-            cost_func = cvx.norm1
-        elif loss == 'huber':
-            cost_func = lambda x: cvx.sum(cvx.huber(x))
-        if eot_ref in ('duffie', 'd', 'duf'):
-            eot = self.eot_duffie
-        elif eot_ref in ('da_rosa', 'dr', 'rosa'):
-            eot = self.eot_da_rosa
-        sn_m = 720 - eot + 4 * (15 * self.gmt_offset - lon)
-        sn_h = sn_m / 60
-        nan_mask = np.isnan(self.solarnoon)
-        use_days = np.logical_and(self.days, ~nan_mask)
-        cost = cost_func(sn_h[use_days] - self.solarnoon[use_days])
-        objective = cvx.Minimize(cost)
-        problem = cvx.Problem(objective)
-        problem.solve()
-        return lon.value.item()
-
-    def estimate_latitude(self, daytime_threshold=0.001, data_matrix='filled', daylight_method='optimized_estimates',
-                          day_selection_method='all'):
-
-        dh = self.data_handler
         self.delta = delta_cooper(self.day_of_year, self.daily_meas)
-        if data_matrix == 'raw':
-            data_in = dh.raw_data_matrix
-        elif data_matrix == 'filled':
-            data_in = dh.filled_data_matrix
-        if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
-            hours_daylight_all = calculate_hours_daylight(data_in, daytime_threshold)
-        elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
-            ss = SunriseSunset()
-            ss.run_optimizer(data=data_in)
-            hours_daylight_all = ss.sunset_estimates - ss.sunrise_estimates
+        self.omega = None
         if day_selection_method == 'all':
-            self.days = dh.daily_flags.no_errors
+            self.days = self.data_handler.daily_flags.no_errors
         elif day_selection_method == 'clear':
-            self.days = dh.daily_flags.clear
+            self.days = self.days.daily_flags.clear
         elif day_selection_method == 'cloudy':
-            self.days = dh.daily_flags.cloudy
+            self.days = self.data_handler.daily_flags.cloudy
 
-        if np.any(np.isnan(hours_daylight_all)):
-            hours_mask = np.isnan(hours_daylight_all)
+        if solar_noon_method == 'optimized_estimates' or daylight_method == 'optimized_estimates':
+            ss = SunriseSunset()
+
+        if solar_noon_method == 'rise_set_average':
+            self.solarnoon = avg_sunrise_sunset(self.data_matrix)
+        elif solar_noon_method == 'energy_com':
+            self.solarnoon = energy_com(self.data_matrix)
+        if solar_noon_method == 'optimized_estimates':
+            ss.run_optimizer(data=self.data_matrix)
+            self.solarnoon = np.nanmean([ss.sunrise_estimates, ss.sunset_estimates], axis=0)
+
+        if daylight_method in ('sunrise-sunset', 'sunrise sunset'):
+            self.hours_daylight = calculate_hours_daylight(self.data_matrix, daytime_threshold)
+        elif daylight_method == 'optimized_estimates':
+            self.hours_daylight = ss.sunset_estimates - ss.sunrise_estimates
+
+    def estimate_longitude(self, estimator='fit_l1', eot_calculation='duffie'):
+        """
+        :param estimator: 'calculated', 'fit_l1', 'fit_l2' or 'fit_huber'
+        :param eot_calculation: 'rise_set_average', 'energy_com', 'optimized_estimates',
+        or 'optimized_measurements'
+        :return: None
+        """
+        if eot_calculation in ('duffie', 'd', 'duf'):
+            eot = self.eot_duffie
+        elif eot_calculation in ('da_rosa', 'dr', 'rosa'):
+            eot = self.eot_da_rosa
+        self.longitude = estimate_longitude(estimator, eot, self.solarnoon, self.days, self.gmt_offset)
+        return
+
+    def estimate_latitude(self):
+        hours_daylight_filtered, delta_filtered = self._prepare_lat_input_data()
+        self.latitude = estimate_latitude(hours_daylight_filtered, delta_filtered)
+        return
+
+    def _prepare_lat_input_data(self):
+        if np.any(np.isnan(self.hours_daylight)):
+            hours_mask = np.isnan(self.hours_daylight)
             full_mask = ~hours_mask & self.days
-            self.hours_daylight = hours_daylight_all[full_mask]
-            self.delta = self.delta[:, full_mask]
+            hours_daylight_filtered = self.hours_daylight[full_mask]
+            delta = self.delta[:, full_mask]
         else:
-            self.hours_daylight = hours_daylight_all[self.days]
-            self.delta = self.delta[:, self.days]
+            hours_daylight_filtered = self.hours_daylight[self.days]
+            delta = self.delta[:, self.days]
+        return hours_daylight_filtered, delta
 
-        self.latitude = self._cal_lat_helper()
-
-    def _cal_lat_helper(self):
-        latitude = calc_lat(self.hours_daylight, self.delta)
-        return np.nanmedian(latitude)
-
+    # estimate tilt and azimuth with or without longitude and latitude input values
     def estimate_orientation(self, longitude=None, latitude=None, tilt=None, azimuth=None, day_interval=None, x1=0.9,
                              x2=0.9):
+        """
+        Estimates tilt and azimuth. The intended use is to estimate tilt and azimuth given longitude and latitude.
+        However, the algorithm will estimate any of longitude, latitude, tilt and azimuth depending on the input values.
+        If a parameter is not provided as an input value, it will be estimated. Any other use than the stated above as
+        the intended use was found to yield inaccurate results.
+
+        :param longitude: optional. Longitude value to be used in parameter estimation.
+        :param latitude: optional. Latitude value to be used in parameter estimation.
+        :param tilt: optional. Tilt value to be used in parameter estimation.
+        :param azimuth: optional. Azimuth value to be used in parameter estimation.
+        :param day_interval: 'all', 'clear' or 'cloudy'.
+        :param x1: cvx parameter. Factor used in signal decomposition for estimation of daytime threshold.
+        :param x2: Quantile of data used in estimation of daytime threshold.
+        :return: None
+        """
 
         if longitude is None:
             est_lon = ConfigurationEstimator(self.data_handler, self.gmt_offset)
@@ -185,6 +158,12 @@ class ConfigurationEstimator():
         self.tilt, self.azimuth = self._cal_orientation_helper()
 
     def estimate_all(self, day_interval=None, x1=0.9, x2=0.9):
+        """
+        Estimate latitude, longitude, tilt and azimuth all at once.
+        :param day_interval: 'all', 'clear', 'cloudy'.
+        :param x1: cvx parameter. Factor used in signal decomposition for estimation of daytime threshold.
+        :param x2: Quantile of data used in estimation of daytime threshold.
+        """
 
         self.tilt = None
         self.azimuth = None
@@ -226,10 +205,8 @@ class ConfigurationEstimator():
 
         lat_initial, tilt_initial, azim_initial = random_initial_values(1)
 
-        func_customized, bounds = select_function(self.latitude, self.tilt,
-                                                  self.azimuth)
-        dict_keys = determine_keys(latitude=self.latitude, tilt=self.tilt,
-                                   azimuth=self.azimuth)
+        func_customized, bounds = select_function(self.latitude, self.tilt, self.azimuth)
+        dict_keys = determine_keys(latitude=self.latitude, tilt=self.tilt, azimuth=self.azimuth)
 
         init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
         init_values, ivr = select_init_values(init_values_dict, dict_keys)
@@ -251,5 +228,3 @@ class ConfigurationEstimator():
         if 'azimuth_estimate' not in dict_keys:
             azimuth_estimate = None
         return tilt_estimate, azimuth_estimate
-
-

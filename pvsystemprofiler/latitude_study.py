@@ -1,27 +1,32 @@
-''' Latitude Study Module
-This module contains a class for conducting a study
-to estimating latitude from solar power data. This code accepts solar power
-data in the form of a `solar-data-tools` `DataHandler` object, which is used
-to standardize and pre-process the data. The provided class will then estimate
-the latitude of the site that produced the data, using the `run` method.
-'''
+""" Latitude Study Module
+This module contains a class for conducting a study to estimate latitude from solar data. This code accepts solar data
+in the form of a `solar-data-tools` `DataHandler` object, which is used to standardize and pre-process the data. The
+provided class will then estimate the latitude of the site that produced the data, using the `run` method.
+
+The following configurations can be run:
+
+ - Input data matrix: 'raw', 'filled'
+ - Daylight estimation method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'
+ - Declination equation: 'cooper', 'spencer'
+ - Day selection method: 'all', 'clear', 'cloudy'
+
+"""
 import numpy as np
 import pandas as pd
 from pvsystemprofiler.utilities.declination_equation import delta_spencer
 from pvsystemprofiler.utilities.declination_equation import delta_cooper
-from pvsystemprofiler.algorithms.latitude.direct_calculation import calc_lat
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight
 from pvsystemprofiler.algorithms.latitude.hours_daylight import calculate_hours_daylight_raw
-from solardatatools.algorithms import SunriseSunset
+from pvsystemprofiler.algorithms.optimized_sunrise_sunset import get_optimized_sunrise_sunset
+from pvsystemprofiler.algorithms.latitude.estimation import estimate_latitude
 
 
 class LatitudeStudy():
     def __init__(self, data_handler, lat_true_value=None):
-        '''
+        """
         :param data_handler: `DataHandler` class instance loaded with a solar power data set.
-
-        :param lat_true_value: (optional) the ground truth value for the system's latitude. (Degrees).
-        '''
+        :param lat_true_value: Optional. The ground truth value for the system's latitude. (Degrees).
+        """
 
         self.data_handler = data_handler
         self.latitude_true_value = lat_true_value
@@ -36,6 +41,7 @@ class LatitudeStudy():
         self.data_sampling = self.data_handler.data_sampling
         self.boolean_daytime = None
         self.hours_daylight = None
+        self.delta = None
         self.delta_cooper = None
         self.delta_spencer = None
         self.residual = None
@@ -59,14 +65,30 @@ class LatitudeStudy():
             daylight_method=('raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'),
             delta_method=('cooper', 'spencer'), day_selection_method=('all', 'clear', 'cloudy'),
             threshold=None):
-        '''
+        """
+        Run a study with the given configuration of options. Defaults to
+        running all available options. Any kwarg can be constrained by
+        providing a subset of acceptable keys. For example the default keys
+        for daylight method kwarg are:
+
+            ('raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements')
+
+        Additionally, any of the following would be acceptable for this kwarg:
+
+            ('raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements')
+            ('raw daylight', 'sunrise-sunset', 'optimized_estimates')
+            ('raw daylight', 'sunrise-sunset')
+            ('raw daylight')
+
+        This method sets the `results` attribute to be a pandas data frame
+        containing the results of the study.
         :param data_matrix: 'raw', 'filled'.
         :param daylight_method: 'raw daylight', 'sunrise-sunset', 'optimized_estimates', 'optimized_measurements'.
         :param threshold: (optional) daylight threshold values, tuple of length one to twelve.
         :param delta_method: (optional) 'cooper', 'spencer'.
         :param day_selection_method: 'all', 'clear', 'cloudy'.
-        :return:
-        '''
+        :return: None.
+        """
         data_matrix = np.atleast_1d(data_matrix)
         daylight_method = np.atleast_1d(daylight_method)
         delta_method = np.atleast_1d(delta_method)
@@ -80,7 +102,21 @@ class LatitudeStudy():
 
         self.delta_cooper = delta_cooper(self.day_of_year, self.daily_meas)
         self.delta_spencer = delta_spencer(self.day_of_year, self.daily_meas)
-        self.get_optimized_sunrise_sunset(data_matrix)
+
+        if 'raw' in data_matrix:
+            rdm = self.raw_data_matrix
+        else:
+            rdm = None
+        if 'filled' in data_matrix:
+            fdm = self.data_matrix
+        else:
+            fdm = None
+
+        opt_dict = get_optimized_sunrise_sunset(fdm, rdm)
+        self.estimates_sunrise_raw, self.estimates_sunset_raw, self.measurements_sunrise_raw, \
+        self.measurements_sunset_raw, self.opt_threshold_raw, \
+        self.estimates_sunrise_filled, self.estimates_sunset_filled, self.measurements_sunrise_filled, \
+        self.measurements_sunset_filled, self.opt_threshold_filled = opt_dict.values()
 
         results = pd.DataFrame(columns=['declination_method', 'daylight_calculation', 'data_matrix', 'threshold',
                                         'day_selection_method', 'latitude'])
@@ -105,8 +141,9 @@ class LatitudeStudy():
                         tm = data_matrix[matrix_ix]
                         dm = delta_id
 
-                        lat_est = self.estimate_latitude(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
-                                                         delta_method=delta_id)
+                        self.prepare_input_data(matrix_id, daytime_threshold=dtt, daylight_method=dlm,
+                                                delta_method=delta_id)
+                        lat_est = estimate_latitude(self.hours_daylight, self.delta)
 
                         if daylight_method_id in ['optimized_estimates', 'optimized_measurements']:
                             dtt = self.opt_threshold
@@ -119,13 +156,12 @@ class LatitudeStudy():
 
         self.results = results
 
-    def estimate_latitude(self, matrix_id=None, daytime_threshold=0.001,
-                          daylight_method=('sunrise-sunset', 'raw daylight'),
-                          delta_method=('cooper', 'spencer')):
+    def prepare_input_data(self, matrix_id=None, daytime_threshold=0.001,
+                           daylight_method=('sunrise-sunset', 'raw daylight'),
+                           delta_method=('cooper', 'spencer')):
         """"
         Latitude is estimated from equation (1.6.11) in:
-        Duffie, John A., and William A. Beckman. Solar engineering of thermal
-        processes. New York: Wiley, 1991.
+        Duffie, John A., and William A. Beckman. Solar engineering of thermal processes. New York: Wiley, 1991.
         """
 
         if matrix_id == 'raw':
@@ -138,7 +174,7 @@ class LatitudeStudy():
             hours_daylight_all = calculate_hours_daylight_raw(data_in, self.data_sampling, daytime_threshold)
         elif daylight_method in ('optimized_estimates', 'Optimized_Estimates'):
             if matrix_id == 'filled':
-                hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunset_filled
+                hours_daylight_all = self.estimates_sunset_filled - self.estimates_sunrise_filled
                 self.opt_threshold = self.opt_threshold_raw
             if matrix_id == 'raw':
                 hours_daylight_all = self.estimates_sunset_raw - self.estimates_sunrise_raw
@@ -151,37 +187,16 @@ class LatitudeStudy():
                 hours_daylight_all = self.measurements_sunset_raw - self.measurements_sunrise_raw
                 self.opt_threshold = self.opt_threshold_raw
         if delta_method in ('Cooper', 'cooper'):
-            delta = self.delta_cooper
+            self.delta = self.delta_cooper
         elif delta_method in ('Spencer', 'spencer'):
-            delta = self.delta_spencer
+            self.delta = self.delta_spencer
 
         if np.any(np.isnan(hours_daylight_all)):
             hours_mask = np.isnan(hours_daylight_all)
             full_mask = ~hours_mask & self.days
             self.hours_daylight = hours_daylight_all[full_mask]
-            delta = delta[:, full_mask]
+            self.delta = self.delta[:, full_mask]
         else:
             self.hours_daylight = hours_daylight_all[self.days]
-            delta = delta[:, self.days]
-
-        latitude_estimate = calc_lat(self.hours_daylight, delta)
-        return np.nanmedian(latitude_estimate)
-
-    def get_optimized_sunrise_sunset(self, data_matrix):
-        for matrix in data_matrix:
-            ss = SunriseSunset()
-            if matrix == 'raw':
-                ss.run_optimizer(data=self.raw_data_matrix)
-                self.estimates_sunrise_raw = ss.sunrise_estimates
-                self.estimates_sunset_raw = ss.sunset_estimates
-                self.measurements_sunrise_raw = ss.sunrise_measurements
-                self.measurements_sunset_raw = ss.sunset_measurements
-                self.opt_threshold_filled = ss.threshold
-            if matrix == 'filled':
-                ss.run_optimizer(data=self.data_matrix)
-                self.estimates_sunrise_filled = ss.sunrise_estimates
-                self.estimates_sunset_filled = ss.sunset_estimates
-                self.measurements_sunrise_filled = ss.sunrise_measurements
-                self.measurements_sunset_filled = ss.sunset_measurements
-                self.opt_threshold_raw = ss.threshold
+            self.delta = self.delta[:, self.days]
         return

@@ -1,9 +1,9 @@
-''' Equation of Time Module
+""" Equation of Time Module
 The Equation of Time (EoT) describes the discrepancy between clock time and
 solar time: https://en.wikipedia.org/wiki/Equation_of_time
 
 This module contains two approaches to calculating the EoT: da_rosa and Duffie
-'''
+"""
 import numpy as np
 
 
@@ -26,6 +26,7 @@ def eot_da_rosa(day_of_year):
     except AttributeError:
         return eot
 
+
 def eot_duffie(day_of_year):
     """
     The equation of time as defined in:
@@ -38,7 +39,7 @@ def eot_duffie(day_of_year):
     :return: the difference between clock time and solar time for a given day of year
     """
     b = np.deg2rad((360 / 365) * (day_of_year - 1))
-    A = 1440 / (2 * np.pi)                  # book uses approximation of 229.2
+    A = 1440 / (2 * np.pi)  # book uses approximation of 229.2
     eot = A * (0.000075 + 0.001868 * np.cos(b) - 0.032077 * np.sin(b)
                - 0.014615 * np.cos(2 * b) - 0.04089 * np.sin(2 * b))
     try:
