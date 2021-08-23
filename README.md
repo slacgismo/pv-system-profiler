@@ -26,10 +26,11 @@ A script that runs the site report and the longitude, latitude and tilt and azim
 instances is provided. The script reads the folder containing the system signals and partitions these signals to run in
 a `n` user prescribed AWS instances in parallel. Here is an example shell command for a partitioned run:
 ```shell
-python /"repository location"/pv-system-profiler/pvsystemprofiler/scripts/run_partition_script.py
-None all /"repository location"/pv-system-profiler/pvsystemprofiler/scripts/tilt_azimuth_script.py conda_environment
-None power_inv_ True False True False  "instance_name"
-s3://"s3 bucket location with longitude and latitude precalculates"/lon_lat_precalculates.csv
+python /"repository location"/pv-system-profiler/pvsystemprofiler/scripts/run_partition_script.py None all 
+/"repository location"/pv-system-profiler/pvsystemprofiler/scripts/tilt_azimuth_script.py "conda_environment" 
+None power_inv_ False False False False 
+s3://"s3 bucket location with longitude and latitude precalculates"/lon_lat_precalculates.csv "instance_name"
+ "s3 bucket with signals" None aws
 ```
 where the individual value of each kwarg are defined in run_partition_script.py. Previous to running this command it is
 necessary to create `n` identical AWS instances that correspond to the number of desired partitions. These instances
