@@ -33,6 +33,7 @@ class TestFitLongitude(unittest.TestCase):
 
         # Expected Longitude Output is generated in tests/fixtures/longitude/longitude_fitting_and_calculation_test_data_creator.ipynb
         expected_output =  -77.22534574490635
+        
         actual_output = fit_longitude(eot_duffie, solarnoon, days, gmt_offset, loss='l2')
         np.testing.assert_almost_equal(actual_output, expected_output)
 

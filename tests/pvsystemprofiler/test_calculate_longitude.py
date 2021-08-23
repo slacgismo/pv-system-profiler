@@ -26,6 +26,7 @@ class TestCalculateLongitude(unittest.TestCase):
         days_file_path = filepath / "fixtures" / "longitude" / "days.csv"
         with open(days_file_path) as file:
                 days = np.genfromtxt(file, delimiter=',')
+                days = days.astype(dtype=bool)
         # gmt_offset
         gmt_offset = -5
         # loss
