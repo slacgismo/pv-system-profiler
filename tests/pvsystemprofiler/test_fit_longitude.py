@@ -13,26 +13,29 @@ class TestFitLongitude(unittest.TestCase):
         # INPUTS
 
         # eot_duffie
-        data_file_path = Path(__file__).parent.parent.joinpath("fixtures/longitude_fitting/eot_duffie_output.csv")
-        with open(data_file_path) as file:
+        filepath = Path(__file__).parent.parent
+
+        eot_duffie_file_path = filepath / "fixtures" / "longitude" / "eot_duffie_output.csv"
+        with open(eot_duffie_file_path) as file:
                 eot_duffie = np.genfromtxt(file, delimiter=',')
         # solarnoon
-        data_file_path = Path(__file__).parent.parent.joinpath("fixtures/longitude_fitting/solarnoon.csv")
-        with open(data_file_path) as file:
+        solarnoon_file_path = filepath / "fixtures" / "longitude" / "solarnoon.csv"
+        with open(solarnoon_file_path) as file:
                 solarnoon = np.genfromtxt(file, delimiter=',')
         # days
-        data_file_path = Path(__file__).parent.parent.joinpath("fixtures/longitude_fitting/days.csv")
-        with open(data_file_path) as file:
+        days_file_path = filepath / "fixtures" / "longitude" / "days.csv"
+        with open(days_file_path) as file:
                 days = np.genfromtxt(file, delimiter=',')
+                days = days.astype(dtype=bool)
         # gmt_offset
         gmt_offset = -5
         # loss
         loss = 'l2'
 
-        # Expected Longitude Output is downloaded directly from https://maps.nrel.gov/pvdaq/ PVDAQ Contributed Sites
-        expected_output =  -76.6636
+        # Expected Longitude Output is generated in tests/fixtures/longitude/longitude_fitting_and_calculation_test_data_creator.ipynb
+        expected_output =  -77.22653735596457
         actual_output = fit_longitude(eot_duffie, solarnoon, days, gmt_offset, loss='l2')
-        np.testing.assert_almost_equal(actual_output, expected_output, decimal=0)
+        np.testing.assert_almost_equal(actual_output, expected_output)
 
 
 if __name__ == '__main__':
