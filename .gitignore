@@ -3,7 +3,6 @@
 # Edit at https://www.gitignore.io/?templates=data,macos,python,windows,pycharm,database,jupyternotebook
 
 ### Data ###
-*.csv
 *.dat
 *.efx
 *.gbr
