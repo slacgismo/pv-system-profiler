@@ -24,6 +24,7 @@ class TestCalculateLongitude(unittest.TestCase):
         data_file_path = Path(__file__).parent.parent.joinpath("fixtures/longitude_calculation/days.csv")
         with open(data_file_path) as file:
                 days = np.genfromtxt(file, delimiter=',')
+                days = days.astype(dtype=bool)
         # gmt_offset
         gmt_offset = -5
         # loss
@@ -33,7 +34,7 @@ class TestCalculateLongitude(unittest.TestCase):
         expected_output =  -76.6636
 
         actual_output = calculate_longitude(eot_duffie, solarnoon, days, gmt_offset)
-        np.testing.assert_almost_equal(actual_output, expected_output)
+        np.testing.assert_almost_equal(actual_output, expected_output, decimal=0)
 
 
 if __name__ == '__main__':

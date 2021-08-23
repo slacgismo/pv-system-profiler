@@ -45,3 +45,11 @@ In order to run unit tests:
 ```
 python -m unittest -v
 ```
+
+## Test Coverage
+
+In order to view the current test coverage metrics:
+```
+coverage run --source pvsystemprofiler -m unittest discover && coverage html
+open htmlcov/index.html
+```
