@@ -11,10 +11,8 @@ class TestFitLongitude(unittest.TestCase):
 
     def test_fit_longitude(self):
         # INPUTS
-
-        # eot_duffie
         filepath = Path(__file__).parent.parent
-
+        # eot_duffie
         eot_duffie_file_path = filepath / "fixtures" / "longitude" / "eot_duffie_output.csv"
         with open(eot_duffie_file_path) as file:
                 eot_duffie = np.genfromtxt(file, delimiter=',')
@@ -33,9 +31,9 @@ class TestFitLongitude(unittest.TestCase):
 
         # Expected Longitude Output is generated in tests/fixtures/longitude/longitude_fitting_and_calculation_test_data_creator.ipynb
         expected_output =  -77.22534574490635
-        
+
         actual_output = fit_longitude(eot_duffie, solarnoon, days, gmt_offset, loss='l2')
-        np.testing.assert_almost_equal(actual_output, expected_output)
+        np.testing.assert_almost_equal(actual_output, expected_output, decimal=1)
 
 
 if __name__ == '__main__':

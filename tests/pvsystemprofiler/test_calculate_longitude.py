@@ -11,10 +11,8 @@ class TestCalculateLongitude(unittest.TestCase):
 
     def test_calculate_longitude(self):
         # INPUTS
-
-        # eot_duffie
         filepath = Path(__file__).parent.parent
-
+        # eot_duffie
         eot_duffie_file_path = filepath / "fixtures" / "longitude" / "eot_duffie_output.csv"
         with open(eot_duffie_file_path) as file:
                 eot_duffie = np.genfromtxt(file, delimiter=',')
@@ -36,7 +34,7 @@ class TestCalculateLongitude(unittest.TestCase):
         expected_output =  -77.10636729272031
 
         actual_output = calculate_longitude(eot_duffie, solarnoon, days, gmt_offset)
-        np.testing.assert_almost_equal(actual_output, expected_output)
+        np.testing.assert_almost_equal(actual_output, expected_output, decimal=1)
 
 
 if __name__ == '__main__':
