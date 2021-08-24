@@ -1,0 +1,49 @@
+{% set name = "pv-system-profiler" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: {{ environ.get('VERSION_FROM_GIT_TAG') }}
+
+source:
+  git_url: https://github.com/slacgismo/pv-system-profiler
+
+build:
+  noarch: python
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv "
+
+requirements:
+  host:
+    - pip
+    - python
+    - scipy
+    - numpy >=1.16
+    - pandas
+    - seaborn
+    - requests
+
+  run:
+    - scipy
+    - numpy >=1.16
+    - pandas
+    - seaborn
+    - requests
+    - scikit-learn
+    - pvlib-python
+    - solar-data-tools
+    - cvxpy
+
+about:
+  home: https://github.com/slacgismo/pv-system-profiler
+  license: BSD
+  license_family: BSD
+  license_file:
+  summary:
+  doc_url:
+  dev_url:
+
+extra:
+  recipe-maintainers:
+    - bmeyers
+    - derins
+    - alejandro350
