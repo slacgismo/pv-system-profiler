@@ -1,5 +1,5 @@
 urllib3
-numpy==1.19.2
+numpy
 cvxpy>=1.1.0
 pykml
 pandas

@@ -217,6 +217,6 @@ setup(
     # maintainers, and where to support the project financially. The key is
     # what's used to render the link text on PyPI.
     project_urls={  # Optional
-        'Bug Reports': 'https://github.com/bmeyers/pv-system-profiler/issues',
+        'Bug Reports': 'https://github.com/slacgismo/pv-system-profiler/issues',
     },
 )
