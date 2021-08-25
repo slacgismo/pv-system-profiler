@@ -148,8 +148,8 @@ def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, 
         if file_label != '':
             i = file_id.find(file_label)
             site_id = file_id[:i]
-        # else:
-        site_id = file_id.split('.')[0]
+        else:
+            site_id = file_id.split('.')[0]
 
         if data_type == 'aws':
             df = load_generic_data(s3_location, file_label, site_id)
