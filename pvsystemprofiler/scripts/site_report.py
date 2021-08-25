@@ -145,7 +145,8 @@ def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, 
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
         progress(file_ix, len(file_list), msg, bar_length=20)
-        if file_label != '':
+
+        if file_label is not None:
             i = file_id.find(file_label)
             site_id = file_id[:i]
         else:
