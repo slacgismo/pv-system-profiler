@@ -47,7 +47,6 @@ class ConfigurationEstimator():
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.daytime_threshold = None
         self.day_interval = None
-        self.daytime_threshold_fit = None
         self.x1 = None
         self.x2 = None
         self.data_sampling = self.data_handler.data_sampling
@@ -149,7 +148,6 @@ class ConfigurationEstimator():
         self.x2 = x2
         dh = self.data_handler
         self.data_matrix = dh.filled_data_matrix
-        self.days = dh.daily_flags.clear
         self.num_days = dh.num_days
         self.omega = calculate_omega(self.data_sampling, self.num_days, self.longitude, self.day_of_year,
                                      self.gmt_offset)
@@ -209,15 +207,6 @@ class ConfigurationEstimator():
 
         init_values_dict = {'latitude': lat_initial[0], 'tilt': tilt_initial[0], 'azimuth': azim_initial[0]}
         init_values, ivr = select_init_values(init_values_dict, dict_keys)
-
-        self.func = func_customized
-        self.keys = dict_keys
-        self.delta = delta_f
-        self.omega = omega_f
-        self.ctheta = costheta_fit
-        self.bf = boolean_filter
-        self.iv = init_values
-        self.fitb = bounds
 
         estimates = run_curve_fit(func=func_customized, keys=dict_keys, delta=delta_f, omega=omega_f,
                                   costheta=costheta_fit, boolean_filter=boolean_filter, init_values=init_values,
