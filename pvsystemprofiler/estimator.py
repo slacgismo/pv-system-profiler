@@ -28,7 +28,7 @@ from pvsystemprofiler.algorithms.latitude.estimation import estimate_latitude
 
 class ConfigurationEstimator():
     def __init__(self, data_handler, gmt_offset, day_selection_method='all', solar_noon_method='optimized_estimates',
-                 daylight_method='optimized_estimates', data_matrix='filled', daytime_threshold=0.001):
+                 daylight_method='optimized_estimates', data_matrix='filled', daytime_threshold=None):
         if not data_handler._ran_pipeline:
             data_handler.run_pipeline()
         self.data_handler = data_handler
