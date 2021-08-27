@@ -57,12 +57,12 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
 
 
 def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-                     time_zone_correction, cp, tq, gmt, convert_to_ts, data_type):
+                     time_zone_correction, cp, tq, gmt, convert_to_ts, data_source):
     ll = len(power_column_label)
 
-    if data_type == 'aws':
+    if data_source == 'aws':
         cols = df.columns
-    elif data_type == 'cassandra':
+    elif data_source == 'cassandra':
         cols = []
         dh = DataHandler(df, convert_to_ts=convert_to_ts)
         for el in dh.keys:
@@ -130,7 +130,7 @@ def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_s
 
 def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset,
-         convert_to_ts, data_type):
+         convert_to_ts, data_source):
     site_run_time = 0
     total_time = 0
 
@@ -171,14 +171,14 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
         else:
             site_id = file_id.split('.')[0]
 
-        if data_type == 'aws':
+        if data_source == 'aws':
             df = load_generic_data(s3_location, file_label, site_id)
-        elif data_type == 'cassandra':
+        elif data_source == 'cassandra':
             df = load_cassandra_data(site_id)
 
         partial_df = evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection,
                                       fix_time_shifts, time_zone_correction, cp, tq, gmt_offset, convert_to_ts,
-                                      data_type)
+                                      data_source)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     convert_to_ts = True if str(sys.argv[10]) == 'True' else False
     system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
     gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
-    data_type = str(sys.argv[13])
+    data_source = str(sys.argv[13])
     '''
       :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
       :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -224,7 +224,7 @@ if __name__ == '__main__':
       :param system_summary_file: Full path to csv file containing longitude, latitude and gmt offset for each system. 
       :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with 
       individual gmt offsets needs to be provided.
-      :param data_type: String. Input signal data type. Options are 'aws' and 'cassandra'.
+      :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
       '''
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
@@ -252,4 +252,4 @@ if __name__ == '__main__':
 
     main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, cp, tq, gmt_offset,
-         convert_to_ts, data_type)
+         convert_to_ts, data_source)

@@ -82,7 +82,7 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
 def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
          convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file, data_type, gmt_offset):
+         supplementary_file, data_source, gmt_offset):
     # number of partitions
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
@@ -108,7 +108,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                           scripts_location=script_location, conda_env=conda_environment, pcid=power_column_id,
                           cts=convert_to_ts, s3l=s3_location, n_files=n_files, file_label=file_label,
                           fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
-                          check_json=check_json, sup_file=supplementary_file, data_type=data_type,
+                          check_json=check_json, sup_file=supplementary_file, data_source=data_source,
                           gmt_offset=gmt_offset)
         # add partition to list
         partitions.append(part)
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     aws_instance_name = str(sys.argv[12])
     s3_location = str(sys.argv[13])
     gmt_offset = str(sys.argv[14])
-    data_type = str(sys.argv[15])
+    data_source = str(sys.argv[15])
     """
     :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
     site file is provided.
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with 
     individual gmt offsets needs to be provided.
-    :param data_type: String. Input signal data type. Options are 'aws' and 'cassandra'.
+    :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     """
     # Default input variables
     if input_site_file == 'None':
@@ -207,7 +207,7 @@ if __name__ == '__main__':
                             gof=global_output_file, god=global_output_directory, cts=convert_to_ts,
                             s3l=s3_location, n_files=n_files, file_label=file_label,
                             time_zone_correction=time_zone_correction, check_json=check_json,
-                            sup_file=supplementary_file, data_type=data_type, gmt_offset=gmt_offset)
+                            sup_file=supplementary_file, data_source=data_source, gmt_offset=gmt_offset)
     # collect aws instance addresses
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
     # read input site file
@@ -216,4 +216,4 @@ if __name__ == '__main__':
     main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
          convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file, data_type, gmt_offset)
+         supplementary_file, data_source, gmt_offset)
