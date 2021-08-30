@@ -15,7 +15,7 @@ from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import copy_to_s3
 from pvsystemprofiler.scripts.modules.script_functions import remote_execute
 from pvsystemprofiler.scripts.modules.script_functions import get_address
-
+from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):
     """
@@ -146,44 +146,62 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
 
 if __name__ == '__main__':
     # read kwargs
-    input_site_file = str(sys.argv[1])
-    n_files = str(sys.argv[2])
-    script_to_execute = str(sys.argv[3])
-    conda_environment = str(sys.argv[4])
-    file_label = str(sys.argv[5])
-    power_column_id = str(sys.argv[6])
-    fix_time_shifts = str(sys.argv[7])
-    time_zone_correction = str(sys.argv[8])
-    check_json = str(sys.argv[9])
-    convert_to_ts = str(sys.argv[10])
-    supplementary_file = str(sys.argv[11])
-    aws_instance_name = str(sys.argv[12])
-    s3_location = str(sys.argv[13])
-    gmt_offset = str(sys.argv[14])
-    data_source = str(sys.argv[15])
+    # input_site_file = str(sys.argv[1])
+    # n_files = str(sys.argv[2])
+    # script_to_execute = str(sys.argv[3])
+    # conda_environment = str(sys.argv[4])
+    # file_label = str(sys.argv[5])
+    # power_column_id = str(sys.argv[6])
+    # fix_time_shifts = str(sys.argv[7])
+    # time_zone_correction = str(sys.argv[8])
+    # check_json = str(sys.argv[9])
+    # convert_to_ts = str(sys.argv[10])
+    # supplementary_file = str(sys.argv[11])
+    # aws_instance_name = str(sys.argv[12])
+    # s3_location = str(sys.argv[13])
+    # gmt_offset = str(sys.argv[14])
+    # data_source = str(sys.argv[15])
     """
-    :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
-    site file is provided.
+    :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
-    :param script_to_execute: Full path to python script to be executed.
-    :param conda environment: conda environment used to run script_to_execute.
+    :param s3_location: Absolute path to s3 location of files.
     :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
-    :param power_column_id: id given to the power column to be analyzed.
+    :param power_column_label: Repeating portion of the power column label. 
+    :param output_file: Absolute path to csv file containing report results.
     :param fix_time_shits: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
-        running the pipeline.
+    running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
     :param convert_to_ts: String, 'True' or 'False'.  Determines if conversion to time series is performed when 
     running the pipeline.
-    :param supplementary_file: csv file with supplementary information need to run script.
-    :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
-    :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
-    :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with 
-    individual gmt offsets needs to be provided.
+    :param system_summary_file: Full path to csv file containing manual time shift flag for each system, None if no file
+    provided. 
+    :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
+    gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
+    :param script_to_execute: Full path to python script to be executed.
+    :param conda environment: conda environment used to run script_to_execute.
     """
+    inputs_dict = get_commandline_inputs()
+    script_to_execute = str(sys.argv[14])
+    conda_environment = str(sys.argv[15])
+
+    input_site_file = inputs_dict['input_site_file']
+    n_files = inputs_dict['n_files']
+    s3_location = inputs_dict['s3_location']
+    file_label = inputs_dict['file_label']
+    power_column_label = inputs_dict['power_column_label']
+    fix_time_shifts = inputs_dict['fix_time_shifts']
+    time_zone_correction = inputs_dict['time_zone_correction']
+    check_json = inputs_dict['check_json']
+    convert_to_ts = inputs_dict['convert_to_ts']
+    system_summary_file = inputs_dict['system_summary_file']
+    gmt_offset = inputs_dict['gmt_offset']
+    data_source = inputs_dict['data_source']
+
+
     # Default input variables
-    if input_site_file == 'None':
+    if input_site_file is not None:
         build_input_file(s3_location)
         input_site_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
     aws_username = 'ubuntu'
@@ -207,7 +225,7 @@ if __name__ == '__main__':
                             gof=global_output_file, god=global_output_directory, cts=convert_to_ts,
                             s3l=s3_location, n_files=n_files, file_label=file_label,
                             time_zone_correction=time_zone_correction, check_json=check_json,
-                            sup_file=supplementary_file, data_source=data_source, gmt_offset=gmt_offset)
+                            sup_file=system_summary_file, data_source=data_source, gmt_offset=gmt_offset)
     # collect aws instance addresses
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
     # read input site file
