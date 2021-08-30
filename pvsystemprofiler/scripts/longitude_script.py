@@ -166,7 +166,10 @@ def main(inputs_dict, full_df, df_system_metadata):
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
 
-        partial_df = evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict)
+        if inputs_dict['data_source'] == 'aws':
+            df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
+        if inputs_dict['data_source'] == 'cassandra':
+            df = load_cassandra_data(site_id)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -223,7 +226,7 @@ if __name__ == '__main__':
             df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
         else:
             inputs_dict['time_shift_inspection'] = False
-
     else:
         df_system_metadata = None
+
     main(inputs_dict, full_df, df_system_metadata)

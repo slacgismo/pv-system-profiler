@@ -195,8 +195,8 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     inputs_dict = get_commandline_inputs()
 
@@ -215,7 +215,6 @@ if __name__ == '__main__':
             df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
         else:
             inputs_dict['time_shift_inspection'] = False
-
     else:
         df_system_metadata = None
     main(inputs_dict, full_df, df_system_metadata)
