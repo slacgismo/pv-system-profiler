@@ -39,15 +39,12 @@ def load_system_metadata(df_loc):
     df['site_file'] = df['site'].apply(lambda x: str(x) + '_20201006_composite')
     return df
 
-
-#def evaluate_systems(df, df_system_metadata, power_column_label, site_id, time_shift_inspection, fix_time_shifts,
-#                     time_zone_correction, json_file_dict=None, convert_to_ts=False, data_source='aws'):
-def evaluate_systems(site_id, inputs_dict, df, df_system_metadata,  json_file_dict=None):
+def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
                        'latitude', 'tilt', 'azimuth', 'sys_id']
-    
+
     if json_file_dict is None:
         partial_df = pd.DataFrame(columns=partial_df_cols[:13])
     else:
@@ -76,9 +73,9 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata,  json_file_di
                 else:
                     manual_time_shift = 0
 
-                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag, 
+                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag,
                                                             inputs_dict['fix_time_shifts'],
-                                                            inputs_dict['time_zone_correction'], 
+                                                            inputs_dict['time_zone_correction'],
                                                             inputs_dict['convert_to_ts'])
 
                 if passes_pipeline:
@@ -105,13 +102,10 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata,  json_file_di
     return partial_df
 
 
-# def main(input_site_list, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-#          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, convert_to_ts,
-#          data_source, ext='.csv'):
-def main(inputs_dict, full_df,  df_system_metadata, ext='.csv'):
+def main(inputs_dict, full_df, df_system_metadata, ext='.csv'):
     site_run_time = 0
     total_time = 0
-    
+
     if inputs_dict['s3_location'] is not None:
         full_site_list = enumerate_files(inputs_dict['s3_location'])
         full_site_list = filename_to_siteid(full_site_list)
@@ -212,8 +206,8 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 
@@ -227,8 +221,4 @@ if __name__ == '__main__':
     else:
         df_system_metadata = None
 
-    # main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-    #      output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, convert_to_ts,
-    #      data_source)
-    #
     main(inputs_dict, full_df, df_system_metadata)

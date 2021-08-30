@@ -24,6 +24,7 @@ from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.longitude_study import LongitudeStudy
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 from solardatatools.dataio import load_cassandra_data
+from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 
 
 def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
