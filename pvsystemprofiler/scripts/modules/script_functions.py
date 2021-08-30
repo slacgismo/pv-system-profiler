@@ -93,7 +93,11 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     :param nrows: number of rows from input signal file to be read.
     :return: Dataframe containing input signals for `file_id`.
     """
-    to_read = location + file_id + file_label + extension
+    if file_label is None:
+        to_read = location + file_id + extension
+    else:
+        to_read = location + file_id + file_label + extension
+
 
     if nrows is None:
         df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
@@ -394,7 +398,7 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_t
 
 def get_commandline_inputs():
     inputs_dict = {'input_site_file': str(sys.argv[1]) if str(sys.argv[1]) != 'None' else None,
-                   'n_file': str(sys.argv[2]),
+                   'n_files': str(sys.argv[2]),
                    's3_location': str(sys.argv[3]) if str(sys.argv[3]) != 'None' else None,
                    'file_label': str(sys.argv[4]) if str(sys.argv[4]) != 'None' else None,
                    'power_column_label': str(sys.argv[5]), 'output_file': str(sys.argv[6]),
