@@ -27,6 +27,7 @@ from solardatatools.dataio import load_cassandra_data
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 from solardatatools import DataHandler
 
+
 def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     try:
         runs_lon_estimation = True
@@ -110,9 +111,6 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
     return partial_df
 
 
-# def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, power_column_label, full_df,
-#          output_file, time_shift_inspection, fix_time_shifts, time_zone_correction, check_json, gmt_offset,
-#          convert_to_ts, data_source):
 def main(inputs_dict, full_df, df_system_metadata):
     site_run_time = 0
     total_time = 0
@@ -161,6 +159,7 @@ def main(inputs_dict, full_df, df_system_metadata):
             site_id = file_id[:i]
         else:
             site_id = file_id.split('.')[0]
+        # TODO: integrate option for other data inputs
 
         if inputs_dict['data_source'] == 'aws':
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
@@ -184,19 +183,6 @@ def main(inputs_dict, full_df, df_system_metadata):
 
 
 if __name__ == '__main__':
-    # input_site_file = str(sys.argv[1]) if str(sys.argv[1]) != 'None' else None
-    # n_files = str(sys.argv[2])
-    # s3_location = str(sys.argv[3]) if str(sys.argv[3]) != 'None' else None
-    # file_label = str(sys.argv[4]) if str(sys.argv[4]) != 'None' else ''
-    # power_column_label = str(sys.argv[5])
-    # output_file = str(sys.argv[6])
-    # fix_time_shifts = True if str(sys.argv[7]) == 'True' else False
-    # time_zone_correction = True if str(sys.argv[8]) == 'True' else False
-    # check_json = True if str(sys.argv[9]) == 'True' else False
-    # convert_to_ts = True if str(sys.argv[10]) == 'True' else False
-    # system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
-    # gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
-    # data_source = str(sys.argv[13])
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -217,11 +203,10 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     inputs_dict = get_commandline_inputs()
-
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 
