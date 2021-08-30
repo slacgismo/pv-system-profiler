@@ -173,20 +173,6 @@ def main(inputs_dict, full_df, df_system_metadata, ext='.csv'):
 
 
 if __name__ == '__main__':
-    # input_site_file = str(sys.argv[1]) if str(sys.argv[1]) != 'None' else None
-    # n_files = str(sys.argv[2])
-    # s3_location = str(sys.argv[3]) if str(sys.argv[3]) != 'None' else None
-    # file_label = str(sys.argv[4]) if str(sys.argv[4]) != 'None' else ''
-    # power_column_label = str(sys.argv[5])
-    # output_file = str(sys.argv[6])
-    # fix_time_shifts = True if str(sys.argv[7]) == 'True' else False
-    # time_zone_correction = True if str(sys.argv[8]) == 'True' else False
-    # check_json = True if str(sys.argv[9]) == 'True' else False
-    # convert_to_ts = True if str(sys.argv[10]) == 'True' else False
-    # system_summary_file = str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None
-    # gmt_offset = str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None
-    # data_source = str(sys.argv[13])
-    inputs_dict = get_commandline_inputs()
     '''
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -206,6 +192,9 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
+
+    inputs_dict = get_commandline_inputs()
+
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
 
