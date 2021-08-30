@@ -144,6 +144,8 @@ def main(input_site_file, df_system_metadata, n_files, s3_location, file_label, 
             site_id = file_id[:i]
         else:
             site_id = file_id.split('.')[0]
+
+        # TODO: integrate option for other data inputs
         if data_source == 'aws':
             df = load_generic_data(s3_location, file_label, site_id)
         elif data_source == 'cassandra':
