@@ -17,6 +17,7 @@ from pvsystemprofiler.scripts.modules.script_functions import remote_execute
 from pvsystemprofiler.scripts.modules.script_functions import get_address
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 
+
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):
     """
     Builds a csv input file by looking at the contents of the s3 bucket containing csv files with signals.
@@ -86,7 +87,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
     # number of partitions
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
-    #total_size = len(df)
+    # total_size = len(df)
     # size of partition
     part_size = np.ceil(total_size / n_part) * 0.8
     ii = 0
@@ -185,7 +186,9 @@ if __name__ == '__main__':
     inputs_dict = get_commandline_inputs()
     script_to_execute = str(sys.argv[14])
     conda_environment = str(sys.argv[15])
+    aws_instance_name = str(sys.argv[16])
 
+    print(aws_instance_name)
     input_site_file = inputs_dict['input_site_file']
     n_files = inputs_dict['n_files']
     s3_location = inputs_dict['s3_location']
@@ -199,39 +202,38 @@ if __name__ == '__main__':
     gmt_offset = inputs_dict['gmt_offset']
     data_source = inputs_dict['data_source']
 
-
     # Default input variables
-    if input_site_file is not None:
-        build_input_file(s3_location)
-        input_site_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
-    aws_username = 'ubuntu'
-    aws_region = 'us-west-1'
-    aws_client = 'ec2'
-    output_folder_location = '~/'
-    global_output_directory = '~/results/'
-    global_output_file = 'results.csv'
-    pos = script_to_execute.rfind('/') + 1
-    script_location = script_to_execute[:pos]
-    script_name = script_to_execute.split('/')[-1]
-    # aws licence file
-    try:
-        ssh_key_file = glob.glob("/Users/*/.aws/*.pem")[0]
-    except:
-        ssh_key_file = glob.glob("/home/*/.aws/*.pem")[0]
-
-    # create main class
-    main_class = get_config(ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
-                            ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
-                            gof=global_output_file, god=global_output_directory, cts=convert_to_ts,
-                            s3l=s3_location, n_files=n_files, file_label=file_label,
-                            time_zone_correction=time_zone_correction, check_json=check_json,
-                            sup_file=system_summary_file, data_source=data_source, gmt_offset=gmt_offset)
-    # collect aws instance addresses
-    ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
-    # read input site file
-    df = pd.read_csv(input_site_file, index_col=0)
-
-    main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
-         convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file, data_source, gmt_offset)
+    # if input_site_file is not None:
+    #     build_input_file(s3_location)
+    #     input_site_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
+    # aws_username = 'ubuntu'
+    # aws_region = 'us-west-1'
+    # aws_client = 'ec2'
+    # output_folder_location = '~/'
+    # global_output_directory = '~/results/'
+    # global_output_file = 'results.csv'
+    # pos = script_to_execute.rfind('/') + 1
+    # script_location = script_to_execute[:pos]
+    # script_name = script_to_execute.split('/')[-1]
+    # # aws licence file
+    # try:
+    #     ssh_key_file = glob.glob("/Users/*/.aws/*.pem")[0]
+    # except:
+    #     ssh_key_file = glob.glob("/home/*/.aws/*.pem")[0]
+    #
+    # # create main class
+    # main_class = get_config(ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
+    #                         ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_label,
+    #                         gof=global_output_file, god=global_output_directory, cts=convert_to_ts,
+    #                         s3l=s3_location, n_files=n_files, file_label=file_label,
+    #                         time_zone_correction=time_zone_correction, check_json=check_json,
+    #                         sup_file=system_summary_file, data_source=data_source, gmt_offset=gmt_offset)
+    # # collect aws instance addresses
+    # ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
+    # # read input site file
+    # df = pd.read_csv(input_site_file, index_col=0)
+    #
+    # main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
+    #      aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
+    #      convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+    #      supplementary_file, data_source, gmt_offset)
