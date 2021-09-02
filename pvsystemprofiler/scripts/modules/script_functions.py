@@ -98,7 +98,6 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     else:
         to_read = location + file_id + file_label + extension
 
-
     if nrows is None:
         df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
     else:
@@ -370,7 +369,7 @@ def filename_to_siteid(sites):
     return site_list
 
 
-def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_to_ts):
+def run_failsafe_pipeline(dh, manual_time_shift, sys_tag, fts, tzc, convert_to_ts):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
     :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
@@ -382,9 +381,9 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_t
     :return: Boolean. True if passes pipeline, otherwise False.
     """
 
-    dh = DataHandler(df_in, convert_to_ts=convert_to_ts)
     if manual_time_shift == 1:
         dh.fix_dst()
+
     try:
         try:
             dh.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)

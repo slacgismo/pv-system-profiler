@@ -53,13 +53,16 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
         partial_df['manual_time_shift'] = np.nan
 
     ll = len(inputs_dict['power_column_label'])
-    if inputs_dict['data_source'] == 'aws':
-        cols = df.columns
-    elif inputs_dict['data_source'] == 'cassandra':
+
+    dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
+
+
+    if inputs_dict['convert_to_ts']:
         cols = []
-        dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
         for el in dh.keys:
             cols.append(el[-1])
+    else:
+        cols = dh.keys
 
     for col_label in cols:
         if col_label.find(inputs_dict['power_column_label']) != -1:
@@ -73,7 +76,7 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 else:
                     manual_time_shift = 0
 
-                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag,
+                dh, passes_pipeline = run_failsafe_pipeline(dh, manual_time_shift, sys_tag,
                                                             inputs_dict['fix_time_shifts'],
                                                             inputs_dict['time_zone_correction'],
                                                             inputs_dict['convert_to_ts'])
@@ -194,9 +197,9 @@ if __name__ == '__main__':
     '''
 
     inputs_dict = get_commandline_inputs()
-
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    #
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 
