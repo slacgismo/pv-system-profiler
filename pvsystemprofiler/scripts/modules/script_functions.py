@@ -380,7 +380,7 @@ def run_failsafe_pipeline(dh, manual_time_shift, sys_tag, fts, tzc, convert_to_t
     :param convert_to_ts: Boolean. Convert data frame to time series.
     :return: Boolean. True if passes pipeline, otherwise False.
     """
-
+    df = dh.data_frame_raw
     if manual_time_shift == 1:
         dh.fix_dst()
 
@@ -388,7 +388,7 @@ def run_failsafe_pipeline(dh, manual_time_shift, sys_tag, fts, tzc, convert_to_t
         try:
             dh.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
         except ValueError:
-            max_val = np.nanquantile(df_in[sys_tag], 0.95)
+            max_val = np.nanquantile(df[sys_tag], 0.95)
             dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False, max_val=max_val * 3)
     except:
         return dh, False
