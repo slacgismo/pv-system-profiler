@@ -39,6 +39,7 @@ def load_system_metadata(df_loc):
     df['site_file'] = df['site'].apply(lambda x: str(x) + '_20201006_composite')
     return df
 
+
 def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
@@ -55,7 +56,8 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
     ll = len(inputs_dict['power_column_label'])
 
     dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-
+    if inputs_dict['time_shift_inspection'] == 1:
+        dh.fix_dst()
 
     if inputs_dict['convert_to_ts']:
         cols = []
@@ -76,10 +78,8 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 else:
                     manual_time_shift = 0
 
-                dh, passes_pipeline = run_failsafe_pipeline(dh, manual_time_shift, sys_tag,
-                                                            inputs_dict['fix_time_shifts'],
-                                                            inputs_dict['time_zone_correction'],
-                                                            inputs_dict['convert_to_ts'])
+                dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
+                                                            inputs_dict['time_zone_correction'])
 
                 if passes_pipeline:
                     results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,

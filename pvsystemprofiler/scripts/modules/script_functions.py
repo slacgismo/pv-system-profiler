@@ -369,7 +369,7 @@ def filename_to_siteid(sites):
     return site_list
 
 
-def run_failsafe_pipeline(dh, manual_time_shift, sys_tag, fts, tzc, convert_to_ts):
+def run_failsafe_pipeline(dh, sys_tag, fts, tzc):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
     :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
@@ -381,9 +381,6 @@ def run_failsafe_pipeline(dh, manual_time_shift, sys_tag, fts, tzc, convert_to_t
     :return: Boolean. True if passes pipeline, otherwise False.
     """
     df = dh.data_frame_raw
-    if manual_time_shift == 1:
-        dh.fix_dst()
-
     try:
         try:
             dh.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
