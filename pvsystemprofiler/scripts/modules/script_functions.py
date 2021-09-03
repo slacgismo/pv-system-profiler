@@ -372,12 +372,10 @@ def filename_to_siteid(sites):
 def run_failsafe_pipeline(dh, sys_tag, fts, tzc):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
-    :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
-    :param df_in: Dataframe containing site input power signal.
+    :param dh: input data handler
     :param sys_tag: Dataframe column label identifying an input signal, i.e. ac_power_01 ar dc_current_02.
     :param fts: Boolean. Fix time shift parameter in `run_pipeline`.
     :param tzc: Boolean. Time zone correction parameter in `run_pipeline`
-    :param convert_to_ts: Boolean. Convert data frame to time series.
     :return: Boolean. True if passes pipeline, otherwise False.
     """
     df = dh.data_frame_raw
