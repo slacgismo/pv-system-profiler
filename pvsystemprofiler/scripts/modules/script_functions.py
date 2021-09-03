@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import boto3
 import subprocess
@@ -92,7 +93,10 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     :param nrows: number of rows from input signal file to be read.
     :return: Dataframe containing input signals for `file_id`.
     """
-    to_read = location + file_id + file_label + extension
+    if file_label is None:
+        to_read = location + file_id + extension
+    else:
+        to_read = location + file_id + file_label + extension
 
     if nrows is None:
         df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
@@ -365,38 +369,38 @@ def filename_to_siteid(sites):
     return site_list
 
 
-def string_to_boolean(value):
-    """
-    Intended to be used when getting values from a terminal using `sys.argv`. Transforms `True` and `False` strings into
-    boolean attributes
-    :param value: string, `True` or `False`.
-    :return: boolean equivalent of string
-    """
-    if value in ['True', 'true']:
-        return True
-    elif value in ['False', 'false']:
-        return False
-
-
-def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc):
+def run_failsafe_pipeline(dh, sys_tag, fts, tzc):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
-    :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
-    :param df_in: Dataframe containing site input power signal.
+    :param dh: input data handler
     :param sys_tag: Dataframe column label identifying an input signal, i.e. ac_power_01 ar dc_current_02.
-    :param fts: Boolean. Fix time shift parameter in `run_pipeline`
+    :param fts: Boolean. Fix time shift parameter in `run_pipeline`.
     :param tzc: Boolean. Time zone correction parameter in `run_pipeline`
     :return: Boolean. True if passes pipeline, otherwise False.
     """
-    dh = DataHandler(df_in)
-    if manual_time_shift == 1:
-        dh.fix_dst()
+    df = dh.data_frame_raw
     try:
         try:
             dh.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
         except ValueError:
-            max_val = np.nanquantile(df_in[sys_tag], 0.95)
+            max_val = np.nanquantile(df[sys_tag], 0.95)
             dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False, max_val=max_val * 3)
     except:
         return dh, False
     return dh, True
+
+
+def get_commandline_inputs():
+    inputs_dict = {'input_site_file': str(sys.argv[1]) if str(sys.argv[1]) != 'None' else None,
+                   'n_files': str(sys.argv[2]),
+                   's3_location': str(sys.argv[3]) if str(sys.argv[3]) != 'None' else None,
+                   'file_label': str(sys.argv[4]) if str(sys.argv[4]) != 'None' else None,
+                   'power_column_label': str(sys.argv[5]), 'output_file': str(sys.argv[6]),
+                   'fix_time_shifts': True if str(sys.argv[7]) == 'True' else False,
+                   'time_zone_correction': True if str(sys.argv[8]) == 'True' else False,
+                   'check_json': True if str(sys.argv[9]) == 'True' else False,
+                   'convert_to_ts': True if str(sys.argv[10]) == 'True' else False,
+                   'system_summary_file': str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None,
+                   'gmt_offset': str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None,
+                   'data_source': str(sys.argv[13])}
+    return inputs_dict
