@@ -380,8 +380,9 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_t
     :param convert_to_ts: Boolean. Convert data frame to time series.
     :return: Boolean. True if passes pipeline, otherwise False.
     """
-
+    pass
     dh = DataHandler(df_in, convert_to_ts=convert_to_ts)
+
     if manual_time_shift == 1:
         dh.fix_dst()
     try:
@@ -393,6 +394,7 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_t
     except:
         return dh, False
     return dh, True
+
 
 
 def get_commandline_inputs():
@@ -423,9 +425,19 @@ def load_system_metadata(df_loc):
     for sys_id in df['system'].to_list():
         mask = df['system'] == sys_id
         individual_data = []
-        for label in ['site', 'time_shift_manual', 'gmt_offset', 'longitude', 'latitude', 'tilt', 'azimuth']:
+        for label in ['site', 'time_shift_manual', 'gmt_offset',
+                      'longitude', 'latitude', 'tilt', 'azimuth',
+                      'estimated_longitude', 'estimated_latitude', 'estimated_tilt',
+                      'estimated _azimuth']:
             if label in df:
-                individual_data.append(df.loc[mask, label].values[0])
+
+                if label == 'site':
+                    individual_data.append(df.loc[mask, label].values[0])
+                elif label == 'time_shift_manual':
+                    individual_data.append(int(df.loc[mask, label].values[0]))
+                else:
+                    individual_data.append(float(df.loc[mask, label].values[0]))
+
             else:
                 individual_data.append(None)
         out_dict[sys_id] = individual_data
