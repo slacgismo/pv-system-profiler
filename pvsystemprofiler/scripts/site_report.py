@@ -18,81 +18,15 @@ from solardatatools.utilities import progress
 from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_pipeline
 from pvsystemprofiler.scripts.modules.script_functions import resume_run
 from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
-from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
-from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
-from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
-from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
+from pvsystemprofiler.scripts.modules.script_functions import generate_list
+from pvsystemprofiler.scripts.modules.script_functions import load_system_metadata
+from pvsystemprofiler.scripts.modules.script_functions import check_manual_time_shift
 from pvsystemprofiler.scripts.modules.script_functions import extract_sys_parameters
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
+
 from solardatatools import DataHandler
 from solardatatools.dataio import load_cassandra_data
-
-
-def load_system_metadata(df_loc):
-    df = pd.read_csv(df_loc, index_col=0)
-    df = df[~df['time_shift_manual'].isnull()]
-    df['time_shift_manual'] = df['time_shift_manual'].apply(int)
-    df = df[df['time_shift_manual'].isin([0, 1])]
-    df['site'] = df['site'].apply(str)
-    df['system'] = df['system'].apply(str)
-    df['site_file'] = df['site'].apply(lambda x: str(x) + '_20201006_composite')
-    out_dict = {}
-    for sys_id in df['system'].to_list():
-        mask = df['system'] == sys_id
-        individual_data = []
-        for label in ['site', 'time_shift_manual', 'gmt_offset', 'longitude', 'latitude', 'tilt', 'azimuth']:
-            if label in df:
-                individual_data.append(df.loc[mask, label].values[0])
-            else:
-                individual_data.append(None)
-        out_dict[sys_id] = individual_data
-    return out_dict
-
-
-def generate_list(inputs_dict, full_df):
-    ssf = inputs_dict['system_summary_file']
-    if ssf:
-        df_system_metadata = pd.read_csv(ssf, index_col=0)
-
-    if inputs_dict['s3_location'] is not None:
-        full_site_list = enumerate_files(inputs_dict['s3_location'])
-        full_site_list = filename_to_siteid(full_site_list)
-    else:
-        full_site_list = []
-
-    previously_checked_site_list = get_checked_sites(full_df)
-    file_list = list(set(full_site_list) - set(previously_checked_site_list))
-
-    if inputs_dict['check_json']:
-        json_files = enumerate_files(inputs_dict['s3_location'], extension='.json')
-        print('Generating system list from json files')
-        json_file_dict = create_json_dict(json_files, inputs_dict['s3_location'])
-        print('List generation completed')
-    else:
-        json_file_dict = None
-
-    if inputs_dict['input_site_file'] is not None:
-        input_site_list_df = pd.read_csv(inputs_dict['input_site_file'], index_col=0)
-        site_list = input_site_list_df['site'].apply(str)
-        site_list = site_list.tolist()
-        if len(file_list) != 0:
-            file_list = list(set(site_list) & set(file_list))
-        else:
-            file_list = list(set(site_list))
-        if inputs_dict['time_shift_inspection']:
-            manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
-            file_list = list(set(file_list) & set(manually_checked_sites))
-    file_list.sort()
-    return file_list, json_file_dict
-
-
-def check_manual_time_shift(location):
-    df = pd.read_csv(location, index_col=0, nrows=2)
-    if 'time_shift_manual' in df.columns:
-        return True
-    else:
-        return False
 
 
 def evaluate_systems(df, site_id, inputs_dict, metadata_dict, json_file_dict=None):
