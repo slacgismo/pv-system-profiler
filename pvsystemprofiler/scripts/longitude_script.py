@@ -17,15 +17,11 @@ from solardatatools.utilities import progress
 from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_pipeline
 from pvsystemprofiler.scripts.modules.script_functions import resume_run
 from pvsystemprofiler.scripts.modules.script_functions import load_generic_data
-from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
-from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
-from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.scripts.modules.script_functions import generate_list
 from pvsystemprofiler.scripts.modules.script_functions import load_system_metadata
 from pvsystemprofiler.scripts.modules.script_functions import check_manual_time_shift
 from pvsystemprofiler.longitude_study import LongitudeStudy
-from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 from solardatatools.dataio import load_cassandra_data
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 from solardatatools import DataHandler
@@ -74,8 +70,6 @@ def evaluate_systems(df, site_id, inputs_dict, metadata_dict, json_file_dict=Non
                 else:
                     gmt_offset = int(metadata_dict[system_id][2])
                 real_longitude = int(metadata_dict[system_id][3])
-
-
 
                 dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag,
                                                             inputs_dict['fix_time_shifts'],
