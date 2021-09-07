@@ -195,8 +195,8 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     inputs_dict = get_commandline_inputs()
 
