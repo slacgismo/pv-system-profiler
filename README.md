@@ -1,4 +1,5 @@
 # pv-system-profiler
+### Estimating PV array location and orientation from real-world power datasets.
 
 <table>
 <tr>
@@ -114,8 +115,10 @@ $ pip install -e path/to/root/folder
 $ conda install -c slacgismo pv-system-profiler
 ```
 
+## Solver Dependencies
 
-Estimating PV array location and orientation from real-world power datasets.
+Refer to [solar-data-tools](https://github.com/slacgismo/solar-data-tools) documentation to get more info about solvers being used.
+
 ## Usage / Run Scripts
 ### Serial run
 The site_report script creates a report of all systems based on the csv files with the sytem signals located in a given folder.
