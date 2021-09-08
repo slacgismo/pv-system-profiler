@@ -228,8 +228,8 @@ if __name__ == '__main__':
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
 
-    inputs_dict = get_commandline_inputs()
-
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
     # threshold values
 
     full_df = resume_run(inputs_dict['output_file'])

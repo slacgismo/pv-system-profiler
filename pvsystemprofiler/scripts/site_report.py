@@ -193,7 +193,8 @@ if __name__ == '__main__':
     :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
     '''
 
-    inputs_dict = get_commandline_inputs()
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
 
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')

@@ -167,12 +167,14 @@ if __name__ == '__main__':
     :param script_to_execute: Full path to python script to be executed.
     :param conda environment: conda environment used to run script_to_execute.
     """
-    inputs_dict = get_commandline_inputs()
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
     # The three input arguments below are required in addition to the input arguments required by the run scripts.
-    # They are related to 'aws' partition handling. 
-    script_to_execute = str(sys.argv[14])
-    conda_environment = str(sys.argv[15])
-    aws_instance_name = str(sys.argv[16])
+    # They are related to 'aws' partition handling.
+
+    script_to_execute = str(sys.argv[-3])
+    conda_environment = str(sys.argv[-2])
+    aws_instance_name = str(sys.argv[-1])
 
     input_site_file = inputs_dict['input_site_file']
     n_files = inputs_dict['n_files']
