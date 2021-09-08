@@ -66,9 +66,8 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
         dh.fix_dst()
 
     if inputs_dict['convert_to_ts']:
-        cols = []
-        for el in dh.keys:
-            cols.append(el[-1])
+        if inputs_dict['convert_to_ts']:
+            cols = [el[-1] for el in dh.keys]
     else:
         cols = dh.keys
 
