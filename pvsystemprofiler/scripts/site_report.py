@@ -53,7 +53,7 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
         partial_df['manual_time_shift'] = np.nan
 
     ll = len(inputs_dict['power_column_label'])
-    if inputs_dict['data_source'] == 'aws':
+    if inputs_dict['data_source'] == 's3':
         cols = df.columns
     elif inputs_dict['data_source'] == 'cassandra':
         cols = []
@@ -152,7 +152,7 @@ def main(inputs_dict, full_df, df_system_metadata, ext='.csv'):
         else:
             site_id = file_id.split('.')[0]
 
-        if inputs_dict['data_source'] == 'aws':
+        if inputs_dict['data_source'] == 's3':
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     provided. 
     :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
     gmt offsets needs to be provided.
-    :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
+    :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
     '''
 
     inputs_dict = get_commandline_inputs()

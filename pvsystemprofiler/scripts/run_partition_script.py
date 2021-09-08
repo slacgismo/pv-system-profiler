@@ -163,7 +163,7 @@ if __name__ == '__main__':
     provided. 
     :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
     gmt offsets needs to be provided.
-    :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
+    :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
     :param script_to_execute: Full path to python script to be executed.
     :param conda environment: conda environment used to run script_to_execute.
     """
