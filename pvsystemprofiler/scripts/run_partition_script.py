@@ -146,22 +146,6 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
 
 
 if __name__ == '__main__':
-    # read kwargs
-    # input_site_file = str(sys.argv[1])
-    # n_files = str(sys.argv[2])
-    # script_to_execute = str(sys.argv[3])
-    # conda_environment = str(sys.argv[4])
-    # file_label = str(sys.argv[5])
-    # power_column_id = str(sys.argv[6])
-    # fix_time_shifts = str(sys.argv[7])
-    # time_zone_correction = str(sys.argv[8])
-    # check_json = str(sys.argv[9])
-    # convert_to_ts = str(sys.argv[10])
-    # supplementary_file = str(sys.argv[11])
-    # aws_instance_name = str(sys.argv[12])
-    # s3_location = str(sys.argv[13])
-    # gmt_offset = str(sys.argv[14])
-    # data_source = str(sys.argv[15])
     """
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
