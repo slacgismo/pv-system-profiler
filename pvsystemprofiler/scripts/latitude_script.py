@@ -45,14 +45,15 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
 
     ll = len(inputs_dict['power_column_label'])
 
-    if inputs_dict['data_source'] == 'aws':
-        cols = df.columns
-    elif inputs_dict['data_source'] == 'cassandra':
-        cols = []
-        dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-        for el in dh.keys:
-            cols.append(el[-1])
+    dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
+    if inputs_dict['time_shift_inspection'] == 1:
+        dh.fix_dst()
 
+    if inputs_dict['convert_to_ts']:
+        if inputs_dict['convert_to_ts']:
+            cols = [el[-1] for el in dh.keys]
+    else:
+        cols = dh.keys
     i = 0
     partial_df = pd.DataFrame()
     for col_label in cols:
@@ -72,10 +73,8 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 else:
                     manual_time_shift = 0
 
-                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag,
-                                                            inputs_dict['fix_time_shifts'],
-                                                            inputs_dict['time_zone_correction'],
-                                                            inputs_dict['convert_to_ts'])
+                dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
+                                                            inputs_dict['time_zone_correction'])
 
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
