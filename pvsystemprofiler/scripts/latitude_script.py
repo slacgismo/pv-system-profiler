@@ -160,8 +160,8 @@ if __name__ == '__main__':
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
     inputs_dict = get_commandline_inputs()
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 

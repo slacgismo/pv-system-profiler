@@ -202,8 +202,8 @@ if __name__ == '__main__':
       '''
 
     inputs_dict = get_commandline_inputs()
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     # threshold values
     inputs_dict['cp'] = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]

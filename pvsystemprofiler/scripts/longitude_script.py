@@ -135,6 +135,8 @@ def main(full_df, file_list, inputs_dict, metadata_dict, json_file_dict, ext='.c
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
+
+        partial_df = evaluate_systems(df, site_id, inputs_dict, metadata_dict, json_file_dict)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -172,8 +174,8 @@ if __name__ == '__main__':
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
     inputs_dict = get_commandline_inputs()
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 
