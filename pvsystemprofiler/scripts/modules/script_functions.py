@@ -385,6 +385,9 @@ def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_t
     dh = DataHandler(df_in, convert_to_ts=convert_to_ts)
     if manual_time_shift == 1:
         dh.fix_dst()
+
+    if manual_time_shift == 1:
+        dh.fix_dst()
     try:
         try:
             dh.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)

@@ -42,9 +42,7 @@ def run_failsafe_lat_estimation(dh_in, real_latitude):
 
 
 def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
-
     ll = len(inputs_dict['power_column_label'])
-
     if inputs_dict['data_source'] == 's3':
         cols = df.columns
     elif inputs_dict['data_source'] == 'cassandra':

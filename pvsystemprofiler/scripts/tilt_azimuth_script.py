@@ -103,7 +103,8 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
                                                                                latitude_input, None, None,
-                                                                               real_latitude, real_tilt, real_azimuth)
+                                                                               real_latitude, real_tilt, real_azimuth,
+                                                                               gmt_offset)
                     results_df['length'] = dh.num_days
                     results_df['data sampling'] = dh.data_sampling
                     results_df['data quality score'] = dh.data_quality_score

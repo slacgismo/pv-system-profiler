@@ -28,6 +28,7 @@ from pvsystemprofiler.scripts.modules.script_functions import get_commandline_in
 from solardatatools import DataHandler
 
 
+
 def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     try:
         runs_lon_estimation = True
@@ -170,6 +171,8 @@ def main(inputs_dict, full_df, df_system_metadata):
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
+
+        partial_df = evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
