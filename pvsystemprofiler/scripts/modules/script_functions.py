@@ -417,3 +417,39 @@ def load_system_metadata(df_in, file_label):
         df['site_file'] = df['site'].apply(lambda x: str(x) + file_label)
     return df
 
+
+def generate_list(inputs_dict, full_df):
+    ssf = inputs_dict['system_summary_file']
+    if ssf:
+        df_system_metadata = pd.read_csv(ssf, index_col=0)
+
+    if inputs_dict['s3_location'] is not None:
+        full_site_list = enumerate_files(inputs_dict['s3_location'])
+        full_site_list = filename_to_siteid(full_site_list)
+    else:
+        full_site_list = []
+
+    previously_checked_site_list = get_checked_sites(full_df)
+    file_list = list(set(full_site_list) - set(previously_checked_site_list))
+
+    if inputs_dict['check_json']:
+        json_files = enumerate_files(inputs_dict['s3_location'], extension='.json')
+        print('Generating system list from json files')
+        json_file_dict = create_json_dict(json_files, inputs_dict['s3_location'])
+        print('List generation completed')
+    else:
+        json_file_dict = None
+
+    if inputs_dict['input_site_file'] is not None:
+        input_site_list_df = pd.read_csv(inputs_dict['input_site_file'], index_col=0)
+        site_list = input_site_list_df['site'].apply(str)
+        site_list = site_list.tolist()
+        if len(file_list) != 0:
+            file_list = list(set(site_list) & set(file_list))
+        else:
+            file_list = list(set(site_list))
+        if inputs_dict['time_shift_inspection']:
+            manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
+            file_list = list(set(file_list) & set(manually_checked_sites))
+    file_list.sort()
+    return file_list, json_file_dict
