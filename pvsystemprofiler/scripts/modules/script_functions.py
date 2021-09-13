@@ -404,3 +404,16 @@ def get_commandline_inputs():
                    'gmt_offset': str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None,
                    'data_source': str(sys.argv[13])}
     return inputs_dict
+
+
+def load_system_metadata(df_in, file_label):
+    df = pd.read_csv(df_in, index_col=0)
+    df = df[~df['time_shift_manual'].isnull()]
+    df['time_shift_manual'] = df['time_shift_manual'].apply(int)
+    df = df[df['time_shift_manual'].isin([0, 1])]
+    df['site'] = df['site'].apply(str)
+    df['system'] = df['system'].apply(str)
+    if file_label:
+        df['site_file'] = df['site'].apply(lambda x: str(x) + file_label)
+    return df
+

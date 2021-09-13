@@ -21,6 +21,7 @@ from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
 from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
+from pvsystemprofiler.scripts.modules.script_functions import load_system_metadata
 from pvsystemprofiler.longitude_study import LongitudeStudy
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 from solardatatools.dataio import load_cassandra_data
@@ -44,7 +45,7 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     return p_df, runs_lon_estimation
 
 
-def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
+def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
 
     ll = len(inputs_dict['power_column_label'])
 
@@ -75,11 +76,11 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 if inputs_dict['gmt_offset'] is not None:
                     gmt_offset = inputs_dict['gmt_offset']
                 else:
-                    gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
+                    gmt_offset = float(site_metadata.loc[site_metadata['system'] == system_id, 'gmt_offset'])
 
                 if inputs_dict['time_shift_inspection']:
-                    manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                                   'time_shift_manual'].values[0])
+                    manual_time_shift = int(site_metadata.loc[site_metadata['system'] == system_id,
+                                                              'time_shift_manual'].values[0])
                 else:
                     manual_time_shift = 0
 
@@ -173,7 +174,13 @@ def main(inputs_dict, full_df, df_system_metadata):
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
 
-        partial_df = evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict)
+        if inputs_dict['file_label']:
+            mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
+        else:
+            mask = df_system_metadata['site'] == site_id
+        site_metadata = df_system_metadata[mask]
+
+        partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
 
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
@@ -211,8 +218,8 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
 
     inputs_dict = get_commandline_inputs()
 

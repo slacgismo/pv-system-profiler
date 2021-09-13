@@ -21,11 +21,13 @@ from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
 from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
+from pvsystemprofiler.scripts.modules.script_functions import load_system_metadata
 from pvsystemprofiler.latitude_study import LatitudeStudy
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 from solardatatools.dataio import load_cassandra_data
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 from solardatatools import DataHandler
+
 
 def run_failsafe_lat_estimation(dh_in, real_latitude):
     try:
@@ -41,8 +43,7 @@ def run_failsafe_lat_estimation(dh_in, real_latitude):
     return p_df, runs_lat_estimation
 
 
-def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
-
+def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
     ll = len(inputs_dict['power_column_label'])
 
     dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
@@ -63,13 +64,13 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 i += 1
                 sys_tag = inputs_dict['power_column_label'] + system_id
                 if df_system_metadata is not None:
-                    real_latitude = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'latitude'])
+                    real_latitude = float(site_metadata.loc[df_system_metadata['system'] == system_id, 'latitude'])
                 else:
                     real_latitude = None
 
                 if inputs_dict['time_shift_inspection']:
-                    manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                                   'time_shift_manual'].values[0])
+                    manual_time_shift = int(site_metadata.loc[df_system_metadata['system'] == system_id,
+                                                              'time_shift_manual'].values[0])
                 else:
                     manual_time_shift = 0
 
@@ -158,7 +159,13 @@ def main(inputs_dict, full_df, df_system_metadata):
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
 
-        partial_df = evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict)
+        if inputs_dict['file_label']:
+            mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
+        else:
+            mask = df_system_metadata['site'] == site_id
+        site_metadata = df_system_metadata[mask]
+
+        partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -194,8 +201,8 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
 
     inputs_dict = get_commandline_inputs()
 
@@ -203,17 +210,12 @@ if __name__ == '__main__':
 
     ssf = inputs_dict['system_summary_file']
     if ssf is not None:
-        df_system_metadata = pd.read_csv(ssf, index_col=0)
-        df_system_metadata['site'] = df_system_metadata['site'].apply(str)
-        df_system_metadata['system'] = df_system_metadata['system'].apply(str)
-        df_system_metadata['site_file'] = df_system_metadata['site'].apply(lambda x: str(x) + '_20201006_composite')
+        df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
         if 'time_shift_manual' in df_system_metadata.columns:
             inputs_dict['time_shift_inspection'] = True
-            df_system_metadata = df_system_metadata[~df_system_metadata['time_shift_manual'].isnull()]
-            df_system_metadata['time_shift_manual'] = df_system_metadata['time_shift_manual'].apply(int)
-            df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
         else:
             inputs_dict['time_shift_inspection'] = False
     else:
         df_system_metadata = None
+
     main(inputs_dict, full_df, df_system_metadata)

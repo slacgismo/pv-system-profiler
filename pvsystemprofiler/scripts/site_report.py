@@ -25,22 +25,12 @@ from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 from pvsystemprofiler.scripts.modules.script_functions import extract_sys_parameters
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
+from pvsystemprofiler.scripts.modules.script_functions import load_system_metadata
 from solardatatools import DataHandler
 from solardatatools.dataio import load_cassandra_data
 
 
-def load_system_metadata(df_loc):
-    df = pd.read_csv(df_loc, index_col=0)
-    df = df[~df['time_shift_manual'].isnull()]
-    df['time_shift_manual'] = df['time_shift_manual'].apply(int)
-    df = df[df['time_shift_manual'].isin([0, 1])]
-    df['site'] = df['site'].apply(str)
-    df['system'] = df['system'].apply(str)
-    df['site_file'] = df['site'].apply(lambda x: str(x) + '_20201006_composite')
-    return df
-
-
-def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
+def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
     partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
@@ -72,8 +62,8 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 sys_tag = inputs_dict['power_column_label'] + system_id
 
                 if inputs_dict['time_shift_inspection']:
-                    manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                                   'time_shift_manual'].values[0])
+                    manual_time_shift = int(site_metadata.loc[site_metadata['system'] == system_id,
+                                                              'time_shift_manual'].values[0])
                 else:
                     manual_time_shift = 0
 
@@ -159,7 +149,14 @@ def main(inputs_dict, full_df, df_system_metadata, ext='.csv'):
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
 
-        partial_df = evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict)
+        if inputs_dict['file_label']:
+            mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
+        else:
+            mask = df_system_metadata['site'] == site_id
+
+        site_metadata = df_system_metadata[mask]
+
+        partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
         if not partial_df.empty:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
@@ -204,7 +201,7 @@ if __name__ == '__main__':
 
     ssf = inputs_dict['system_summary_file']
     if ssf is not None:
-        df_system_metadata = load_system_metadata(ssf)
+        df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
         if 'time_shift_manual' in df_system_metadata.columns:
             inputs_dict['time_shift_inspection'] = True
         else:
