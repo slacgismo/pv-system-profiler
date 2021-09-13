@@ -50,7 +50,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
     ll = len(inputs_dict['power_column_label'])
 
     dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-    if inputs_dict['time_shift_inspection'] == 1:
+    if inputs_dict['time_shift_manual'] == 1:
         dh.fix_dst()
 
     if inputs_dict['convert_to_ts']:
@@ -64,21 +64,19 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
     for col_label in cols:
         if col_label.find(inputs_dict['power_column_label']) != -1:
             system_id = col_label[ll:]
-            if system_id in df_system_metadata['system'].tolist():
+            if system_id in site_metadata['system'].tolist():
                 i += 1
                 sys_tag = inputs_dict['power_column_label'] + system_id
-                if df_system_metadata is not None:
-                    real_longitude = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                                  'longitude'])
+                sys_mask = site_metadata['system'] == system_id
+                if inputs_dict['longitude']:
+                    real_longitude = float(site_metadata.loc[sys_mask, 'longitude'])
                 else:
                     real_longitude = None
-
-                if inputs_dict['gmt_offset'] is not None:
+                if inputs_dict['gmt_offset']:
                     gmt_offset = inputs_dict['gmt_offset']
                 else:
-                    gmt_offset = float(site_metadata.loc[site_metadata['system'] == system_id, 'gmt_offset'])
-
-                if inputs_dict['time_shift_inspection']:
+                    gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
+                if inputs_dict['time_shift_manual']:
                     manual_time_shift = int(site_metadata.loc[site_metadata['system'] == system_id,
                                                               'time_shift_manual'].values[0])
                 else:
@@ -107,7 +105,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                 results_df['site'] = site_id
                 results_df['system'] = system_id
 
-                if inputs_dict['time_shift_inspection']:
+                if inputs_dict['time_shift_manual']:
                     results_df['manual_time shift'] = manual_time_shift
 
                 partial_df = partial_df.append(results_df)
@@ -182,21 +180,25 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
+    inputs_dict = get_commandline_inputs()
+
     # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     # log_file_versions('pv-system-profiler')
-
-    inputs_dict = get_commandline_inputs()
 
     full_df = resume_run(inputs_dict['output_file'])
 
     ssf = inputs_dict['system_summary_file']
     if ssf:
         df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
-        if 'time_shift_manual' in df_system_metadata.columns:
-            inputs_dict['time_shift_inspection'] = True
-        else:
-            inputs_dict['time_shift_inspection'] = False
+        cols = df_system_metadata.columns
+        for param in ['longitude', 'latitude', 'tilt', 'azimuth',
+                      'estimated_longitude', 'estimated_latitude',
+                      'time_shift_manual']:
+            if param in cols:
+                inputs_dict[param] = True
+            else:
+                inputs_dict[param] = False
     else:
         df_system_metadata = None
 
-    main(full_df, inputs_dict, df_system_metadata)
+main(full_df, inputs_dict, df_system_metadata)

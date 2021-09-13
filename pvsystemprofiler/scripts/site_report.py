@@ -36,18 +36,18 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                        'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
                        'latitude', 'tilt', 'azimuth', 'sys_id']
+    ll = len(inputs_dict['power_column_label'])
 
     if json_file_dict is None:
         partial_df = pd.DataFrame(columns=partial_df_cols[:13])
     else:
         partial_df = pd.DataFrame(columns=partial_df_cols)
-    if inputs_dict['time_shift_inspection']:
+
+    if inputs_dict['time_shift_manual']:
         partial_df['manual_time_shift'] = np.nan
 
-    ll = len(inputs_dict['power_column_label'])
-
     dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-    if inputs_dict['time_shift_inspection'] == 1:
+    if inputs_dict['time_shift_manual'] == 1:
         dh.fix_dst()
 
     if inputs_dict['convert_to_ts']:
@@ -62,7 +62,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
             if df_system_metadata is None or system_id in df_system_metadata['system'].tolist():
                 sys_tag = inputs_dict['power_column_label'] + system_id
 
-                if inputs_dict['time_shift_inspection']:
+                if inputs_dict['time_shift_manual']:
                     manual_time_shift = int(site_metadata.loc[site_metadata['system'] == system_id,
                                                               'time_shift_manual'].values[0])
                 else:
@@ -80,7 +80,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                 else:
                     results_list = [site_id, system_id, passes_pipeline] + [np.nan] * 10
 
-                if json_file_dict is not None:
+                if json_file_dict:
                     if system_id in json_file_dict.keys():
                         source_file = json_file_dict[system_id]
                         location_results = extract_sys_parameters(source_file, system_id, inputs_dict['s3_location'])
@@ -88,7 +88,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                         location_results = [np.nan] * 5
                     results_list += location_results
 
-                if inputs_dict['time_shift_inspection']:
+                if inputs_dict['time_shift_manual']:
                     results_list += str(manual_time_shift)
 
                 partial_df.loc[len(partial_df)] = results_list
@@ -162,20 +162,23 @@ if __name__ == '__main__':
 
     inputs_dict = get_commandline_inputs()
 
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 
     ssf = inputs_dict['system_summary_file']
-
     if ssf:
         df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
-        if 'time_shift_manual' in df_system_metadata.columns:
-            inputs_dict['time_shift_inspection'] = True
-        else:
-            inputs_dict['time_shift_inspection'] = False
+        cols = df_system_metadata.columns
+        for param in ['longitude', 'latitude', 'tilt', 'azimuth',
+                      'estimated_longitude', 'estimated_latitude',
+                      'time_shift_manual']:
+            if param in cols:
+                inputs_dict[param] = True
+            else:
+                inputs_dict[param] = False
     else:
         df_system_metadata = None
 
-    main(full_df, inputs_dict, df_system_metadata)
+main(full_df, inputs_dict, df_system_metadata)
