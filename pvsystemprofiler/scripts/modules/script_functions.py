@@ -98,7 +98,6 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     else:
         to_read = location + file_id + file_label + extension
 
-
     if nrows is None:
         df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
     else:
@@ -370,26 +369,21 @@ def filename_to_siteid(sites):
     return site_list
 
 
-def run_failsafe_pipeline(df_in, manual_time_shift, sys_tag, fts, tzc, convert_to_ts):
+def run_failsafe_pipeline(dh, sys_tag, fts, tzc):
     """
     Runs the solarDataTools dataHandler pipeline in failsafe mode.
-    :param manual_time_shift: Boolean. True if manual time shift inspection is performed.
-    :param df_in: Dataframe containing site input power signal.
+    :param dh: input data handler
     :param sys_tag: Dataframe column label identifying an input signal, i.e. ac_power_01 ar dc_current_02.
     :param fts: Boolean. Fix time shift parameter in `run_pipeline`.
     :param tzc: Boolean. Time zone correction parameter in `run_pipeline`
-    :param convert_to_ts: Boolean. Convert data frame to time series.
     :return: Boolean. True if passes pipeline, otherwise False.
     """
-
-    dh = DataHandler(df_in, convert_to_ts=convert_to_ts)
-    if manual_time_shift == 1:
-        dh.fix_dst()
+    df = dh.data_frame_raw
     try:
         try:
             dh.run_pipeline(power_col=sys_tag, fix_shifts=fts, correct_tz=tzc, verbose=False)
         except ValueError:
-            max_val = np.nanquantile(df_in[sys_tag], 0.95)
+            max_val = np.nanquantile(df[sys_tag], 0.95)
             dh.run_pipeline(power_col=sys_tag, fix_shifts=False, correct_tz=tzc, verbose=False, max_val=max_val * 3)
     except:
         return dh, False

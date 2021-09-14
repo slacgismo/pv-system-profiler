@@ -61,6 +61,7 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
 
 def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
     ll = len(inputs_dict['power_column_label'])
+
     if inputs_dict['data_source'] == 's3':
         cols = df.columns
     elif inputs_dict['data_source'] == 'cassandra':
@@ -96,10 +97,9 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 else:
                     manual_time_shift = 0
 
-                dh, passes_pipeline = run_failsafe_pipeline(df, manual_time_shift, sys_tag,
-                                                            inputs_dict['fix_time_shifts'],
-                                                            inputs_dict['time_zone_correction'],
-                                                            inputs_dict['convert_to_ts'])
+                dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
+                                                            inputs_dict['time_zone_correction'])
+
                 if passes_pipeline:
                     results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
                                                                                latitude_input, None, None,
