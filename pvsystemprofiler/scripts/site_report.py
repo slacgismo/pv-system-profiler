@@ -121,6 +121,7 @@ def main(full_df, inputs_dict, df_system_metadata):
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
+
         if not site_metadata.empty:
             partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
         else:
