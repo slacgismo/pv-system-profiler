@@ -44,29 +44,28 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
         partial_df = pd.DataFrame(columns=partial_df_cols)
 
     if inputs_dict['time_shift_manual']:
-        partial_df['manual_time_shift'] = np.nan
-
-    dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-    if inputs_dict['time_shift_manual'] == 1:
-        dh.fix_dst()
+        partial_df['time_shift_manual'] = np.nan
 
     if inputs_dict['convert_to_ts']:
-        if inputs_dict['convert_to_ts']:
-            cols = [el[-1] for el in dh.keys]
+        dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
+        cols = [el[-1] for el in dh.keys]
     else:
-        cols = dh.keys
+        cols = df.columns
 
     for col_label in cols:
         if col_label.find(inputs_dict['power_column_label']) != -1:
             system_id = col_label[ll:]
             if df_system_metadata is None or system_id in df_system_metadata['system'].tolist():
+                dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
                 sys_tag = inputs_dict['power_column_label'] + system_id
+                sys_mask = site_metadata['system'] == system_id
 
                 if inputs_dict['time_shift_manual']:
-                    manual_time_shift = int(site_metadata.loc[site_metadata['system'] == system_id,
-                                                              'time_shift_manual'].values[0])
+                    time_shift_manual = int(site_metadata.loc[sys_mask, 'time_shift_manual'].values[0])
+                    if time_shift_manual == 1:
+                        dh.fix_dst()
                 else:
-                    manual_time_shift = 0
+                    time_shift_manual = 0
 
                 dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
                                                             inputs_dict['time_zone_correction'])
@@ -89,7 +88,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                     results_list += location_results
 
                 if inputs_dict['time_shift_manual']:
-                    results_list += str(manual_time_shift)
+                    results_list += str(time_shift_manual)
 
                 partial_df.loc[len(partial_df)] = results_list
     return partial_df
@@ -110,7 +109,7 @@ def main(full_df, inputs_dict, df_system_metadata, ext='.csv'):
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
         progress(file_ix, len(file_list), msg, bar_length=20)
 
-        if inputs_dict['file_label']:
+        if inputs_dict['file_label'] is not None:
             i = file_id.find(inputs_dict['file_label'])
             site_id = file_id[:i]
             mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
@@ -162,8 +161,8 @@ if __name__ == '__main__':
 
     inputs_dict = get_commandline_inputs()
 
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 

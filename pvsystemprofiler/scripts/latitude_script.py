@@ -47,15 +47,12 @@ def run_failsafe_lat_estimation(dh_in, real_latitude):
 def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
     ll = len(inputs_dict['power_column_label'])
 
-    dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-    if inputs_dict['time_shift_manual'] == 1:
-        dh.fix_dst()
-
     if inputs_dict['convert_to_ts']:
-        if inputs_dict['convert_to_ts']:
-            cols = [el[-1] for el in dh.keys]
+        dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
+        cols = [el[-1] for el in dh.keys]
     else:
-        cols = dh.keys
+        cols = df.columns
+
     i = 0
     partial_df = pd.DataFrame()
     for col_label in cols:
@@ -63,17 +60,21 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
             system_id = col_label[ll:]
             if system_id in site_metadata['system'].tolist():
                 i += 1
+                dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
                 sys_tag = inputs_dict['power_column_label'] + system_id
                 sys_mask = site_metadata['system'] == system_id
                 if inputs_dict['latitude']:
                     real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
                 else:
                     real_latitude = None
+
                 if inputs_dict['time_shift_manual']:
-                    manual_time_shift = int(site_metadata.loc[site_metadata['system'] == system_id,
-                                                              'time_shift_manual'].values[0])
+                    time_shift_manual = int(site_metadata.loc[sys_mask, 'time_shift_manual'].values[0])
+                    if time_shift_manual == 1:
+                        dh.fix_dst()
                 else:
-                    manual_time_shift = 0
+                    time_shift_manual = 0
+
                 dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
                                                             inputs_dict['time_zone_correction'])
 
@@ -98,7 +99,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                 results_df['system'] = system_id
 
                 if inputs_dict['time_shift_manual']:
-                    results_df['manual_time shift'] = manual_time_shift
+                    results_df['manual_time shift'] = time_shift_manual
 
                 partial_df = partial_df.append(results_df)
     return partial_df
@@ -119,7 +120,7 @@ def main(full_df, inputs_dict, df_system_metadata, ext='.csv'):
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
         progress(file_ix, len(file_list), msg, bar_length=20)
 
-        if inputs_dict['file_label']:
+        if inputs_dict['file_label'] is not None:
             i = file_id.find(inputs_dict['file_label'])
             site_id = file_id[:i]
             mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
@@ -170,15 +171,15 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
     '''
-    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    log_file_versions('pv-system-profiler')
+    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    # log_file_versions('pv-system-profiler')
 
     inputs_dict = get_commandline_inputs()
 
     full_df = resume_run(inputs_dict['output_file'])
 
     ssf = inputs_dict['system_summary_file']
-    if ssf:
+    if ssf is not None:
         df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
         cols = df_system_metadata.columns
         for param in ['longitude', 'latitude', 'tilt', 'azimuth',
