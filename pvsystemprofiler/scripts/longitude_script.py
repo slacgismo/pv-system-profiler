@@ -138,9 +138,8 @@ def main(full_df, inputs_dict, df_system_metadata):
         site_metadata = df_system_metadata[mask]
 
         # TODO: integrate option for other data inputs
-        if inputs_dict['data_source'] == 'aws':
-
-        df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
+        if inputs_dict['data_source'] == 's3':
+            df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
 
@@ -185,13 +184,11 @@ if __name__ == '__main__':
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
     '''
-    inputs_dict = get_commandline_inputs()
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
 
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
-
-    input_kwargs = sys.argv
-    inputs_dict = get_commandline_inputs(input_kwargs)
 
     full_df = resume_run(inputs_dict['output_file'])
 
