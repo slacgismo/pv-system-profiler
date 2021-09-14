@@ -390,17 +390,68 @@ def run_failsafe_pipeline(dh, sys_tag, fts, tzc):
     return dh, True
 
 
-def get_commandline_inputs():
-    inputs_dict = {'input_site_file': str(sys.argv[1]) if str(sys.argv[1]) != 'None' else None,
-                   'n_files': str(sys.argv[2]),
-                   's3_location': str(sys.argv[3]) if str(sys.argv[3]) != 'None' else None,
-                   'file_label': str(sys.argv[4]) if str(sys.argv[4]) != 'None' else None,
-                   'power_column_label': str(sys.argv[5]), 'output_file': str(sys.argv[6]),
-                   'fix_time_shifts': True if str(sys.argv[7]) == 'True' else False,
-                   'time_zone_correction': True if str(sys.argv[8]) == 'True' else False,
-                   'check_json': True if str(sys.argv[9]) == 'True' else False,
-                   'convert_to_ts': True if str(sys.argv[10]) == 'True' else False,
-                   'system_summary_file': str(sys.argv[11]) if str(sys.argv[11]) != 'None' else None,
-                   'gmt_offset': str(sys.argv[12]) if str(sys.argv[12]) != 'None' else None,
-                   'data_source': str(sys.argv[13])}
+def get_commandline_inputs(input_kwargs):
+    inputs_dict = {'input_site_file': input_kwargs[1] if input_kwargs[1] != 'None' else None,
+                   'n_files': input_kwargs[2],
+                   's3_location': input_kwargs[3] if input_kwargs[3] != 'None' else None,
+                   'file_label': input_kwargs[4] if input_kwargs[4] != 'None' else None,
+                   'power_column_label': input_kwargs[5],
+                   'output_file': input_kwargs[6],
+                   'fix_time_shifts': True if input_kwargs[7] == 'True' else False,
+                   'time_zone_correction': True if input_kwargs[8] == 'True' else False,
+                   'check_json': True if input_kwargs[9] == 'True' else False,
+                   'convert_to_ts': True if input_kwargs[10] == 'True' else False,
+                   'system_summary_file': input_kwargs[11] if input_kwargs[11] != 'None' else None,
+                   'gmt_offset': input_kwargs[12] if input_kwargs[12] != 'None' else None,
+                   'data_source': input_kwargs[13]}
     return inputs_dict
+
+
+def load_system_metadata(df_in, file_label):
+    df = pd.read_csv(df_in, index_col=0)
+    df = df[~df['time_shift_manual'].isnull()]
+    df['time_shift_manual'] = df['time_shift_manual'].apply(int)
+    df = df[df['time_shift_manual'].isin([0, 1])]
+    df['site'] = df['site'].apply(str)
+    df['system'] = df['system'].apply(str)
+    if file_label:
+        df['site_file'] = df['site'].apply(lambda x: str(x) + file_label)
+    return df
+
+
+def generate_list(inputs_dict, full_df):
+    ssf = inputs_dict['system_summary_file']
+    if ssf:
+        df_system_metadata = pd.read_csv(ssf, index_col=0)
+
+    if inputs_dict['s3_location'] is not None:
+        full_site_list = enumerate_files(inputs_dict['s3_location'])
+        full_site_list = filename_to_siteid(full_site_list)
+    else:
+        full_site_list = []
+
+    previously_checked_site_list = get_checked_sites(full_df)
+    file_list = list(set(full_site_list) - set(previously_checked_site_list))
+
+    if inputs_dict['check_json']:
+        json_files = enumerate_files(inputs_dict['s3_location'], extension='.json')
+        print('Generating system list from json files')
+        json_file_dict = create_json_dict(json_files, inputs_dict['s3_location'])
+        print('List generation completed')
+    else:
+        json_file_dict = None
+
+    if inputs_dict['input_site_file'] is not None:
+        input_site_list_df = pd.read_csv(inputs_dict['input_site_file'], index_col=0)
+        site_list = input_site_list_df['site'].apply(str)
+        site_list = site_list.tolist()
+        if len(file_list) != 0:
+            file_list = list(set(site_list) & set(file_list))
+        else:
+            file_list = list(set(site_list))
+        if inputs_dict['time_shift_inspection']:
+            manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
+            file_list = list(set(file_list) & set(manually_checked_sites))
+    file_list.sort()
+    return file_list, json_file_dict
+

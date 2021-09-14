@@ -14,15 +14,17 @@ local_working_folder = str(sys.argv[5])
 local_input_file = str(sys.argv[6])
 local_output_file = str(sys.argv[7])
 power_column_id = str(sys.argv[8])
-time_shift_inspection = str(sys.argv[9])
+convert_to_ts = str(sys.argv[9])
 s3_location = str(sys.argv[10])
 n_files = str(sys.argv[11])
 file_label = str(sys.argv[12])
 fix_time_shifts = str(sys.argv[13])
 time_zone_correction = str(sys.argv[14])
 check_json = str(sys.argv[15])
-supplementary_file = str(sys.argv[16])
-python_command = str(sys.argv[17])
+gmt_offset = str(sys.argv[16])
+data_type = str(sys.argv[17])
+supplementary_file = str(sys.argv[18])
+python_command = str(sys.argv[19])
 
 # read full list of systems save a local copy of systems corresponding to partition
 df_full = pd.read_csv(global_input_file, index_col=0)
@@ -39,11 +41,14 @@ arguments = local_input_file + ' '  \
             + file_label + ' ' \
             + power_column_id + ' ' \
             + local_output_file + ' ' \
-            + time_shift_inspection + ' '\
             + fix_time_shifts + ' '\
-            + time_zone_correction + ' ' \
+            + time_zone_correction + ' '\
             + check_json + ' ' \
-            + supplementary_file
+            + convert_to_ts + ' ' \
+            + supplementary_file + ' ' \
+            + gmt_offset + ' ' \
+            + data_type
+
 full_command = command + ' ' + arguments + '>out &'
 # save local copy of run script
 file1 = open(local_working_folder + 'run_local_partition.sh', "w")

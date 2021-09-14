@@ -15,6 +15,7 @@ from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import copy_to_s3
 from pvsystemprofiler.scripts.modules.script_functions import remote_execute
 from pvsystemprofiler.scripts.modules.script_functions import get_address
+from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 
 
 def build_input_file(s3_location, input_file_location='s3://pv.insight.misc/report_files/'):
@@ -81,12 +82,12 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
 
 def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
-         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file):
+         convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+         supplementary_file, data_source, gmt_offset):
     # number of partitions
     n_part = len(ec2_instances)
     total_size = np.sum(df['file_size'])
-    #total_size = len(df)
+    # total_size = len(df)
     # size of partition
     part_size = np.ceil(total_size / n_part) * 0.8
     ii = 0
@@ -106,9 +107,10 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
                           scripts_location=script_location, conda_env=conda_environment, pcid=power_column_id,
-                          tsi=time_shift_inspection, s3l=s3_location, n_files=n_files, file_label=file_label,
+                          cts=convert_to_ts, s3l=s3_location, n_files=n_files, file_label=file_label,
                           fix_time_shifts=fix_time_shifts, time_zone_correction=time_zone_correction,
-                          check_json=check_json, sup_file=supplementary_file)
+                          check_json=check_json, sup_file=supplementary_file, data_source=data_source,
+                          gmt_offset=gmt_offset)
         # add partition to list
         partitions.append(part)
         create_partition(part)
@@ -144,46 +146,55 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
 
 
 if __name__ == '__main__':
-    # read kwargs
-    input_site_file = str(sys.argv[1])
-    n_files = str(sys.argv[2])
-    script_to_execute = str(sys.argv[3])
-    conda_environment = str(sys.argv[4])
-    file_label = str(sys.argv[5])
-    power_column_id = str(sys.argv[6])
-    time_shift_inspection = str(sys.argv[7])
-    fix_time_shifts = str(sys.argv[8])
-    time_zone_correction = str(sys.argv[9])
-    check_json = str(sys.argv[10])
-    supplementary_file = str(sys.argv[11])
-    aws_instance_name = str(sys.argv[12])
-    s3_location = str(sys.argv[13])
-
     """
-    :param input_site_file: Absolute path to csv file containing a list of sites to be evaluated. 'None' if no input 
-    site file is provided.
+    :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
+    :param s3_location: Absolute path to s3 location of files.
+    :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
+    :param power_column_label: Repeating portion of the power column label. 
+    :param output_file: Absolute path to csv file containing report results.
+    :param fix_time_shits: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
+    :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
+    running the pipeline.
+    :param check_json: String, 'True' or 'False'. Check json file for location information.
+    :param convert_to_ts: String, 'True' or 'False'.  Determines if conversion to time series is performed when 
+    running the pipeline.
+    :param system_summary_file: Full path to csv file containing manual time shift flag for each system, None if no file
+    provided. 
+    :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
+    gmt offsets needs to be provided.
+    :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
     :param script_to_execute: Full path to python script to be executed.
     :param conda environment: conda environment used to run script_to_execute.
-    :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
-    :param power_column_id: id given to the power column to be analyzed.
-    :param time_shift_inspection: String, 'True' or 'False'. Determines if manual time shift inspection is performed 
-        when running the pipeline.
-    :param fix_time_shifts: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
-    :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
-        running the pipeline.
-    :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
-        running the pipeline.
-    :param check_json: String, 'True' or 'False'. Check json file for location information.
-    :param supplementary_file: csv file with supplementary information need to run script.
-    :param aws_instance_name: aws name key used to identify instances to be used in the partitioning.
-    :param s3_location: Absolute path to s3 location of csv files containing site power signal time series.
     """
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
+    # The three input arguments below are required in addition to the input arguments required by the run scripts.
+    # They are related to 'aws' partition handling.
+
+    script_to_execute = str(sys.argv[-3])
+    conda_environment = str(sys.argv[-2])
+    aws_instance_name = str(sys.argv[-1])
+
+    input_site_file = inputs_dict['input_site_file']
+    n_files = inputs_dict['n_files']
+    s3_location = inputs_dict['s3_location']
+    file_label = inputs_dict['file_label']
+    power_column_label = inputs_dict['power_column_label']
+    fix_time_shifts = inputs_dict['fix_time_shifts']
+    time_zone_correction = inputs_dict['time_zone_correction']
+    check_json = inputs_dict['check_json']
+    convert_to_ts = inputs_dict['convert_to_ts']
+    system_summary_file = inputs_dict['system_summary_file']
+    gmt_offset = inputs_dict['gmt_offset']
+    data_source = inputs_dict['data_source']
 
     # Default input variables
-    if input_site_file == 'None':
+    if not input_site_file:
+
         build_input_file(s3_location)
         input_site_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
+
     aws_username = 'ubuntu'
     aws_region = 'us-west-1'
     aws_client = 'ec2'
@@ -193,6 +204,7 @@ if __name__ == '__main__':
     pos = script_to_execute.rfind('/') + 1
     script_location = script_to_execute[:pos]
     script_name = script_to_execute.split('/')[-1]
+
     # aws licence file
     try:
         ssh_key_file = glob.glob("/Users/*/.aws/*.pem")[0]
@@ -201,17 +213,17 @@ if __name__ == '__main__':
 
     # create main class
     main_class = get_config(ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
-                            ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_id,
-                            gof=global_output_file, god=global_output_directory, tsi=time_shift_inspection,
-                            s3l=s3_location, n_files=n_files, file_label=file_label, fix_time_shifts=fix_time_shifts,
+                            ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_label,
+                            gof=global_output_file, god=global_output_directory, cts=convert_to_ts,
+                            s3l=s3_location, n_files=n_files, file_label=file_label,
                             time_zone_correction=time_zone_correction, check_json=check_json,
-                            sup_file=supplementary_file)
+                            sup_file=system_summary_file, data_source=data_source, gmt_offset=gmt_offset)
     # collect aws instance addresses
     ec2_instances = get_address(aws_instance_name, aws_region, aws_client)
     # read input site file
     df = pd.read_csv(input_site_file, index_col=0)
 
     main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
-         time_shift_inspection, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
-         supplementary_file)
+         aws_region, aws_client, script_name, script_location, conda_environment, power_column_label,
+         convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
+         system_summary_file, data_source, gmt_offset)

@@ -28,7 +28,7 @@ from pvsystemprofiler.algorithms.latitude.estimation import estimate_latitude
 
 class ConfigurationEstimator():
     def __init__(self, data_handler, gmt_offset, day_selection_method='all', solar_noon_method='optimized_estimates',
-                 daylight_method='optimized_estimates', data_matrix='filled', daytime_threshold=0.001):
+                 daylight_method='optimized_estimates', data_matrix='filled', daytime_threshold=None):
         if not data_handler._ran_pipeline:
             data_handler.run_pipeline()
         self.data_handler = data_handler
@@ -47,7 +47,6 @@ class ConfigurationEstimator():
         self.daily_meas = self.data_handler.filled_data_matrix.shape[0]
         self.daytime_threshold = None
         self.day_interval = None
-        self.daytime_threshold_fit = None
         self.x1 = None
         self.x2 = None
         self.data_sampling = self.data_handler.data_sampling
@@ -149,9 +148,7 @@ class ConfigurationEstimator():
         self.x2 = x2
         dh = self.data_handler
         self.data_matrix = dh.filled_data_matrix
-        self.days = dh.daily_flags.clear
         self.num_days = dh.num_days
-        self.delta = delta_cooper(self.day_of_year, self.daily_meas)
         self.omega = calculate_omega(self.data_sampling, self.num_days, self.longitude, self.day_of_year,
                                      self.gmt_offset)
 

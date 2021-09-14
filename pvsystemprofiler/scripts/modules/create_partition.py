@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 # TODO: remove pth.append after package is deployed
 filepath = Path(__file__).resolve().parents[1]
 sys.path.append(str(filepath))
@@ -25,7 +26,7 @@ def create_partition(partition):
     ssh_username = partition.aws_username
     ssh_key_file = partition.ssh_key_file
     power_column_id = partition.power_column_id
-    time_shift_inspection = partition.time_shift_inspection
+    convert_to_ts = partition.convert_to_ts
     s3_location = partition.s3_location
     n_files = partition.n_files
     file_label = partition.file_label
@@ -33,6 +34,8 @@ def create_partition(partition):
     time_zone_correction = partition.time_zone_correction
     check_json = partition.check_json
     supplementary_file = partition.supplementary_file
+    data_type = partition.data_source
+    gmt_offset = partition.gmt_offset
 
     # prepare python command to run local partition
     # extract conda installation folder from local .bashrc
@@ -46,13 +49,14 @@ def create_partition(partition):
     conda_location = conda_location[i + 2: j]
     python_command = conda_location + 'envs/' + conda_env + '/bin/python'
 
-    #delete existing remote partitions
-    #commands = ['rm estimation* -rf']
-    #output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    # delete existing remote partitions
+    # commands = ['rm estimation* -rf']
+    # output = remote_execute(ssh_username, instance, ssh_key_file, commands)
 
     # check for previously created remote folders
     commands = ['ls' + ' ' + local_working_folder]
     output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+
     # create remote partition if does not exist
     if str(output[commands[0]][1]).find('No such file or directory') != -1:
         # prepare commands to create partition
@@ -67,13 +71,15 @@ def create_partition(partition):
                     + local_input_file + ' '
                     + local_output_file + ' '
                     + power_column_id + ' '
-                    + time_shift_inspection + ' '
+                    + str(convert_to_ts) + ' '
                     + s3_location + ' '
                     + n_files + ' '
-                    + file_label + ' '
-                    + fix_time_shifts + ' '
-                    + time_zone_correction + ' '
-                    + check_json + ' '
+                    + str(file_label) + ' '
+                    + str(fix_time_shifts) + ' '
+                    + str(time_zone_correction) + ' '
+                    + str(check_json) + ' '
+                    + str(gmt_offset) + ' '
+                    + data_type + ' '
                     + supplementary_file + ' '
                     + python_command
                     ]
