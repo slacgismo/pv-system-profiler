@@ -166,8 +166,12 @@ def main(full_df, inputs_dict, df_system_metadata):
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
 
-        partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
-        if not partial_df.empty:
+        if not site_metadata.empty:
+            partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
+        else:
+            partial_df = None
+
+        if not partial_df.empty or partial_df is not None:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
             full_df.to_csv(inputs_dict['output_file'])
