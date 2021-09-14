@@ -37,7 +37,6 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                        'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
                        'latitude', 'tilt', 'azimuth', 'sys_id']
     ll = len(inputs_dict['power_column_label'])
-
     if json_file_dict is None:
         partial_df = pd.DataFrame(columns=partial_df_cols[:13])
     else:
@@ -94,7 +93,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
     return partial_df
 
 
-def main(full_df, inputs_dict, df_system_metadata, ext='.csv'):
+def main(full_df, inputs_dict, df_system_metadata):
     site_run_time = 0
     total_time = 0
     file_list, json_file_dict = generate_list(inputs_dict, full_df)

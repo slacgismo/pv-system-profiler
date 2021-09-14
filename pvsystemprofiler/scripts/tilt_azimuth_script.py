@@ -136,7 +136,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
     return partial_df
 
 
-def main(full_df, inputs_dict, df_system_metadata, ext='.csv'):
+def main(full_df, inputs_dict, df_system_metadata):
     site_run_time = 0
     total_time = 0
     file_list, json_file_dict = generate_list(inputs_dict, full_df)
