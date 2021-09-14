@@ -78,7 +78,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                 else:
                     results_list = [site_id, system_id, passes_pipeline] + [np.nan] * 10
 
-                if json_file_dict:
+                if json_file_dict is not None:
                     if system_id in json_file_dict.keys():
                         source_file = json_file_dict[system_id]
                         location_results = extract_sys_parameters(source_file, system_id, inputs_dict['s3_location'])
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     full_df = resume_run(inputs_dict['output_file'])
 
     ssf = inputs_dict['system_summary_file']
-    if ssf:
+    if ssf is not None:
         df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
         cols = df_system_metadata.columns
         for param in ['longitude', 'latitude', 'tilt', 'azimuth',
