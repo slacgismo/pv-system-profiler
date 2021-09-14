@@ -146,22 +146,6 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
 
 
 if __name__ == '__main__':
-    # read kwargs
-    # input_site_file = str(sys.argv[1])
-    # n_files = str(sys.argv[2])
-    # script_to_execute = str(sys.argv[3])
-    # conda_environment = str(sys.argv[4])
-    # file_label = str(sys.argv[5])
-    # power_column_id = str(sys.argv[6])
-    # fix_time_shifts = str(sys.argv[7])
-    # time_zone_correction = str(sys.argv[8])
-    # check_json = str(sys.argv[9])
-    # convert_to_ts = str(sys.argv[10])
-    # supplementary_file = str(sys.argv[11])
-    # aws_instance_name = str(sys.argv[12])
-    # s3_location = str(sys.argv[13])
-    # gmt_offset = str(sys.argv[14])
-    # data_source = str(sys.argv[15])
     """
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
@@ -179,14 +163,18 @@ if __name__ == '__main__':
     provided. 
     :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
     gmt offsets needs to be provided.
-    :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
+    :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
     :param script_to_execute: Full path to python script to be executed.
     :param conda environment: conda environment used to run script_to_execute.
     """
-    inputs_dict = get_commandline_inputs()
-    script_to_execute = str(sys.argv[14])
-    conda_environment = str(sys.argv[15])
-    aws_instance_name = str(sys.argv[16])
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
+    # The three input arguments below are required in addition to the input arguments required by the run scripts.
+    # They are related to 'aws' partition handling.
+
+    script_to_execute = str(sys.argv[-3])
+    conda_environment = str(sys.argv[-2])
+    aws_instance_name = str(sys.argv[-1])
 
     input_site_file = inputs_dict['input_site_file']
     n_files = inputs_dict['n_files']

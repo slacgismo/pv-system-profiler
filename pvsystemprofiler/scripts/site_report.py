@@ -55,15 +55,14 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
 
     ll = len(inputs_dict['power_column_label'])
 
-    dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-    if inputs_dict['time_shift_inspection'] == 1:
-        dh.fix_dst()
+    if inputs_dict['data_source'] == 's3':
+        cols = df.columns
+    elif inputs_dict['data_source'] == 'cassandra':
+        cols = []
+        dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
+        for el in dh.keys:
+            cols.append(el[-1])
 
-    if inputs_dict['convert_to_ts']:
-        if inputs_dict['convert_to_ts']:
-            cols = [el[-1] for el in dh.keys]
-    else:
-        cols = dh.keys
 
     for col_label in cols:
         if col_label.find(inputs_dict['power_column_label']) != -1:
@@ -154,7 +153,7 @@ def main(inputs_dict, full_df, df_system_metadata, ext='.csv'):
         else:
             site_id = file_id.split('.')[0]
 
-        if inputs_dict['data_source'] == 'aws':
+        if inputs_dict['data_source'] == 's3':
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
@@ -192,10 +191,11 @@ if __name__ == '__main__':
     provided. 
     :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
     gmt offsets needs to be provided.
-    :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
+    :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
     '''
 
-    inputs_dict = get_commandline_inputs()
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
 
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
