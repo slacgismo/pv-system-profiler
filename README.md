@@ -1,6 +1,125 @@
 # pv-system-profiler
-Estimating PV array location and orientation from real-world power datasets.
-## Run Scripts
+### Estimating PV array location and orientation from real-world power datasets.
+
+<table>
+<tr>
+  <td>Latest Release</td>
+  <td>
+    <a href="https://pypi.org/project/pv-system-profiler/">
+        <img src="https://img.shields.io/pypi/v/pv-system-profiler.svg" alt="latest release" />
+    </a>
+    <a href="https://anaconda.org/slacgismo/pv-system-profiler">
+        <img src="https://anaconda.org/slacgismo/pv-system-profiler/badges/version.svg" />
+    </a>
+    <a href="https://anaconda.org/slacgismo/pv-system-profiler">
+        <img src="https://anaconda.org/slacgismo/pv-system-profiler/badges/latest_release_date.svg" />
+    </a>
+</tr>
+<tr>
+  <td>License</td>
+  <td>
+    <a href="https://github.com/slacgismo/pv-system-profiler/blob/master/LICENSE">
+        <img src="https://img.shields.io/pypi/l/pv-system-profiler.svg" alt="license" />
+    </a>
+</td>
+</tr>
+<tr>
+  <td>Build Status</td>
+  <td>
+    <a href="https://app.circleci.com/pipelines/github/slacgismo/pv-system-profiler">
+        <img src="https://circleci.com/gh/slacgismo/pv-system-profiler.svg?style=svg" alt="CircleCi build status" />
+    </a>
+  </td>
+</tr>
+<tr>
+    <td>Code Quality</td>
+    <td>
+        <a href="https://lgtm.com/projects/g/slacgismo/pv-system-profiler/context:python">
+            <img alt="Language grade: Python" src="https://img.shields.io/lgtm/grade/python/g/slacgismo/pv-system-profiler.svg?logo=lgtm&logoWidth=18"/>
+        </a>
+        <a href="https://lgtm.com/projects/g/slacgismo/pv-system-profiler/alerts/">
+            <img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/slacgismo/pv-system-profiler.svg?logo=lgtm&logoWidth=18"/>
+        </a>
+    </td>
+</tr>
+<tr>
+    <td>Publications</td>
+    <td>
+      <a href="https://zenodo.org/badge/latestdoi/183074637">
+        <img src="https://zenodo.org/badge/183074637.svg" alt="DOI">
+      </a>
+    </td>
+</tr>
+<tr>
+    <td>PyPI Downloads</td>
+    <td>
+        <a href="https://pepy.tech/project/pv-system-profiler">
+            <img src="https://img.shields.io/pypi/dm/pv-system-profiler" alt="PyPI downloads" />
+        </a>
+    </td>
+</tr>
+<tr>
+    <td>Conda Downloads</td>
+    <td>
+        <a href="https://anaconda.org/slacgismo/pv-system-profiler">
+            <img src="https://anaconda.org/slacgismo/pv-system-profiler/badges/downloads.svg" alt="conda-forge downloads" />
+        </a>
+    </td>
+</tr>
+</table>
+
+## Install & Setup
+
+#### 1) Recommended: Set up `conda` environment with provided `.yml` file
+
+We recommend setting up a fresh Python virtual environment in which to use `pv-system-profiler`. We recommend using the [Conda](https://docs.conda.io/projects/conda/en/latest/index.html) package management system, and creating an environment with the environment configuration file named `pvi-user.yml`, provided in the top level of this repository. This will install the `statistical-clear-sky` and `solar-data-tools` packages as well.
+
+Creating the env:
+
+```bash
+$ conda env create -f pvi-user.yml
+```
+
+Starting the env:
+
+```bash
+$ conda activate pvi_user
+```
+
+Stopping the env
+
+```bash
+$ conda deactivate
+```
+
+Additional documentation on setting up the Conda environment is available [here](https://github.com/slacgismo/pvinsight-onboarding/blob/main/README.md).
+
+
+#### 2) PIP Package
+
+```sh
+$ pip install pv-system-profiler
+```
+
+Alternative: Clone repo from GitHub
+
+Mimic the pip package by setting up locally.
+
+```bash
+$ pip install -e path/to/root/folder
+```
+
+#### 3) Anaconda Package
+
+```sh
+$ conda install -c slacgismo pv-system-profiler
+```
+
+## Solver Dependencies
+
+Refer to [solar-data-tools](https://github.com/slacgismo/solar-data-tools) documentation to get more info about solvers being used.
+
+## Usage / Run Scripts
 ### Serial run
 The site_report script creates a report of all systems based on the csv files with the sytem signals located in a given folder.
 The script takes all input parameters as kwargs. The example below illustrates the use of report_script:
@@ -54,3 +173,11 @@ In order to view the current test coverage metrics:
 coverage run --source pvsystemprofiler -m unittest discover && coverage html
 open htmlcov/index.html
 ```
+
+## Versioning
+
+We use [Semantic Versioning](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/slacgismo/pv-system-profiler/tags).
+
+## License
+
+This project is licensed under the BSD 2-Clause License - see the [LICENSE](LICENSE) file for details

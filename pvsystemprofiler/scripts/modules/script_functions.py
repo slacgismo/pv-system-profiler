@@ -454,3 +454,4 @@ def generate_list(inputs_dict, full_df):
             file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
     return file_list, json_file_dict
+
