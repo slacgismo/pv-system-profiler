@@ -21,12 +21,13 @@ from pvsystemprofiler.scripts.modules.script_functions import enumerate_files
 from pvsystemprofiler.scripts.modules.script_functions import get_checked_sites
 from pvsystemprofiler.scripts.modules.script_functions import create_json_dict
 from pvsystemprofiler.scripts.modules.script_functions import log_file_versions
+from pvsystemprofiler.scripts.modules.script_functions import load_system_metadata
+from pvsystemprofiler.scripts.modules.script_functions import generate_list
 from pvsystemprofiler.tilt_azimuth_study import TiltAzimuthStudy
 from pvsystemprofiler.scripts.modules.script_functions import filename_to_siteid
 from solardatatools.dataio import load_cassandra_data
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 from solardatatools import DataHandler
-
 
 def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim,
                                gmt_offset):
@@ -58,44 +59,45 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
         p_df.loc[0, :] = np.nan
     return p_df, runs_ta_estimation
 
+def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
 
-def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict=None):
     ll = len(inputs_dict['power_column_label'])
-
-    if inputs_dict['data_source'] == 's3':
-        cols = df.columns
-    elif inputs_dict['data_source'] == 'cassandra':
-        cols = []
+    if inputs_dict['convert_to_ts']:
         dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-        for el in dh.keys:
-            cols.append(el[-1])
-
+        cols = [el[-1] for el in dh.keys]
+    else:
+        cols = df.columns
     i = 0
     partial_df = pd.DataFrame()
     for col_label in cols:
         if col_label.find(inputs_dict['power_column_label']) != -1:
             system_id = col_label[ll:]
-            if system_id in df_system_metadata['system'].tolist():
+            if system_id in site_metadata['system'].tolist():
                 i += 1
+                dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
                 sys_tag = inputs_dict['power_column_label'] + system_id
-                longitude_input = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                               'estimated_longitude'])
-                real_latitude = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'latitude'])
-                real_tilt = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'tilt'])
-                real_azimuth = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'azimuth'])
-                latitude_input = float(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                              'estimated_latitude'])
+                sys_mask = site_metadata['system'] == system_id
 
-                if inputs_dict['gmt_offset'] is not None:
+                if inputs_dict['estimated_longitude']:
+                    longitude_input = float(site_metadata.loc[sys_mask, 'estimated_longitude'])
+                if inputs_dict['estimated_latitude']:
+                    real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
+                if inputs_dict['tilt']:
+                    real_tilt = float(site_metadata.loc[sys_mask, 'tilt'])
+                if inputs_dict['azimuth']:
+                    real_azimuth = float(site_metadata.loc[sys_mask, 'azimuth'])
+                    latitude_input = float(site_metadata.loc[sys_mask, 'estimated_latitude'])
+                if inputs_dict['gmt_offset']:
                     gmt_offset = inputs_dict['gmt_offset']
                 else:
-                    gmt_offset = float(df_system_metadata.loc[df_system_metadata['system'] == system_id, 'gmt_offset'])
+                    gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
 
-                if inputs_dict['time_shift_inspection']:
-                    manual_time_shift = int(df_system_metadata.loc[df_system_metadata['system'] == system_id,
-                                                                   'time_shift_manual'].values[0])
+                if inputs_dict['time_shift_manual']:
+                    time_shift_manual = int(site_metadata.loc[sys_mask, 'time_shift_manual'].values[0])
+                    if time_shift_manual == 1:
+                        dh.fix_dst()
                 else:
-                    manual_time_shift = 0
+                    time_shift_manual = 0
 
                 dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
                                                             inputs_dict['time_zone_correction'])
@@ -123,51 +125,23 @@ def evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dic
                 results_df['site'] = site_id
                 results_df['system'] = system_id
 
-                if inputs_dict['time_shift_inspection']:
-                    results_df['manual_time shift'] = manual_time_shift
+                if inputs_dict['time_shift_manual']:
+                    results_df['manual_time shift'] = time_shift_manual
 
                 partial_df = partial_df.append(results_df)
     return partial_df
 
 
-def main(inputs_dict, full_df, df_system_metadata):
+def main(full_df, inputs_dict, df_system_metadata):
     site_run_time = 0
     total_time = 0
-
-    if inputs_dict['s3_location'] is not None:
-        full_site_list = enumerate_files(inputs_dict['s3_location'])
-        full_site_list = filename_to_siteid(full_site_list)
-    else:
-        full_site_list = []
-
-    previously_checked_site_list = get_checked_sites(full_df)
-    file_list = list(set(full_site_list) - set(previously_checked_site_list))
-
-    if inputs_dict['check_json']:
-        json_files = enumerate_files(inputs_dict['s3_location'], extension='.json')
-        print('Generating system list from json files')
-        json_file_dict = create_json_dict(json_files, inputs_dict['s3_location'])
-        print('List generation completed')
-    else:
-        json_file_dict = None
-
-    if inputs_dict['input_site_file'] is not None:
-        input_site_list_df = pd.read_csv(inputs_dict['input_site_file'], index_col=0)
-        site_list = input_site_list_df['site'].apply(str)
-        site_list = site_list.tolist()
-        if len(file_list) != 0:
-            file_list = list(set(site_list) & set(file_list))
-        else:
-            file_list = list(set(site_list))
-        if inputs_dict['time_shift_inspection']:
-            manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
-            file_list = list(set(file_list) & set(manually_checked_sites))
-    file_list.sort()
+    file_list, json_file_dict = generate_list(inputs_dict, full_df)
 
     if inputs_dict['n_files'] != 'all':
         file_list = file_list[:int(inputs_dict['n_files'])]
     if full_df is None:
         full_df = pd.DataFrame()
+
     for file_ix, file_id in enumerate(file_list):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
@@ -176,14 +150,12 @@ def main(inputs_dict, full_df, df_system_metadata):
         if inputs_dict['file_label'] is not None:
             i = file_id.find(inputs_dict['file_label'])
             site_id = file_id[:i]
+            mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
         else:
             site_id = file_id.split('.')[0]
-        # TODO: integrate option for other data inputs
+            mask = df_system_metadata['site'] == site_id
+        site_metadata = df_system_metadata[mask]
 
-        if inputs_dict['data_source'] == 's3':
-            df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
-        if inputs_dict['data_source'] == 'cassandra':
-            df = load_cassandra_data(site_id)
 
         # TODO: integrate option for other data inputs
         if inputs_dict['data_source'] == 's3':
@@ -191,8 +163,12 @@ def main(inputs_dict, full_df, df_system_metadata):
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
 
-        partial_df = evaluate_systems(site_id, inputs_dict, df, df_system_metadata, json_file_dict)
-        if not partial_df.empty:
+        if not site_metadata.empty:
+            partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
+        else:
+            partial_df = None
+
+        if not partial_df.empty or partial_df is not None:
             full_df = full_df.append(partial_df)
             full_df.index = np.arange(len(full_df))
             full_df.to_csv(inputs_dict['output_file'])
@@ -226,28 +202,29 @@ if __name__ == '__main__':
       individual gmt offsets needs to be provided.
       :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
       '''
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
+
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
 
-    input_kwargs = sys.argv
-    inputs_dict = get_commandline_inputs(input_kwargs)
+
     # threshold values
 
     full_df = resume_run(inputs_dict['output_file'])
 
     ssf = inputs_dict['system_summary_file']
     if ssf is not None:
-        df_system_metadata = pd.read_csv(ssf, index_col=0)
-        df_system_metadata['site'] = df_system_metadata['site'].apply(str)
-        df_system_metadata['system'] = df_system_metadata['system'].apply(str)
-        df_system_metadata['site_file'] = df_system_metadata['site'].apply(lambda x: str(x) + '_20201006_composite')
-        if 'time_shift_manual' in df_system_metadata.columns:
-            inputs_dict['time_shift_inspection'] = True
-            df_system_metadata = df_system_metadata[~df_system_metadata['time_shift_manual'].isnull()]
-            df_system_metadata['time_shift_manual'] = df_system_metadata['time_shift_manual'].apply(int)
-            df_system_metadata = df_system_metadata[df_system_metadata['time_shift_manual'].isin([0, 1])]
-        else:
-            inputs_dict['time_shift_inspection'] = False
+        df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
+        cols = df_system_metadata.columns
+        for param in ['longitude', 'latitude', 'tilt', 'azimuth',
+                      'estimated_longitude', 'estimated_latitude',
+                      'time_shift_manual']:
+            if param in cols:
+                inputs_dict[param] = True
+            else:
+                inputs_dict[param] = False
     else:
         df_system_metadata = None
-    main(inputs_dict, full_df, df_system_metadata)
+
+main(full_df, inputs_dict, df_system_metadata)
