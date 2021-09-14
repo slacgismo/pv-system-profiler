@@ -29,15 +29,14 @@ from solardatatools.dataio import load_cassandra_data
 from pvsystemprofiler.scripts.modules.script_functions import get_commandline_inputs
 from solardatatools import DataHandler
 
-
-def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim, gmt_offset,
-                               cp, tq):
+def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim,
+                               gmt_offset):
     try:
         runs_ta_estimation = True
         ta_study = TiltAzimuthStudy(data_handler=dh, nrandom_init_values=nrandom, daytime_threshold=threshold,
                                     lon_input=lon, lat_input=lat, tilt_input=tilt, azimuth_input=azim,
                                     lat_true_value=real_lat, tilt_true_value=real_tilt, azimuth_true_value=real_azim,
-                                    gmt_offset=gmt_offset, cvx_parameter=cp, threshold_quantile=tq)
+                                    gmt_offset=gmt_offset)
         ta_study.run()
         p_df = ta_study.results.sort_index().copy()
     except:
@@ -60,7 +59,6 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
         p_df.loc[0, :] = np.nan
     return p_df, runs_ta_estimation
 
-
 def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
 
     ll = len(inputs_dict['power_column_label'])
@@ -69,7 +67,6 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
         cols = [el[-1] for el in dh.keys]
     else:
         cols = df.columns
-
     i = 0
     partial_df = pd.DataFrame()
     for col_label in cols:
@@ -109,8 +106,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                     results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
                                                                                latitude_input, None, None,
                                                                                real_latitude, real_tilt, real_azimuth,
-                                                                               gmt_offset, inputs_dict['cp'],
-                                                                               inputs_dict['tq'])
+                                                                               gmt_offset)
                     results_df['length'] = dh.num_days
                     results_df['data sampling'] = dh.data_sampling
                     results_df['data quality score'] = dh.data_quality_score
@@ -160,8 +156,9 @@ def main(full_df, inputs_dict, df_system_metadata):
             mask = df_system_metadata['site'] == site_id
         site_metadata = df_system_metadata[mask]
 
+
         # TODO: integrate option for other data inputs
-        if inputs_dict['data_source'] == 'aws':
+        if inputs_dict['data_source'] == 's3':
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
         if inputs_dict['data_source'] == 'cassandra':
             df = load_cassandra_data(site_id)
@@ -203,16 +200,14 @@ if __name__ == '__main__':
       :param system_summary_file: Full path to csv file containing longitude, latitude and gmt offset for each system. 
       :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with 
       individual gmt offsets needs to be provided.
-      :param data_source: String. Input signal data source. Options are 'aws' and 'cassandra'.
+      :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
       '''
     log_file_versions('solar-data-tools', active_conda_env='pvi-user')
     log_file_versions('pv-system-profiler')
 
-    inputs_dict = get_commandline_inputs()
-
+    input_kwargs = sys.argv
+    inputs_dict = get_commandline_inputs(input_kwargs)
     # threshold values
-    inputs_dict['cp'] = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
-    inputs_dict['tq'] = inputs_dict['cp']
 
     full_df = resume_run(inputs_dict['output_file'])
 
