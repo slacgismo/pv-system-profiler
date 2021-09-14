@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 from solardatatools.utilities import progress
 from solardatatools import DataHandler
+from pvsystemprofiler.longitude_study import LongitudeStudy
+from pvsystemprofiler.latitude_study import LatitudeStudy
+from pvsystemprofiler.tilt_azimuth_study import TiltAzimuthStudy
 
 
 def get_address(tag_name, region, client):
@@ -391,19 +394,20 @@ def run_failsafe_pipeline(dh, sys_tag, fts, tzc):
 
 
 def get_commandline_inputs(input_kwargs):
-    inputs_dict = {'input_site_file': input_kwargs[1] if input_kwargs[1] != 'None' else None,
-                   'n_files': input_kwargs[2],
-                   's3_location': input_kwargs[3] if input_kwargs[3] != 'None' else None,
-                   'file_label': input_kwargs[4] if input_kwargs[4] != 'None' else None,
-                   'power_column_label': input_kwargs[5],
-                   'output_file': input_kwargs[6],
-                   'fix_time_shifts': True if input_kwargs[7] == 'True' else False,
-                   'time_zone_correction': True if input_kwargs[8] == 'True' else False,
-                   'check_json': True if input_kwargs[9] == 'True' else False,
-                   'convert_to_ts': True if input_kwargs[10] == 'True' else False,
-                   'system_summary_file': input_kwargs[11] if input_kwargs[11] != 'None' else None,
-                   'gmt_offset': input_kwargs[12] if input_kwargs[12] != 'None' else None,
-                   'data_source': input_kwargs[13]}
+    inputs_dict = {'estimation': input_kwargs[1],
+                   'input_site_file': input_kwargs[2] if input_kwargs[2] != 'None' else None,
+                   'n_files': input_kwargs[3],
+                   's3_location': input_kwargs[4] if input_kwargs[4] != 'None' else None,
+                   'file_label': input_kwargs[5] if input_kwargs[5] != 'None' else None,
+                   'power_column_label': input_kwargs[6],
+                   'output_file': input_kwargs[7],
+                   'fix_time_shifts': True if input_kwargs[8] == 'True' else False,
+                   'time_zone_correction': True if input_kwargs[9] == 'True' else False,
+                   'check_json': True if input_kwargs[10] == 'True' else False,
+                   'convert_to_ts': True if input_kwargs[11] == 'True' else False,
+                   'system_summary_file': input_kwargs[12] if input_kwargs[12] != 'None' else None,
+                   'gmt_offset': input_kwargs[13] if input_kwargs[13] != 'None' else None,
+                   'data_source': input_kwargs[14]}
     return inputs_dict
 
 
@@ -454,4 +458,66 @@ def generate_list(inputs_dict, full_df):
             file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
     return file_list, json_file_dict
+
+
+def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
+    try:
+        runs_lon_estimation = True
+        lon_study = LongitudeStudy(data_handler=dh_in, gmt_offset=gmt_offset, true_value=real_longitude)
+        lon_study.run(verbose=False)
+        p_df = lon_study.results.sort_index().copy()
+    except:
+        runs_lon_estimation = False
+        p_df = pd.DataFrame(columns=['longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
+                                     'day_selection_method', 'data_matrix', 'residual', 'site', 'system',
+                                     'length', 'data sampling', 'data quality score', 'data clearness score',
+                                     'inverter clipping', 'time shift manual'])
+        p_df.loc[0, :] = np.nan
+    return p_df, runs_lon_estimation
+
+
+def run_failsafe_lat_estimation(dh_in, real_latitude):
+    try:
+        runs_lat_estimation = True
+        lat_study = LatitudeStudy(data_handler=dh_in, lat_true_value=real_latitude)
+        lat_study.run()
+        p_df = lat_study.results.sort_index().copy()
+    except:
+        runs_lat_estimation = False
+        p_df = pd.DataFrame(columns=['declination_method', 'daylight_calculation', 'data_matrix', 'threshold',
+                                     'day_selection_method', 'latitude', 'residual'])
+        p_df.loc[0, :] = np.nan
+    return p_df, runs_lat_estimation
+
+
+def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, real_lat, real_tilt, real_azim,
+                               gmt_offset):
+    try:
+        runs_ta_estimation = True
+        ta_study = TiltAzimuthStudy(data_handler=dh, nrandom_init_values=nrandom, daytime_threshold=threshold,
+                                    lon_input=lon, lat_input=lat, tilt_input=tilt, azimuth_input=azim,
+                                    lat_true_value=real_lat, tilt_true_value=real_tilt, azimuth_true_value=real_azim,
+                                    gmt_offset=gmt_offset)
+        ta_study.run()
+        p_df = ta_study.results.sort_index().copy()
+    except:
+        runs_ta_estimation = False
+        cols = ['day range', 'declination method', 'latitude initial value', 'tilt initial value',
+                'azimuth initial value']
+        if lat is not None:
+            cols.append('latitude')
+        if tilt is not None:
+            cols.append('tilt')
+        if azim is not None:
+            cols.append('azimuth')
+        if lat is not None:
+            cols.append('latitude_residual')
+        if tilt is not None:
+            cols.append('tilt_residual')
+        if azim is not None:
+            cols.append('azimuth_residual')
+        p_df = pd.DataFrame(columns=cols)
+        p_df.loc[0, :] = np.nan
+    return p_df, runs_ta_estimation
+
 
