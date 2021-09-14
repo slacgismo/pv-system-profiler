@@ -144,7 +144,7 @@ if __name__ == '__main__':
     :param s3_location: Absolute path to s3 location of files.
     :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
     :param power_column_label: Repeating portion of the power column label. 
-    :param output_file: Absolute path to csv file containing report results.
+    :param output_file: Absolute path to 'csv' file containing report results.
     :param fix_time_shits: String, 'True' or 'False'. Determines if time shifts are fixed when running the pipeline.
     :param time_zone_correction: String, 'True' or 'False'. Determines if time zone correction is performed when 
     running the pipeline.
@@ -160,8 +160,8 @@ if __name__ == '__main__':
 
     inputs_dict = get_commandline_inputs()
 
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 
