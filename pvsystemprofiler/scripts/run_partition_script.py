@@ -169,9 +169,9 @@ if __name__ == '__main__':
     """
     input_kwargs = sys.argv
     inputs_dict = get_commandline_inputs(input_kwargs)
-    script_to_execute = '/home/ubuntu/github/pv-system-profiler/pvsystemprofiler/scripts/parameter_estimation_script.py'
     # The three input arguments below are required in addition to the input arguments required by the run scripts.
     # They are related to 'aws' partition handling.
+    script_to_execute = str(sys.argv[-3])
     conda_environment = str(sys.argv[-2])
     aws_instance_name = str(sys.argv[-1])
 
