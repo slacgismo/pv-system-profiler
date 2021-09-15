@@ -51,8 +51,8 @@ def create_partition(partition):
     python_command = conda_location + 'envs/' + conda_env + '/bin/python'
 
     # delete existing remote partitions
-    # commands = ['rm estimation* -rf']
-    # output = remote_execute(ssh_username, instance, ssh_key_file, commands)
+    commands = ['rm estimation* -rf']
+    output = remote_execute(ssh_username, instance, ssh_key_file, commands)
 
     # check for previously created remote folders
     commands = ['ls' + ' ' + local_working_folder]

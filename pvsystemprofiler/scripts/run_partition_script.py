@@ -80,8 +80,8 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
         return False
 
 
-def main(estimation, df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
+def main(estimation, df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username,
+         aws_instance_name, aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
          convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
          supplementary_file, data_source, gmt_offset):
     # number of partitions
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     """
     input_kwargs = sys.argv
     inputs_dict = get_commandline_inputs(input_kwargs)
-    script_to_execute = 'parameter_estimation_script.py'
+    script_to_execute = '/home/ubuntu/github/pv-system-profiler/pvsystemprofiler/scripts/parameter_estimation_script.py'
     # The three input arguments below are required in addition to the input arguments required by the run scripts.
     # They are related to 'aws' partition handling.
     conda_environment = str(sys.argv[-2])
