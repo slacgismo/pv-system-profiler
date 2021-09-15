@@ -8,7 +8,6 @@ from smart_open import smart_open
 import numpy as np
 import pandas as pd
 from solardatatools.utilities import progress
-from solardatatools import DataHandler
 from pvsystemprofiler.longitude_study import LongitudeStudy
 from pvsystemprofiler.latitude_study import LatitudeStudy
 from pvsystemprofiler.tilt_azimuth_study import TiltAzimuthStudy

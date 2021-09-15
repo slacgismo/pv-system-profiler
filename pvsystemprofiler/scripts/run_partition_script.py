@@ -80,7 +80,7 @@ def check_completion(ssh_username, instance_id, ssh_key_file):
         return False
 
 
-def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
+def main(estimation, df, ec2_instances, site_input_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
          aws_region, aws_client, script_name, script_location, conda_environment, power_column_id,
          convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
          supplementary_file, data_source, gmt_offset):
@@ -103,7 +103,7 @@ def main(df, ec2_instances, site_input_file, output_folder_location, ssh_key_fil
                 local_size = part_size + 1
             jj += 1
         # create partition
-        part = get_config(part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=site_input_file,
+        part = get_config(est=estimation, part_id=i, ix_0=ii, ix_n=jj, n_part=n_part, ifl=site_input_file,
                           ofl=output_folder_location, ip_address=ec2_instances[i], skf=ssh_key_file, au=aws_username,
                           ain=aws_instance_name, ar=aws_region, ac=aws_client, script_name=script_name,
                           scripts_location=script_location, conda_env=conda_environment, pcid=power_column_id,
@@ -169,13 +169,13 @@ if __name__ == '__main__':
     """
     input_kwargs = sys.argv
     inputs_dict = get_commandline_inputs(input_kwargs)
+    script_to_execute = 'parameter_estimation_script.py'
     # The three input arguments below are required in addition to the input arguments required by the run scripts.
     # They are related to 'aws' partition handling.
-
-    script_to_execute = str(sys.argv[-3])
     conda_environment = str(sys.argv[-2])
     aws_instance_name = str(sys.argv[-1])
 
+    estimation = inputs_dict['estimation']
     input_site_file = inputs_dict['input_site_file']
     n_files = inputs_dict['n_files']
     s3_location = inputs_dict['s3_location']
@@ -191,7 +191,6 @@ if __name__ == '__main__':
 
     # Default input variables
     if not input_site_file:
-
         build_input_file(s3_location)
         input_site_file = 's3://pv.insight.misc/report_files/generated_site_list.csv'
 
@@ -212,7 +211,7 @@ if __name__ == '__main__':
         ssh_key_file = glob.glob("/home/*/.aws/*.pem")[0]
 
     # create main class
-    main_class = get_config(ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
+    main_class = get_config(est=estimation, ifl=input_site_file, ofl=output_folder_location, skf=ssh_key_file, au=aws_username,
                             ain=aws_instance_name, ar=aws_region, ac=aws_client, pcid=power_column_label,
                             gof=global_output_file, god=global_output_directory, cts=convert_to_ts,
                             s3l=s3_location, n_files=n_files, file_label=file_label,
@@ -223,7 +222,7 @@ if __name__ == '__main__':
     # read input site file
     df = pd.read_csv(input_site_file, index_col=0)
 
-    main(df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username, aws_instance_name,
-         aws_region, aws_client, script_name, script_location, conda_environment, power_column_label,
+    main(estimation, df, ec2_instances, input_site_file, output_folder_location, ssh_key_file, aws_username,
+         aws_instance_name, aws_region, aws_client, script_name, script_location, conda_environment, power_column_label,
          convert_to_ts, s3_location, n_files, file_label, fix_time_shifts, time_zone_correction, check_json,
          system_summary_file, data_source, gmt_offset)
