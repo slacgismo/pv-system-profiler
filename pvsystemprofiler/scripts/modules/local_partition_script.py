@@ -49,7 +49,7 @@ arguments = estimation + ' ' \
             + convert_to_ts + ' ' \
             + supplementary_file + ' ' \
             + gmt_offset + ' ' \
-            + data_type + ' '
+            + data_type
 
 full_command = command + ' ' + arguments + '>out &'
 # save local copy of run script

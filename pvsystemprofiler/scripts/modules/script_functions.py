@@ -452,7 +452,7 @@ def generate_list(inputs_dict, full_df):
             file_list = list(set(site_list) & set(file_list))
         else:
             file_list = list(set(site_list))
-        if inputs_dict['time_shift_inspection']:
+        if inputs_dict['time_shift_manual']:
             manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
             file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
