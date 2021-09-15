@@ -417,16 +417,12 @@ def load_system_metadata(df_in, file_label):
     df = df[df['time_shift_manual'].isin([0, 1])]
     df['site'] = df['site'].apply(str)
     df['system'] = df['system'].apply(str)
-    if file_label:
+    if file_label is not None:
         df['site_file'] = df['site'].apply(lambda x: str(x) + file_label)
     return df
 
 
-def generate_list(inputs_dict, full_df):
-    ssf = inputs_dict['system_summary_file']
-    if ssf:
-        df_system_metadata = pd.read_csv(ssf, index_col=0)
-
+def generate_list(inputs_dict, full_df, df_system_metadata):
     if inputs_dict['s3_location'] is not None:
         full_site_list = enumerate_files(inputs_dict['s3_location'])
         full_site_list = filename_to_siteid(full_site_list)
@@ -456,6 +452,7 @@ def generate_list(inputs_dict, full_df):
             manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
             file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
+
     return file_list, json_file_dict
 
 
@@ -518,5 +515,3 @@ def run_failsafe_ta_estimation(dh, nrandom, threshold, lon, lat, tilt, azim, rea
         p_df = pd.DataFrame(columns=cols)
         p_df.loc[0, :] = np.nan
     return p_df, runs_ta_estimation
-
-

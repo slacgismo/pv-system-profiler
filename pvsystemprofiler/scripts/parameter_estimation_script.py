@@ -157,7 +157,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
 def main(full_df, inputs_dict, df_system_metadata):
     site_run_time = 0
     total_time = 0
-    file_list, json_file_dict = generate_list(inputs_dict, full_df)
+    file_list, json_file_dict = generate_list(inputs_dict, full_df, df_system_metadata)
 
     if inputs_dict['n_files'] != 'all':
         file_list = file_list[:int(inputs_dict['n_files'])]
