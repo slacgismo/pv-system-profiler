@@ -158,27 +158,27 @@ method is run after instantiating the data handler. The next `karg is` `gmt_offs
 The last kwarg corresponds to the `data_source`. In this case the value is `s3` since files with the input signals are
 located in an `s3` bucket.
  ## Partitioned run
-A script that runs the site report, the longitude, latitude and tilt and azimuth scripts using a number of prescribed AWS
-instances is provided. The script reads the folder containing the system signals and partitions these signals to run in
-a `n` user prescribed AWS instances in parallel. Here is an example shell command for a partitioned run:
+A script that runs the site report, the longitude, latitude and tilt and azimuth scripts using a number of prescribed 
+Amazon Web Services (AWS), instances is provided. The script reads the folder containing the system signals and 
+partitions these signals to run in  a `n` user prescribed AWS instances in parallel. Here is an example shell command 
+for a partitioned run:
 ```shell
 python 'repository location of run script'/run_partition_script.py parameter_estimation_script.py report None all 
 s3://s3_bucket_with_signals/ 'repeating_part_of label' /home/results.csv True False 
 False False s3://'s3_path_to_file_containing_metadata/metadata.csv' None s3
-'repository location of run script'/parameter_estimation_script.py pvi-dev my_partition
+'repository location of run script'/parameter_estimation_script.py pvi-dev my_instance
  ```
 where the individual value of each kwarg are defined in run_partition_script.py. This script takes the same inputs as
 the `parameter_estimation_script.py` plus three additional parameters. Note that the first kwarg is the partitioning 
 script repository location of run script `/run_partition_script.py parameter_estimation_script.py`. The estimation run
 script `/parameter_estimation_script.p` is specified as the third to last kwarg. The second to last kwarg is the conda
 enviroment to be used to run the estimation, in this case `pvi-dev`. The last kwarg is the name of the AWS instances to
-be used to run `run_partition_script.py`. Previous to running this command it is necessary to create `n` identical AWS 
+be used to run `run_partition_script.py`, in this case `my_instance`. Previous to running this command it is necessary to create `n` identical AWS 
 instances that correspond to the number of desired partitions. These instances need to have the same 
-`Name="instance name"` AWS tag. The simplest way to accomplish this is by parting from an AWS  image of a  previously 
+`Name='instance name'` AWS tag. The simplest way to accomplish this is by parting from an AWS  image of a  previously 
 configured instance. This image needs to have all the  repositories and conda environments that 
 would be  needed in a serial run. Once each partitioned run is finished, results will be automatically collected in the 
-local folder where `run_partition_script.py` was run. The kwarg `"instance_name"` corresponds to the conda environment that is to
-be used in the  partitioned run.
+local folder where `run_partition_script.py` was run. 
 ## Unit tests
 
 In order to run unit tests:
