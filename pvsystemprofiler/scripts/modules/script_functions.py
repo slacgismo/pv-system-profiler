@@ -394,7 +394,7 @@ def run_failsafe_pipeline(dh, sys_tag, fts, tzc):
 
 def get_commandline_inputs(input_kwargs):
     """
-        :param estimation: Estimation to be performed. Options are longitude, latitude, tilt and azimuth.
+        :param estimation: Estimation to be performed. Options are 'report', 'longitude', 'latitude', 'tilt_azimuth'.
         :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
         :param n_files: number of files to read. If 'all' all files in folder are read.
         :param s3_location: Absolute path to s3 location of files.
