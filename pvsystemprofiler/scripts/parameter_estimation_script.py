@@ -91,7 +91,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                     results_list = [site_id, system_id, passes_pipeline] + [np.nan] * (len(results_list) - 3)
 
                 if inputs_dict['estimation'] == 'longitude':
-                    if inputs_dict['longitude'] is not None:
+                    if inputs_dict['longitude']:
                         real_longitude = float(site_metadata.loc[sys_mask, 'longitude'])
                     if inputs_dict['gmt_offset'] is not None:
                         gmt_offset = inputs_dict['gmt_offset']
@@ -100,22 +100,22 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                     results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
 
                 elif inputs_dict['estimation'] == 'latitude':
-                    if inputs_dict['latitude'] is not None:
+                    if inputs_dict['latitude']:
                         real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
                     results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
 
                 elif inputs_dict['estimation'] == 'tilt_azimuth':
-                    if inputs_dict['estimated_longitude'] is not None:
+                    if inputs_dict['estimated_longitude']:
                         longitude_input = float(site_metadata.loc[sys_mask, 'estimated_longitude'])
-                    if inputs_dict['estimated_latitude'] is not None:
+                    if inputs_dict['estimated_latitude']:
                         latitude_input = float(site_metadata.loc[sys_mask, 'latitude'])
-                    if inputs_dict['latitude'] is not None:
+                    if inputs_dict['latitude']:
                         real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
-                    if inputs_dict['tilt'] is not None:
+                    if inputs_dict['tilt']:
                         real_tilt = float(site_metadata.loc[sys_mask, 'tilt'])
-                    if inputs_dict['azimuth'] is not None:
+                    if inputs_dict['azimuth']:
                         real_azimuth = float(site_metadata.loc[sys_mask, 'azimuth'])
-                    if inputs_dict['gmt_offset'] is not None:
+                    if inputs_dict['gmt_offset']:
                         gmt_offset = inputs_dict['gmt_offset']
                     else:
                         gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
