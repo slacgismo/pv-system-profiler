@@ -123,7 +123,7 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                                                                                latitude_input, None, None,
                                                                                real_latitude, real_tilt, real_azimuth,
                                                                                gmt_offset)
-                if inputs_dict['estimation'] in ['longitude', 'latitude', 'tilt', 'azimuth']:
+                if inputs_dict['estimation'] in ['longitude', 'latitude', 'tilt_azimuth']:
                     results_df[partial_df_cols] = results_list
                     partial_df = partial_df.append(results_df)
                 elif inputs_dict['estimation'] == 'report':
