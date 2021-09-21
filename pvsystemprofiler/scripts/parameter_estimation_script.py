@@ -33,13 +33,12 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
     if inputs_dict['estimation'] == 'report':
         partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
                            'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
-                           'time_zone_correction', 'capacity_changes', 'normal_quality_scores', 'zip_code', 'longitude',
-                           'latitude', 'tilt', 'azimuth', 'sys_id']
+                           'time_zone_correction', 'capacity_changes', 'normal_quality_scores']
 
-        if json_file_dict is None:
-            partial_df = pd.DataFrame(columns=partial_df_cols[:13])
-        else:
-            partial_df = pd.DataFrame(columns=partial_df_cols)
+        if json_file_dict is not None:
+            partial_df_cols.extend(['zip_code', 'longitude', 'latitude', 'tilt', 'azimuth'])
+
+        partial_df = pd.DataFrame(columns=partial_df_cols)
 
         if inputs_dict['time_shift_manual']:
             partial_df['time_shift_manual'] = np.nan
@@ -88,8 +87,10 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                             source_file = json_file_dict[system_id]
                             location_results = extract_sys_parameters(source_file, system_id,
                                                                       inputs_dict['s3_location'])
+                            #  do not include sys_id in results
+                            location_results = location_results[:-1]
                         else:
-                            location_results = [np.nan] * 5
+                            location_results = [np.nan] * 4
                         results_list += location_results
 
                     if inputs_dict['time_shift_manual']:
