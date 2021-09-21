@@ -465,9 +465,7 @@ def run_failsafe_lon_estimation(dh_in, real_longitude, gmt_offset):
     except:
         runs_lon_estimation = False
         p_df = pd.DataFrame(columns=['longitude', 'estimator', 'eot_calculation', 'solar_noon_method',
-                                     'day_selection_method', 'data_matrix', 'residual', 'site', 'system',
-                                     'length', 'data sampling', 'data quality score', 'data clearness score',
-                                     'inverter clipping', 'time shift manual'])
+                                     'day_selection_method', 'data_matrix', 'residual', 'site', 'system'])
         p_df.loc[0, :] = np.nan
     return p_df, runs_lon_estimation
 
