@@ -30,20 +30,16 @@ from solardatatools import DataHandler
 
 
 def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
-    if inputs_dict['estimation'] == 'report':
-        partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
-                           'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
-                           'time_zone_correction', 'capacity_changes', 'normal_quality_scores']
+    partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
+                       'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
+                       'time_zone_correction', 'capacity_changes', 'normal_quality_scores']
 
-        if json_file_dict is not None:
-            partial_df_cols.extend(['zip_code', 'longitude', 'latitude', 'tilt', 'azimuth'])
+    if json_file_dict is not None:
+        partial_df_cols.extend(['zip_code', 'real longitude', 'real latitude', 'real tilt', 'real azimuth'])
+    if inputs_dict['time_shift_manual']:
+        partial_df_cols.append('time_shift_manual')
 
-        partial_df = pd.DataFrame(columns=partial_df_cols)
-
-        if inputs_dict['time_shift_manual']:
-            partial_df['time_shift_manual'] = np.nan
-    else:
-        partial_df = pd.DataFrame()
+    partial_df = pd.DataFrame(columns=partial_df_cols)
 
     ll = len(inputs_dict['power_column_label'])
 
@@ -72,86 +68,66 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
 
                 dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
                                                             inputs_dict['time_zone_correction'])
+                if passes_pipeline:
+                    results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
+                                    dh.data_sampling, dh.data_quality_score, dh.data_clearness_score,
+                                    dh.inverter_clipping, dh.time_shifts, dh.tz_correction, dh.capacity_changes,
+                                    dh.normal_quality_scores]
 
-                if inputs_dict['estimation'] == 'report':
-                    if passes_pipeline:
-                        results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
-                                        dh.data_sampling,
-                                        dh.data_quality_score, dh.data_clearness_score, dh.inverter_clipping,
-                                        dh.time_shifts, dh.tz_correction, dh.capacity_changes, dh.normal_quality_scores]
-                    else:
-                        results_list = [site_id, system_id, passes_pipeline] + [np.nan] * 10
-
+                    if inputs_dict['time_shift_manual']:
+                        results_list.append(time_shift_manual)
                     if json_file_dict is not None:
                         if system_id in json_file_dict.keys():
                             source_file = json_file_dict[system_id]
-                            location_results = extract_sys_parameters(source_file, system_id,
+                            json_information = extract_sys_parameters(source_file, system_id,
                                                                       inputs_dict['s3_location'])
-                            #  do not include sys_id in results
-                            location_results = location_results[:-1]
+                            #  exclude sys_id in results
+                            json_information = json_information[:-1]
                         else:
-                            location_results = [np.nan] * 4
-                        results_list += location_results
+                            json_information = [np.nan] * 4
+                        results_list.extend(json_information)
 
-                    if inputs_dict['time_shift_manual']:
-                        results_list += str(time_shift_manual)
-                    partial_df.loc[len(partial_df)] = results_list
-                elif passes_pipeline:
-                    if inputs_dict['estimation'] == 'longitude':
-                        if inputs_dict['longitude'] is not None:
-                            real_longitude = float(site_metadata.loc[sys_mask, 'longitude'])
-                        if inputs_dict['gmt_offset'] is not None:
-                            gmt_offset = inputs_dict['gmt_offset']
-                        else:
-                            gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
-                        results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
-                    elif inputs_dict['estimation'] == 'latitude':
-                        if inputs_dict['latitude'] is not None:
-                            real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
-                        results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
-                    elif inputs_dict['estimation'] == 'tilt_azimuth':
-                        if inputs_dict['estimated_longitude'] is not None:
-                            longitude_input = float(site_metadata.loc[sys_mask, 'estimated_longitude'])
-                        if inputs_dict['estimated_latitude'] is not None:
-                            latitude_input = float(site_metadata.loc[sys_mask, 'latitude'])
-                        if inputs_dict['latitude'] is not None:
-                            real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
-                        if inputs_dict['tilt'] is not None:
-                            real_tilt = float(site_metadata.loc[sys_mask, 'tilt'])
-                        if inputs_dict['azimuth'] is not None:
-                            real_azimuth = float(site_metadata.loc[sys_mask, 'azimuth'])
-                        if inputs_dict['gmt_offset'] is not None:
-                            gmt_offset = inputs_dict['gmt_offset']
-                        else:
-                            gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
-
-                        results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
-                                                                                   latitude_input, None, None,
-                                                                                   real_latitude, real_tilt,
-                                                                                   real_azimuth,
-                                                                                   gmt_offset)
-                    results_df['length'] = dh.num_days
-                    results_df['data sampling'] = dh.data_sampling
-                    results_df['data quality score'] = dh.data_quality_score
-                    results_df['data clearness score'] = dh.data_clearness_score
-                    results_df['inverter clipping'] = dh.inverter_clipping
-                    results_df['runs estimation'] = passes_estimation
                 else:
-                    results_df = pd.DataFrame()
-                    results_df['length'] = np.nan
-                    results_df['data sampling'] = np.nan
-                    results_df['data quality score'] = np.nan
-                    results_df['data clearness score'] = np.nan
-                    results_df['inverter clipping'] = np.nan
-                    results_df['runs estimation'] = np.nan
+                    results_list = [site_id, system_id, passes_pipeline] + [np.nan] * (len(results_list) - 3)
 
-            if inputs_dict['estimation'] in ['longitude', 'latitude', 'tilt_azimuth']:
-                results_df['site'] = site_id
-                results_df['system'] = system_id
-                if inputs_dict['time_shift_manual'] is not None:
-                    results_df['manual_time shift'] = time_shift_manual
+                if inputs_dict['estimation'] == 'longitude':
+                    if inputs_dict['longitude'] is not None:
+                        real_longitude = float(site_metadata.loc[sys_mask, 'longitude'])
+                    if inputs_dict['gmt_offset'] is not None:
+                        gmt_offset = inputs_dict['gmt_offset']
+                    else:
+                        gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
+                    results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
 
-                partial_df = partial_df.append(results_df)
+                elif inputs_dict['estimation'] == 'latitude':
+                    if inputs_dict['latitude'] is not None:
+                        real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
+                    results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
+
+                elif inputs_dict['estimation'] == 'tilt_azimuth':
+                    if inputs_dict['estimated_longitude'] is not None:
+                        longitude_input = float(site_metadata.loc[sys_mask, 'estimated_longitude'])
+                    if inputs_dict['estimated_latitude'] is not None:
+                        latitude_input = float(site_metadata.loc[sys_mask, 'latitude'])
+                    if inputs_dict['latitude'] is not None:
+                        real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
+                    if inputs_dict['tilt'] is not None:
+                        real_tilt = float(site_metadata.loc[sys_mask, 'tilt'])
+                    if inputs_dict['azimuth'] is not None:
+                        real_azimuth = float(site_metadata.loc[sys_mask, 'azimuth'])
+                    if inputs_dict['gmt_offset'] is not None:
+                        gmt_offset = inputs_dict['gmt_offset']
+                    else:
+                        gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
+                    results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
+                                                                               latitude_input, None, None,
+                                                                               real_latitude, real_tilt, real_azimuth,
+                                                                               gmt_offset)
+                if inputs_dict['estimation'] in ['longitude', 'latitude', 'tilt', 'azimuth']:
+                    results_df[partial_df_cols] = results_list
+                    partial_df = partial_df.append(results_df)
+                elif inputs_dict['estimation'] == 'report':
+                    partial_df.loc[len(partial_df)] = results_list
     return partial_df
 
 
@@ -230,8 +206,8 @@ if __name__ == '__main__':
     input_kwargs = sys.argv
     inputs_dict = get_commandline_inputs(input_kwargs)
 
-    # log_file_versions('solar-data-tools', active_conda_env='pvi-user')
-    # log_file_versions('pv-system-profiler')
+    log_file_versions('solar-data-tools', active_conda_env='pvi-user')
+    log_file_versions('pv-system-profiler')
 
     full_df = resume_run(inputs_dict['output_file'])
 
