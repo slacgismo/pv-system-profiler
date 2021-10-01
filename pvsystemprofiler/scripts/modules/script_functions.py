@@ -332,8 +332,8 @@ def extract_sys_parameters(file_name, system, location):
                             val = np.nan
                         val = np.nan if val == '' else val
                         parameters.append(val)
-        file_id = file_json['System']['system_id']
-        parameters.append(file_id)
+        #file_id = file_json['System']['system_id']
+        #parameters.append(file_id)
         return parameters
 
 

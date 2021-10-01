@@ -81,8 +81,6 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                             source_file = json_file_dict[system_id]
                             json_information = extract_sys_parameters(source_file, system_id,
                                                                       inputs_dict['s3_location'])
-                            #  exclude sys_id in results
-                            json_information = json_information[:-1]
                         else:
                             json_information = [np.nan] * 4
                         results_list.extend(json_information)
