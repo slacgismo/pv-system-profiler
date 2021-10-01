@@ -9,22 +9,23 @@ import pandas as pd
 start_index = int(sys.argv[1])
 end_index = int(sys.argv[2])
 script_name = str(sys.argv[3])
-global_input_file = str(sys.argv[4])
-local_working_folder = str(sys.argv[5])
-local_input_file = str(sys.argv[6])
-local_output_file = str(sys.argv[7])
-power_column_id = str(sys.argv[8])
-convert_to_ts = str(sys.argv[9])
-s3_location = str(sys.argv[10])
-n_files = str(sys.argv[11])
-file_label = str(sys.argv[12])
-fix_time_shifts = str(sys.argv[13])
-time_zone_correction = str(sys.argv[14])
-check_json = str(sys.argv[15])
-gmt_offset = str(sys.argv[16])
-data_type = str(sys.argv[17])
-supplementary_file = str(sys.argv[18])
-python_command = str(sys.argv[19])
+estimation = str(sys.argv[4])
+global_input_file = str(sys.argv[5])
+local_working_folder = str(sys.argv[6])
+local_input_file = str(sys.argv[7])
+local_output_file = str(sys.argv[8])
+power_column_id = str(sys.argv[9])
+convert_to_ts = str(sys.argv[10])
+s3_location = str(sys.argv[11])
+n_files = str(sys.argv[12])
+file_label = str(sys.argv[13])
+fix_time_shifts = str(sys.argv[14])
+time_zone_correction = str(sys.argv[15])
+check_json = str(sys.argv[16])
+gmt_offset = str(sys.argv[17])
+data_type = str(sys.argv[18])
+supplementary_file = str(sys.argv[19])
+python_command = str(sys.argv[20])
 
 # read full list of systems save a local copy of systems corresponding to partition
 df_full = pd.read_csv(global_input_file, index_col=0)
@@ -35,7 +36,8 @@ df_part.to_csv(local_input_file)
 # create execute command to run study or site report
 command = 'setsid nohup' + ' ' + python_command + ' ' + script_name
 # create arguments to run `command` with
-arguments = local_input_file + ' '  \
+arguments = estimation + ' ' \
+            + local_input_file + ' '  \
             + n_files + ' ' \
             + s3_location + ' ' \
             + file_label + ' ' \
