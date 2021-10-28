@@ -31,7 +31,7 @@ For gismo collaborators: check out the video in https://drive.google.com/drive/f
 
 # Pv-system-profiler Partitions Running Steps From Scratch:
 
-#### Create and Ubuntu 20.04 ec2 instance
+#### Create an Ubuntu 20.04 ec2 instance
 
 ```
 sudo apt update
