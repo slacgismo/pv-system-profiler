@@ -186,19 +186,19 @@ if __name__ == '__main__':
     :param input_site_file:  csv file containing list of sites to be evaluated. 'None' if no input file is provided.
     :param n_files: number of files to read. If 'all' all files in folder are read.
     :param s3_location: Absolute path to s3 location of files.
-    :param file_label:  Repeating portion of data files label. If 'None', no file label is used. 
-    :param power_column_label: Repeating portion of the power column label. 
+    :param file_label:  Repeating portion of data files label. If 'None', no file label is used.
+    :param power_column_label: Repeating portion of the power column label.
     :param output_file: Absolute path to csv file containing report results.
-    :param fix_time_shits: String, 'True' or 'False'. Specifies if time shifts are to be 
+    :param fix_time_shits: String, 'True' or 'False'. Specifies if time shifts are to be
     fixed when running the pipeline.
-    :param time_zone_correction: String, 'True' or 'False'. Specifies if the time zone correction is performed when 
+    :param time_zone_correction: String, 'True' or 'False'. Specifies if the time zone correction is performed when
     running the pipeline.
     :param check_json: String, 'True' or 'False'. Check json file for location information.
-    :param convert_to_ts: String, 'True' or 'False'. Specifies if conversion to time series is performed when 
+    :param convert_to_ts: String, 'True' or 'False'. Specifies if conversion to time series is performed when
     running the pipeline.
     :param system_summary_file: Full path to csv file containing longitude and manual time shift flag for each system,
     None if no file
-    provided. 
+    provided.
     :param gmt_offset: String. Single value of gmt offset to be used for all estimations. If None a list with individual
     gmt offsets needs to be provided.
     :param data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
