@@ -2,8 +2,8 @@
 
 # BELOW IS THE LIST OF ALL THE KWARGS NEEDED FOR ESTIMATION SCRIPT TO RUN
 
-# Desired state: options are 'single', 'partition'
-STATE=partition
+# Script to Run
+SCRIPT=github/pv-system-profiler/pvsystemprofiler/scripts/run_partition_script.py;
 
 # estimation: Estimation to be performed. Options are 'report', 'longitude', 'latitude', 'tilt_azimuth'
 ESTIMATION=tilt_azimuth
@@ -47,8 +47,13 @@ GMT_OFFSET=None
 # data_source: String. Input signal data source. Options are 's3' and 'cassandra'.
 DATA_SOURCE=s3
 
+ESTIMATION=github/pv-system-profiler/pvsystemprofiler/scripts/parameter_estimation_script.py;
+
+# conda env name
+CONDA_ENV=pvi-user
+
+# Instance name (all instances must have the same name)
+EC2_NAME=pv-system-profiler-prod
+
 # CODE RUN
-if [ $STATE == partition ]; then SCRIPT=pvsystemprofiler/scripts/run_partition_script.py;
-elif [ $STATE == single ]; then SCRIPT=pvsystemprofiler/scripts/parameter_estimation_script.py;
-fi
-python $SCRIPT $ESTIMATION $INPUT_SITE_FILE $N_FILES $S3_LOCATION $FILE_LABEL $POWER_COLUMN_LABEL $OUTPUT_FILE $FIX_TIME_SHIFTS $TIME_ZONE_CORRECTION $CHECK_JSON $CONVERT_TO_TS $SYSTEM_SUMMARY_FILE $GMT_OFFSET $DATA_SOURCE
+python $SCRIPT $ESTIMATION $INPUT_SITE_FILE $N_FILES $S3_LOCATION $FILE_LABEL $POWER_COLUMN_LABEL $OUTPUT_FILE $FIX_TIME_SHIFTS $TIME_ZONE_CORRECTION $CHECK_JSON $CONVERT_TO_TS $SYSTEM_SUMMARY_FILE $GMT_OFFSET $DATA_SOURCE $ESTIMATION $CONDA_ENV $EC2_NAME
