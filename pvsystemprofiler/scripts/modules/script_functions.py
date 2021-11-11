@@ -95,10 +95,10 @@ def load_generic_data(location, file_label, file_id, extension='.csv', parse_dat
     :param nrows: number of rows from input signal file to be read.
     :return: Dataframe containing input signals for `file_id`.
     """
-    if file_label is None:
-        to_read = location + file_id + extension
+    if file_id is None:
+        to_read = location + "*" + extension
     else:
-        to_read = location + file_id + file_label + extension
+        to_read = location + file_id + "*" + extension
 
     if nrows is None:
         df = pd.read_csv(to_read, index_col=0, parse_dates=parse_dates)
