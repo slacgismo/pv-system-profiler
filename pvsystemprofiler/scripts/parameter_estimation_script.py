@@ -165,13 +165,14 @@ def main(full_df, inputs_dict, df_system_metadata):
         else:
             partial_df = None
 
-        if not partial_df.empty or partial_df is not None:
-            full_df = full_df.append(partial_df)
-            full_df.index = np.arange(len(full_df))
-            full_df.to_csv(inputs_dict['output_file'])
-            t1 = time()
-            site_run_time = t1 - t0
-            total_time += site_run_time
+        if partial_df is not None:
+            if not partial_df.empty:
+                full_df = full_df.append(partial_df)
+                full_df.index = np.arange(len(full_df))
+                full_df.to_csv(inputs_dict['output_file'])
+                t1 = time()
+                site_run_time = t1 - t0
+                total_time += site_run_time
 
     msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
     if len(file_list) != 0:
