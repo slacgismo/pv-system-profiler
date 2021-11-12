@@ -226,5 +226,6 @@ if __name__ == '__main__':
                 inputs_dict[param] = False
     else:
         df_system_metadata = None
+        print("METADATA file is none")
 
 main(full_df, inputs_dict, df_system_metadata)
