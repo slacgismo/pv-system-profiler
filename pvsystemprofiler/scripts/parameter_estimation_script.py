@@ -29,53 +29,24 @@ from pvsystemprofiler.scripts.modules.script_functions import run_failsafe_ta_es
 from solardatatools import DataHandler
 
 
-def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
-    partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
-                       'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
-                       'time_zone_correction', 'capacity_changes', 'normal_quality_scores']
+def site_report(partial_df, cols, inputs_dict, df, site_id, json_file_dict, ll):
+        for col_label in cols:
+            if col_label.find(inputs_dict['power_column_label']) != -1:
+                system_id = col_label[ll:]
 
-    if json_file_dict is not None:
-        partial_df_cols.extend(['zip_code', 'real longitude', 'real latitude', 'real tilt', 'real azimuth'])
-    if inputs_dict['time_shift_manual']:
-        partial_df_cols.append('time_shift_manual')
-
-    partial_df = pd.DataFrame(columns=partial_df_cols)
-
-    ll = len(inputs_dict['power_column_label'])
-
-    if inputs_dict['convert_to_ts']:
-        dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
-        cols = [el[-1] for el in dh.keys]
-    else:
-        cols = df.columns
-
-    i = 0
-    for col_label in cols:
-        if col_label.find(inputs_dict['power_column_label']) != -1:
-            system_id = col_label[ll:]
-            if system_id in site_metadata['system'].tolist():
-                i += 1
                 dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
                 sys_tag = inputs_dict['power_column_label'] + system_id
-                sys_mask = site_metadata['system'] == system_id
-
-                if inputs_dict['time_shift_manual']:
-                    time_shift_manual = int(site_metadata.loc[sys_mask, 'time_shift_manual'].values[0])
-                    if time_shift_manual == 1:
-                        dh.fix_dst()
-                else:
-                    time_shift_manual = 0
+                time_shift_manual = 0
 
                 dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
                                                             inputs_dict['time_zone_correction'])
+
                 if passes_pipeline:
                     results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
                                     dh.data_sampling, dh.data_quality_score, dh.data_clearness_score,
                                     dh.inverter_clipping, dh.time_shifts, dh.tz_correction, dh.capacity_changes,
                                     dh.normal_quality_scores]
 
-                    if inputs_dict['time_shift_manual']:
-                        results_list.append(time_shift_manual)
                     if json_file_dict is not None:
                         if system_id in json_file_dict.keys():
                             source_file = json_file_dict[system_id]
@@ -88,44 +59,112 @@ def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=Non
                 else:
                     results_list = [site_id, system_id, passes_pipeline] + [np.nan] * (len(results_list) - 3)
 
-                if inputs_dict['estimation'] == 'longitude':
-                    if inputs_dict['longitude']:
-                        real_longitude = float(site_metadata.loc[sys_mask, 'longitude'])
-                    if inputs_dict['gmt_offset'] is not None:
-                        gmt_offset = inputs_dict['gmt_offset']
-                    else:
-                        gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
-                    results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
+                partial_df.loc[len(partial_df)] = results_list
+        return partial_df
 
-                elif inputs_dict['estimation'] == 'latitude':
-                    if inputs_dict['latitude']:
-                        real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
-                    results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
 
-                elif inputs_dict['estimation'] == 'tilt_azimuth':
-                    if inputs_dict['estimated_longitude']:
-                        longitude_input = float(site_metadata.loc[sys_mask, 'estimated_longitude'])
-                    if inputs_dict['estimated_latitude']:
-                        latitude_input = float(site_metadata.loc[sys_mask, 'latitude'])
-                    if inputs_dict['latitude']:
-                        real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
-                    if inputs_dict['tilt']:
-                        real_tilt = float(site_metadata.loc[sys_mask, 'tilt'])
-                    if inputs_dict['azimuth']:
-                        real_azimuth = float(site_metadata.loc[sys_mask, 'azimuth'])
-                    if inputs_dict['gmt_offset']:
-                        gmt_offset = inputs_dict['gmt_offset']
+def evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict=None):
+    partial_df_cols = ['site', 'system', 'passes pipeline', 'length', 'capacity_estimate', 'data_sampling',
+                       'data quality_score', 'data clearness_score', 'inverter_clipping', 'time_shifts_corrected',
+                       'time_zone_correction', 'capacity_changes', 'normal_quality_scores']
+
+    if json_file_dict is not None:
+        partial_df_cols.extend(['zip_code', 'real longitude', 'real latitude', 'real tilt', 'real azimuth'])
+    try:
+        if inputs_dict['time_shift_manual']:
+            partial_df_cols.append('time_shift_manual')
+    except:
+        pass
+    partial_df = pd.DataFrame(columns=partial_df_cols)
+
+    ll = len(inputs_dict['power_column_label'])
+
+    if inputs_dict['convert_to_ts']:
+        dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
+        cols = [el[-1] for el in dh.keys]
+    else:
+        cols = df.columns
+
+    i = 0
+    if (inputs_dict['estimation'] == 'report'):
+        partial_df = site_report(partial_df, cols, inputs_dict, df, site_id, json_file_dict, ll)
+    else:
+        for col_label in cols:
+            if col_label.find(inputs_dict['power_column_label']) != -1:
+                system_id = col_label[ll:]
+                if system_id in site_metadata['system'].tolist():
+                    i += 1
+                    dh = DataHandler(df, convert_to_ts=inputs_dict['convert_to_ts'])
+                    sys_tag = inputs_dict['power_column_label'] + system_id
+                    sys_mask = site_metadata['system'] == system_id
+
+                    if inputs_dict['time_shift_manual']:
+                        time_shift_manual = int(site_metadata.loc[sys_mask, 'time_shift_manual'].values[0])
+                        if time_shift_manual == 1:
+                            dh.fix_dst()
                     else:
-                        gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
-                    results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
-                                                                               latitude_input, None, None,
-                                                                               real_latitude, real_tilt, real_azimuth,
-                                                                               gmt_offset)
-                if inputs_dict['estimation'] in ['longitude', 'latitude', 'tilt_azimuth']:
-                    results_df[partial_df_cols] = results_list
-                    partial_df = partial_df.append(results_df)
-                elif inputs_dict['estimation'] == 'report':
-                    partial_df.loc[len(partial_df)] = results_list
+                        time_shift_manual = 0
+
+                    dh, passes_pipeline = run_failsafe_pipeline(dh, sys_tag, inputs_dict['fix_time_shifts'],
+                                                                inputs_dict['time_zone_correction'])
+                    if passes_pipeline:
+                        results_list = [site_id, system_id, passes_pipeline, dh.num_days, dh.capacity_estimate,
+                                        dh.data_sampling, dh.data_quality_score, dh.data_clearness_score,
+                                        dh.inverter_clipping, dh.time_shifts, dh.tz_correction, dh.capacity_changes,
+                                        dh.normal_quality_scores]
+
+                        if inputs_dict['time_shift_manual']:
+                            results_list.append(time_shift_manual)
+                        if json_file_dict is not None:
+                            if system_id in json_file_dict.keys():
+                                source_file = json_file_dict[system_id]
+                                json_information = extract_sys_parameters(source_file, system_id,
+                                                                          inputs_dict['s3_location'])
+                            else:
+                                json_information = [np.nan] * 4
+                            results_list.extend(json_information)
+
+                    else:
+                        results_list = [site_id, system_id, passes_pipeline] + [np.nan] * (len(results_list) - 3)
+
+                    if inputs_dict['estimation'] == 'longitude':
+                        if inputs_dict['longitude']:
+                            real_longitude = float(site_metadata.loc[sys_mask, 'longitude'])
+                        if inputs_dict['gmt_offset'] is not None:
+                            gmt_offset = inputs_dict['gmt_offset']
+                        else:
+                            gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
+                        results_df, passes_estimation = run_failsafe_lon_estimation(dh, real_longitude, gmt_offset)
+
+                    elif inputs_dict['estimation'] == 'latitude':
+                        if inputs_dict['latitude']:
+                            real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
+                        results_df, passes_estimation = run_failsafe_lat_estimation(dh, real_latitude)
+
+                    elif inputs_dict['estimation'] == 'tilt_azimuth':
+                        if inputs_dict['estimated_longitude']:
+                            longitude_input = float(site_metadata.loc[sys_mask, 'estimated_longitude'])
+                        if inputs_dict['estimated_latitude']:
+                            latitude_input = float(site_metadata.loc[sys_mask, 'latitude'])
+                        if inputs_dict['latitude']:
+                            real_latitude = float(site_metadata.loc[sys_mask, 'latitude'])
+                        if inputs_dict['tilt']:
+                            real_tilt = float(site_metadata.loc[sys_mask, 'tilt'])
+                        if inputs_dict['azimuth']:
+                            real_azimuth = float(site_metadata.loc[sys_mask, 'azimuth'])
+                        if inputs_dict['gmt_offset']:
+                            gmt_offset = inputs_dict['gmt_offset']
+                        else:
+                            gmt_offset = float(site_metadata.loc[sys_mask, 'gmt_offset'])
+                        results_df, passes_estimation = run_failsafe_ta_estimation(dh, 1, None, longitude_input,
+                                                                                   latitude_input, None, None,
+                                                                                   real_latitude, real_tilt, real_azimuth,
+                                                                                   gmt_offset)
+                    if inputs_dict['estimation'] in ['longitude', 'latitude', 'tilt_azimuth']:
+                        results_df[partial_df_cols] = results_list
+                        partial_df = partial_df.append(results_df)
+                    elif inputs_dict['estimation'] == 'report':
+                        partial_df.loc[len(partial_df)] = results_list
     return partial_df
 
 
@@ -143,27 +182,31 @@ def main(full_df, inputs_dict, df_system_metadata):
         t0 = time()
         msg = 'Site/Accum. run time: {0:2.2f} s/{1:2.2f} m'.format(site_run_time, total_time / 60.0)
         progress(file_ix, len(file_list), msg, bar_length=20)
+        if(inputs_dict["estimation"] != "report"):
+            if inputs_dict['file_label'] is not None:
+                i = file_id.find(inputs_dict['file_label'])
+                site_id = file_id[:i]
+                mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
+            else:
+                site_id = file_id.split('.')[0]
 
-        if inputs_dict['file_label'] is not None:
-            i = file_id.find(inputs_dict['file_label'])
-            site_id = file_id[:i]
-            mask = df_system_metadata['site'] == site_id.split(inputs_dict['file_label'])[0]
+                mask = df_system_metadata['site'] == site_id
+            site_metadata = df_system_metadata[mask]
+            # TODO: integrate option for other data inputs
+            if inputs_dict['data_source'] == 's3':
+                df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
+            if inputs_dict['data_source'] == 'cassandra':
+                df = load_cassandra_data(site_id)
+
+            if not site_metadata.empty:
+                partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
+            else:
+                partial_df = None
         else:
             site_id = file_id.split('.')[0]
-
-            mask = df_system_metadata['site'] == site_id
-        site_metadata = df_system_metadata[mask]
-
-        # TODO: integrate option for other data inputs
-        if inputs_dict['data_source'] == 's3':
             df = load_generic_data(inputs_dict['s3_location'], inputs_dict['file_label'], site_id)
-        if inputs_dict['data_source'] == 'cassandra':
-            df = load_cassandra_data(site_id)
+            partial_df = evaluate_systems(site_id, inputs_dict, df, None, json_file_dict)
 
-        if not site_metadata.empty:
-            partial_df = evaluate_systems(site_id, inputs_dict, df, site_metadata, json_file_dict)
-        else:
-            partial_df = None
 
         if partial_df is not None:
             if not partial_df.empty:
@@ -214,7 +257,7 @@ if __name__ == '__main__':
     full_df = resume_run(inputs_dict['output_file'])
 
     ssf = inputs_dict['system_summary_file']
-    if ssf is not None or inputs_dict["estimation"] != "report":
+    if ssf is not None and inputs_dict["estimation"] != "report":
         df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
         cols = df_system_metadata.columns
         for param in ['longitude', 'latitude', 'tilt', 'azimuth',
@@ -226,6 +269,5 @@ if __name__ == '__main__':
                 inputs_dict[param] = False
     else:
         df_system_metadata = None
-        print("METADATA file is none")
 
 main(full_df, inputs_dict, df_system_metadata)

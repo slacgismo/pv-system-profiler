@@ -470,7 +470,7 @@ def generate_list(inputs_dict, full_df, df_system_metadata):
             file_list = list(set(site_list) & set(file_list))
         else:
             file_list = list(set(site_list))
-        if inputs_dict['time_shift_manual'] or df_system_metadata is not None:
+        if inputs_dict['time_shift_manual'] and df_system_metadata is not None:
             manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
             file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
