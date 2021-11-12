@@ -214,7 +214,7 @@ if __name__ == '__main__':
     full_df = resume_run(inputs_dict['output_file'])
 
     ssf = inputs_dict['system_summary_file']
-    if ssf is not None:
+    if ssf is not None or inputs_dict["estimation"] != "report":
         df_system_metadata = load_system_metadata(df_in=ssf, file_label=inputs_dict['file_label'])
         cols = df_system_metadata.columns
         for param in ['longitude', 'latitude', 'tilt', 'azimuth',
