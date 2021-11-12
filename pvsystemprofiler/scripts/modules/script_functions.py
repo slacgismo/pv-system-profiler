@@ -440,7 +440,7 @@ def load_system_metadata(df_in, file_label):
     df['site'] = df['site'].apply(str)
     df['system'] = df['system'].apply(str)
     if file_label is not None:
-        df['site_file'] = df['site'].apply(lambda x: str(x) + file_label)
+        df['input_site_file'] = df['site'].apply(lambda x: str(x) + file_label)
     return df
 
 
@@ -471,7 +471,7 @@ def generate_list(inputs_dict, full_df, df_system_metadata):
         else:
             file_list = list(set(site_list))
         if inputs_dict['time_shift_manual']:
-            manually_checked_sites = df_system_metadata['site_file'].apply(str).tolist()
+            manually_checked_sites = df_system_metadata['input_site_file'].apply(str).tolist()
             file_list = list(set(file_list) & set(manually_checked_sites))
     file_list.sort()
 
